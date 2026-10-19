@@ -75,17 +75,7 @@ module.exports = class Room {
         this.survey = config?.features?.survey;
         this.redirect = config?.features?.redirect;
         this.videoAIEnabled = config?.integrations?.videoAI?.enabled || false;
-        const videoAIConfig = config?.integrations?.videoAI || {};
-        this.videoAIProviders = this.videoAIEnabled
-            ? {
-                  available: {
-                      liveavatar: !!(videoAIConfig?.liveavatar?.enabled && videoAIConfig?.liveavatar?.apiKey),
-                      anam: !!(videoAIConfig?.anam?.enabled && videoAIConfig?.anam?.apiKey),
-                  },
-                  defaultProvider: videoAIConfig?.defaultProvider || 'liveavatar',
-              }
-            : null;
-        this.videoAISessionTimeLimit = videoAIConfig?.sessionTimeLimit || 0;
+        this.videoAISessionTimeLimit = 0;
         this.peers = new Map();
         this.videoTextAnnotations = new Map();
         this.videoDrawingAnnotations = new Map();
@@ -145,11 +135,8 @@ module.exports = class Room {
             survey: this.survey,
             redirect: this.redirect,
             videoAIEnabled: this.videoAIEnabled,
-            videoAIProviders: this.videoAIProviders,
             videoAISessionTimeLimit: this.videoAISessionTimeLimit,
             chatGPTEnabled: config?.integrations?.chatGPT?.enabled || false,
-            remoteControlEnabled: config?.features?.remoteControl?.enabled || false,
-            remoteControlDownloadUrl: config?.features?.remoteControl?.downloadUrl,
             whisperEnabled: config?.integrations?.whisper?.enabled || false,
             whisperSegmentSeconds: config?.integrations?.whisper?.segmentSeconds || 5,
             thereIsPolls: this.thereIsPolls(),

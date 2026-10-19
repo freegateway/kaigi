@@ -24,16 +24,7 @@ const BLOCKED_HOSTNAMES = new Set([
 const BLOCKED_HOSTNAME_SUFFIXES = ['.localhost', '.internal', '.local', '.lan', '.intranet', '.home.arpa'];
 
 function isValidRoomName(input) {
-    if (!input || typeof input !== 'string') {
-        return false;
-    }
-    const room = checkXSS(input);
-
-    if (!room || ['false', 'undefined', '', null, undefined, 'favicon.ico'].includes(room.trim().toLowerCase())) {
-        return false;
-    }
-
-    return !hasPathTraversal(room);
+    return require('./MeetingSettings').isMeetingKey(input);
 }
 
 function isValidRecFileNameFormat(input) {
@@ -230,9 +221,8 @@ function safeDnsLookup(hostname, options, callback) {
 
 /**
  * Validate that a fabric.js `image.src` URL is safe to broadcast.
- * Allows http(s) to non-private hosts and `data:image/...` URIs.
- * Rejects javascript:, vbscript:, file:, blob:, gopher:, ftp:, anything pointing
- * at loopback / private / link-local hosts, and malformed inputs.
+ * Allows inline raster image data. A remote image would make every recipient's
+ * browser contact a host selected by the sender; an SVG can reference remote content.
  * @param {string} src
  * @returns {boolean}
  */
@@ -241,34 +231,15 @@ function isSafeImageSrc(src) {
     const s = src.trim();
     if (!s) return false;
 
-    // data: URI — only image/* subtypes
-    if (/^data:/i.test(s)) {
-        return /^data:image\/[a-z0-9.+-]+[;,]/i.test(s);
-    }
-
-    // Must be http(s) — reject every other scheme (javascript:, file:, blob:, ftp:, gopher:, …)
-    if (!/^https?:\/\//i.test(s)) return false;
-
-    let u;
-    try {
-        u = new URL(s);
-    } catch (_) {
-        return false;
-    }
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-
-    let host = u.hostname || '';
-    if (host.startsWith('[') && host.endsWith(']')) host = host.slice(1, -1); // IPv6 literal
-    return !isPrivateOrLoopbackHost(host);
+    return /^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(s);
 }
 
 /**
- * Filter fabric.js canvas JSON in place: drop any `image` objects whose `src`
- * fails `isSafeImageSrc`. Accepts either a JSON string or an object and
- * returns the sanitized value in the same shape it was given.
+ * Remove remote image sources anywhere in Fabric canvas JSON, including
+ * nested groups, backgrounds, overlays, and clipping objects.
  * @param {string|object} payload
  * @param {function({src:string}):void} [onDrop] optional callback invoked per dropped image
- * @returns {string|object|null} sanitized payload (same type as input), or original on parse failure
+ * @returns {string|object|null} sanitized payload (same type as input)
  */
 function sanitizeWbCanvasJson(payload, onDrop) {
     if (payload == null) return payload;
@@ -280,8 +251,7 @@ function sanitizeWbCanvasJson(payload, onDrop) {
         try {
             parsed = JSON.parse(payload);
         } catch (_) {
-            // Not parseable JSON, leave untouched.
-            return payload;
+            return null;
         }
     }
 
@@ -289,18 +259,25 @@ function sanitizeWbCanvasJson(payload, onDrop) {
         return wasString ? JSON.stringify(parsed) : parsed;
     }
 
-    parsed.objects = parsed.objects.filter((obj) => {
-        if (!obj || typeof obj !== 'object') return true;
-        const type = typeof obj.type === 'string' ? obj.type.toLowerCase() : '';
-        if (type !== 'image') return true;
-        if (isSafeImageSrc(obj.src)) return true;
-        if (typeof onDrop === 'function') {
-            try {
-                onDrop({ src: obj.src });
-            } catch (_) {}
+    const sanitizeNode = (node, depth = 0) => {
+        if (depth > 16) return null;
+        if (Array.isArray(node)) return node.map((value) => sanitizeNode(value, depth + 1)).filter((value) => value !== null);
+        if (!node || typeof node !== 'object') return node;
+
+        if (typeof node.src === 'string' && !isSafeImageSrc(node.src)) {
+            if (typeof onDrop === 'function') onDrop({ src: node.src });
+            return null;
         }
-        return false;
-    });
+        for (const [key, value] of Object.entries(node)) {
+            if (value && typeof value === 'object') {
+                const safeValue = sanitizeNode(value, depth + 1);
+                if (safeValue === null) delete node[key];
+                else node[key] = safeValue;
+            }
+        }
+        return node;
+    };
+    parsed = sanitizeNode(parsed);
 
     return wasString ? JSON.stringify(parsed) : parsed;
 }

@@ -20,8 +20,8 @@ function showScheduleSwal(options) {
 function loadScheduleMeetingAssets() {
     const assets = [
         { tag: 'link', rel: 'stylesheet', href: '../css/ScheduleMeeting.css' },
-        { tag: 'link', rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css' },
-        { tag: 'link', rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css' },
+        { tag: 'link', rel: 'stylesheet', href: '/vendor/flatpickr/dist/flatpickr.min.css' },
+        { tag: 'link', rel: 'stylesheet', href: '/vendor/flatpickr/dist/themes/dark.css' },
     ];
     assets.forEach(({ tag, rel, href }) => {
         const el = document.createElement(tag);
@@ -31,7 +31,7 @@ function loadScheduleMeetingAssets() {
     });
     if (typeof flatpickr === 'undefined') {
         const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+        script.src = '/vendor/flatpickr/dist/flatpickr.min.js';
         document.head.appendChild(script);
     }
 }

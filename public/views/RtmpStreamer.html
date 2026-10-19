@@ -4,8 +4,8 @@
         <!-- Title and Icon -->
 
         <title id="title">MiroTalk RTMP Streamer</title>
-        <link id="icon" rel="shortcut icon" href="../images/logo.svg" />
-        <link id="appleTouchIcon" rel="apple-touch-icon" href="../images/logo.svg" />
+        <link id="icon" rel="shortcut icon" href="data:," />
+        <link id="appleTouchIcon" rel="apple-touch-icon" href="data:," />
 
         <!-- Meta Information -->
 
@@ -28,17 +28,16 @@
 
         <!-- https://cdnjs.com/libraries/font-awesome -->
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="/vendor/@fortawesome/fontawesome-free/css/all.min.css" />
 
         <!-- Axios -->
 
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="/vendor/axios/dist/axios.min.js"></script>
 
-        <script defer src="https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js"></script>
+        <script defer src="/vendor/xss/dist/xss.min.js"></script>
 
         <!-- JS scripts -->
         <script defer src="../js/Brand.js"></script>
-        <script async src="../js/Translate.js"></script>
         <script defer src="../js/RtmpStreamer.js"></script>
     </head>
     <body>
@@ -57,7 +56,7 @@
         </div>
         <header class="streamer-header fadein">
             <a class="brand" href="/" aria-label="MiroTalk SFU home">
-                <img src="../images/logo.svg" alt="" width="34" height="34" />
+                <img data-brand-logo alt="" width="34" height="34" />
                 <span>MiroTalk SFU</span>
             </a>
             <div class="header-status" aria-label="RTMP broadcast studio">

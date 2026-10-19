@@ -1,6 +1,6 @@
 'use strict';
 
-// Fallback if xss library failed to load (CDN blocked/unreachable)
+// Escape text if the locally hosted XSS filtering library is unavailable.
 if (typeof filterXSS === 'undefined') {
     var filterXSS = function (str) {
         if (!str) return '';

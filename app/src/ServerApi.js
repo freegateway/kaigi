@@ -44,7 +44,7 @@ module.exports = class ServerApi {
         return Array.from(roomList.entries()).map(([roomId, room]) => ({
             id: roomId,
             peers: room.peers.size,
-            join: 'https://' + this._host + '/' + roomId,
+            join: 'https://' + this._host + '/',
         }));
     }
 
@@ -115,51 +115,11 @@ module.exports = class ServerApi {
     }
 
     getMeetingURL() {
-        return 'https://' + this._host + '/join/' + uuidV4();
+        return 'https://' + this._host + '/';
     }
 
-    getJoinURL(data) {
-        // Get data
-        const { room, roomPassword, name, avatar, audio, video, screen, chat, hide, notify, duration, token } = data;
-        const { noiseSuppression } = data;
-
-        const roomValue = room || uuidV4();
-        const roomPasswordValue = roomPassword || false;
-        const nameValue = name || 'User-' + this.getRandomNumber();
-        const avatarValue = avatar || false;
-        const audioValue = audio || false;
-        const videoValue = video || false;
-        const screenValue = screen || false;
-        const chatValue = chat || false;
-        const hideValue = hide || false;
-        const notifyValue = notify || false;
-        const durationValue = duration || 'unlimited';
-        // Optional: omitted means the server default applies
-        const noiseSuppressionParam =
-            noiseSuppression === undefined || noiseSuppression === null || noiseSuppression === ''
-                ? ''
-                : `&noiseSuppression=${encodeURIComponent(noiseSuppression)}`;
-        const jwtToken = token ? '&token=' + this.getToken(token) : '';
-
-        const joinURL =
-            'https://' +
-            this._host +
-            '/join?' +
-            `room=${roomValue}` +
-            `&roomPassword=${roomPasswordValue}` +
-            `&name=${encodeURIComponent(nameValue)}` +
-            `&avatar=${encodeURIComponent(avatarValue)}` +
-            `&audio=${audioValue}` +
-            `&video=${videoValue}` +
-            `&screen=${screenValue}` +
-            `&chat=${chatValue}` +
-            `&hide=${hideValue}` +
-            `&notify=${notifyValue}` +
-            `&duration=${durationValue}` +
-            noiseSuppressionParam +
-            jwtToken;
-
-        return joinURL;
+    getJoinURL() {
+        return 'https://' + this._host + '/';
     }
 
     getToken(token) {

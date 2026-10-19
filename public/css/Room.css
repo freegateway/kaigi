@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');
 
 :root {
     --room-stage-bg: var(--body-bg);
@@ -332,26 +331,6 @@ body {
 }
 
 /*--------------------------------------------------------------
-# Google Translate
---------------------------------------------------------------*/
-
-.skiptranslate iframe,
-.goog-te-banner-frame.skiptranslate,
-.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
-.VIpgJd-ZVi9od-aZ2wEe-OiiCO,
-#goog-gt-tt,
-#goog-gt-tt *,
-#goog-gt-vt,
-#goog-gt-vt * {
-    display: none !important;
-}
-
-#google_translate_element select {
-    background-color: var(--select-bg) !important;
-    box-shadow: none !important;
-}
-
-/*--------------------------------------------------------------
 # Loading...
 --------------------------------------------------------------*/
 
@@ -366,7 +345,7 @@ body {
 #loadingDiv h1 {
     padding: 10px;
     font-size: 60px;
-    font-family: 'Montserrat';
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     border-radius: 14px;
 }
 #loadingDiv pre,
@@ -374,7 +353,7 @@ body {
     padding: 10px;
     margin: 0 auto;
     max-width: min(90vw, 60ch);
-    font-family: 'Montserrat';
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     font-size: var(--font-base, 15px);
     line-height: var(--lh-base, 1.5);
     color: var(--fg-2, rgba(255, 255, 255, 0.78));
@@ -530,8 +509,76 @@ body {
         border-color var(--motion-base) ease;
 }
 
-.init-video-off.clickable {
-    cursor: pointer;
+.init-identity-panel {
+    width: min(calc(100% - 2rem), 600px);
+    margin: 1rem auto;
+    padding: 0.5rem 0.85rem;
+    border: var(--border);
+    border-radius: 12px;
+    color: #fff;
+    text-align: left;
+}
+
+.init-identity-panel {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem 0.85rem;
+    text-align: start;
+}
+
+.init-identity-panel dt,
+.init-identity-panel dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.init-identity-panel .swal2-input {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    height: auto;
+    margin: 0;
+    padding: 0.2rem 0;
+    border: 0 !important;
+    text-align: start;
+}
+
+.init-identity-panel .swal2-input:read-only {
+    opacity: 1;
+    cursor: default;
+}
+
+.init-login-name {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.init-identity-panel strong {
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .init-identity-panel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .init-identity-panel dd + dt {
+        margin-top: 0.5rem;
+    }
+}
+
+/*---------------------------
+> 1024px SCREEN */
+@media screen and (min-width: 1025px) {
+    .init-modal-size {
+        width: 1024px !important;
+    }
+    .init-user {
+        display: flex;
+    }
+    .init-video-container {
+        padding: 10px;
+    }
 }
 
 .init-video-off.clickable:hover,
@@ -3932,7 +3979,7 @@ body {
         padding: 0 !important;
         white-space: nowrap;
         font-size: 0.82rem;
-        font-family: 'Montserrat', sans-serif;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
         font-weight: 600;
     }
     .tabActions {
@@ -4085,7 +4132,7 @@ body {
 
 .room-action-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: minmax(0, 420px);
     gap: 10px;
 }
 
@@ -4331,191 +4378,6 @@ body {
     border-color: var(--room-accent);
     background: rgba(255, 255, 255, 0.12);
     box-shadow: 0 0 0 3px var(--room-accent-soft);
-}
-
-/*--------------------------------------------------------------
-# Remote control (RustDesk) dialogs
---------------------------------------------------------------*/
-
-.remote-control {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    width: min(100%, 360px);
-    margin: 0 auto;
-    text-align: left;
-}
-
-.remote-control__brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--room-switch-accent);
-}
-
-.remote-control__brand .remote-control__icon {
-    width: 84px;
-    height: 84px;
-    font-size: 38px;
-    color: var(--room-switch-accent);
-}
-
-.remote-control__target {
-    display: flex;
-    align-items: center;
-    align-self: center;
-    gap: 8px;
-    max-width: 100%;
-    margin: 0;
-    padding: 6px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.remote-control__target i {
-    color: var(--room-switch-accent);
-}
-
-.remote-control__target b {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.remote-control__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    align-self: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    font-size: 24px;
-    color: var(--room-accent);
-    background: var(--room-accent-soft);
-}
-
-.remote-control__icon--ok {
-    color: #5ad17f;
-    background: rgba(90, 209, 127, 0.15);
-}
-
-.remote-control__text {
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    text-align: center;
-}
-
-.remote-control__highlight {
-    font-weight: 600;
-    color: var(--room-switch-accent);
-}
-
-/* Remote control entries (video dropdown menus and participants list): accent icon.
-   --room-switch-accent is blue on the neutral themes, where --room-accent is near-white. */
-.navbar-dropdown-item:has(button[id$='remoteControl']) button,
-.participant-list-dropdown-menu button[id$='remoteControl'] .participant-action-icon {
-    color: var(--room-switch-accent) !important;
-}
-
-.remote-control__steps {
-    margin: 0;
-    padding-left: 20px;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.remote-control__steps a {
-    color: var(--room-accent);
-}
-
-.remote-control__field {
-    position: relative;
-    display: block;
-    margin: 0;
-}
-
-.remote-control__field i {
-    position: absolute;
-    top: 50%;
-    left: 16px;
-    color: var(--room-accent);
-    pointer-events: none;
-    transform: translateY(-50%);
-}
-
-.remote-control__field input {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 46px;
-    padding: 0 16px 0 46px;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 8px;
-    outline: none;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.remote-control__field input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.remote-control__field input:hover,
-.remote-control__field input:focus {
-    border-color: var(--room-accent);
-    background: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 0 0 3px var(--room-accent-soft);
-}
-
-.remote-control__warning,
-.remote-control__hint {
-    margin: 0;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.remote-control__warning i {
-    margin-right: 4px;
-    color: #ffc107;
-}
-
-.remote-control__credential {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.remote-control__credential span {
-    flex: 0 0 72px;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.remote-control__credential code {
-    flex: 1;
-    overflow-wrap: anywhere;
-    font-size: 1rem;
-    color: #fff;
-}
-
-.remote-control__credential button {
-    border: 0;
-    color: var(--room-accent);
-    background: transparent;
-    cursor: pointer;
 }
 
 /*--------------------------------------------------------------
@@ -5351,7 +5213,7 @@ body {
     overflow: hidden;
     --rgb-background: var(--body-bg);
     --color-border-over: var(--body-bg);
-    --font-family: 'Montserrat';
+    --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
 }
 
 .room-emoji-header {
@@ -5999,6 +5861,16 @@ html body.swal2-toast-shown .swal2-container.swal2-top-end > .swal2-popup {
     color: rgba(255, 255, 255, 0.58);
     font-size: 0.78rem;
     line-height: 1.4;
+}
+
+.about-build-info {
+    width: 100%;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
 /*--------------------------------------------------------------
@@ -8301,7 +8173,7 @@ hr {
     -webkit-backdrop-filter: blur(12px);
     box-shadow: var(--box-shadow);
     animation: breakoutSlideDown 0.4s ease-out;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
 }
 
 @keyframes breakoutSlideDown {
@@ -8382,7 +8254,7 @@ hr {
     color: #fff;
     font-size: 12px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -8408,7 +8280,7 @@ hr {
     color: #fff;
     font-size: 12px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -8446,7 +8318,7 @@ hr {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     box-shadow: var(--box-shadow);
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     overflow: hidden;
 }
 
@@ -8622,7 +8494,7 @@ hr {
     color: #fff;
     font-size: 12px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition:
         background 0.18s ease,
@@ -8733,7 +8605,7 @@ hr {
     color: #fff;
     font-size: 12px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     padding: 2px 6px;
     width: 100px;
     outline: none;
@@ -8782,7 +8654,7 @@ hr {
     color: #fff;
     font-size: 10px;
     font-weight: 500;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     padding: 2px 6px;
     width: 70px;
     outline: none;
@@ -8901,7 +8773,7 @@ hr {
     background: var(--select-bg);
     color: #fff;
     font-size: 12px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     outline: none;
     transition: border-color 0.2s;
     min-width: 0;
@@ -8959,7 +8831,7 @@ hr {
     color: var(--breakout-danger);
     font-size: 11px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -8992,7 +8864,7 @@ hr {
     color: var(--breakout-accent);
     font-size: 10px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition:
         background 0.18s ease,
@@ -9019,7 +8891,7 @@ hr {
     color: var(--breakout-danger);
     font-size: 10px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -9043,7 +8915,7 @@ hr {
     color: rgba(255, 255, 255, 0.74);
     font-size: 10px;
     font-weight: 600;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -9064,7 +8936,7 @@ hr {
     background: var(--select-bg);
     color: #fff;
     font-size: 12px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     outline: none;
     transition: border-color 0.2s;
 }
@@ -9122,7 +8994,7 @@ hr {
     background: var(--select-bg);
     color: #fff;
     font-size: 11px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
     cursor: pointer;
     min-width: 100px;
     flex-shrink: 0;
@@ -9554,7 +9426,7 @@ hr {
     margin: 0 !important;
     padding: 0.85rem 1rem !important;
     border-radius: 999px !important;
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif !important;
     font-size: 0.92rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.01em;
@@ -9838,3 +9710,31 @@ z-index:
     - 9 room/user emoji
     - 1001 audio unlock prompt
 */
+
+/* Administrator recording policy takes precedence over dynamic menu visibility. */
+.meeting-recording-disabled #startRecButton,
+.meeting-recording-disabled #stopRecButton,
+.meeting-recording-disabled #pauseRecButton,
+.meeting-recording-disabled #resumeRecButton,
+.meeting-recording-disabled #tabRecordingBtn,
+.meeting-recording-disabled #tabRecording,
+.meeting-recording-disabled #recordingActionButton,
+.meeting-recording-disabled #recordingTime {
+    display: none !important;
+}
+
+#meetingRecordingPolicy {
+    margin: 0;
+}
+.title:has(#meetingRecordingPolicy) {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* HARDENED: speech capture controls stay absent after dynamic visibility updates. */
+#speechRecButton, #transcriptionButton, #chatSpeechStartButton, #chatSpeechStopButton,
+#transcriptionRoom, #transcriptionPopup {
+    display: none !important;
+}
+
+.init-modal-size { width: min(1024px, calc(100vw - 24px)) !important; }

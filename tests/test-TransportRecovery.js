@@ -511,5 +511,31 @@ describe('test-TransportRecovery', () => {
             assert.equal(client.producedScreenAudio[0].getTracks()[0], tabTrack);
             assert.equal(client.chatInits, 1);
         });
+        it('rejects a production failure instead of reporting a restored connection', async () => {
+            const { client } = createProducerClient({ newTransport: { id: 'new' } });
+            client.produce = async () => { throw new Error('production rejected'); };
+            await assert.rejects(recover(client), /production rejected/);
+            assert.equal(client.producerRecoverySnapshot.length, 1);
+        });
+
+        it('detects production helpers that silently return without creating a producer', async () => {
+            const { client } = createProducerClient({ newTransport: { id: 'new' } });
+            client.produce = async () => undefined;
+            await assert.rejects(recover(client), /Producer recovery failed/);
+        });
+
+        it('does not announce Media reconnected when every production retry fails', async () => {
+            let attempts=0;
+            const { client } = createProducerClient({ newTransport: () => ({ id: `new-${++attempts}`, closed:false, close() { this.closed=true; } }) });
+            client._isConnected=true;
+            client.logs=[];
+            client.userLog=(type,message)=>client.logs.push(message);
+            client.recoverProducerTransport=RoomClientProto.recoverProducerTransport;
+            client.produce=async()=>undefined;
+            await RoomClientProto.handleTransportLost.call(client,'producer',2,1);
+            assert.equal(attempts,2);
+            assert.equal(client.logs.includes('Media reconnected'),false);
+            assert.equal(popups.length,1);
+        });
     });
 });

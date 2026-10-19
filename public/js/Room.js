@@ -44,6 +44,7 @@ const showDocumentPipBtn = !isEmbedded && 'documentPictureInPicture' in window;
  * @property {number} timeout - Connection timeout before an error is emitted (in ms). Default: 20000.
  */
 const socket = io({
+    auth: (callback) => callback({ token: window.sessionStorage.peer_token || '' }),
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: 10,
@@ -53,13 +54,13 @@ const socket = io({
 });
 
 let survey = {
-    enabled: true,
-    url: 'https://www.questionpro.com/t/AUs7VZq02P',
+    enabled: false,
+    url: '',
 };
 
 let redirect = {
     enabled: true,
-    url: '/newroom',
+    url: '/login?select=1',
 };
 
 let recCodecs = null;
@@ -81,8 +82,6 @@ const _PEER = {
     acceptPeer: '<i class="fas fa-check"></i>',
     banPeer: '<i class="fas fa-ban red"></i>',
     ejectPeer: '<i class="fas fa-right-from-bracket red"></i>',
-    geoLocation: '<i class="fas fa-location-dot"></i>',
-    remoteControl: '<i class="fas fa-computer-mouse"></i>',
     sendFile: '<i class="fas fa-upload"></i>',
     sendMsg: '<i class="fas fa-paper-plane"></i>',
     sendVideo: '<i class="fab fa-youtube"></i>',
@@ -242,28 +241,6 @@ const copyRoomUrlBtn = getId('copyRoomUrlBtn');
 const participantsSplit = getId('participantsSplit');
 const participantsInviteBtn = getId('participantsInviteBtn');
 const participantsCopyInviteLinkBtn = getId('participantsCopyInviteLinkBtn');
-const tabSipPhoneBtn = getId('tabSipPhoneBtn');
-const sipWsServer = getId('sipWsServer');
-const sipDomain = getId('sipDomain');
-const sipUsername = getId('sipUsername');
-const sipAuthUsername = getId('sipAuthUsername');
-const sipPassword = getId('sipPassword');
-const sipTarget = getId('sipTarget');
-const sipHackIpInContact = getId('sipHackIpInContact');
-const sipDisplayName = getId('sipDisplayName');
-const sipOutboundProxy = getId('sipOutboundProxy');
-const sipRegisterExpires = getId('sipRegisterExpires');
-const sipStatus = getId('sipStatus');
-const sipRemoteAudio = getId('sipRemoteAudio');
-const sipGenerateUserBtn = getId('sipGenerateUserBtn');
-const sipCopyUserBtn = getId('sipCopyUserBtn');
-const sipRegisterBtn = getId('sipRegisterBtn');
-const sipUnregisterBtn = getId('sipUnregisterBtn');
-const sipCallBtn = getId('sipCallBtn');
-const sipHangupBtn = getId('sipHangupBtn');
-const sipIncomingActions = getId('sipIncomingActions');
-const sipAcceptBtn = getId('sipAcceptBtn');
-const sipRejectBtn = getId('sipRejectBtn');
 
 const exitDropdown = getId('exitDropdown');
 const exitMenu = getId('exitMenu');
@@ -285,7 +262,7 @@ loadVirtualBackgroundsFromManifest();
 
 async function loadVirtualBackgroundsFromManifest() {
     try {
-        const response = await fetch(defaultVirtualBackgroundManifestPath, { cache: 'no-store' });
+        const response = await fetch(defaultVirtualBackgroundManifestPath, { cache: 'no-store', redirect: 'error' });
         if (!response.ok) {
             throw new Error(`Status ${response.status}`);
         }
@@ -350,6 +327,112 @@ let hasTemporaryAvatar = !!(
 );
 let peer_uuid = getPeerUUID();
 let peer_token = getPeerToken();
+
+let authSessionLastActivity = Date.now();
+let authSessionLastTouch = 0;
+let authSessionLogoutStarted = false;
+socket.on('connect_error', (error) => {
+    if (error.message === 'Authentication required') terminateAuthenticatedSession(true);
+});
+
+function clearAuthenticatedSession() {
+    window.sessionStorage.removeItem('peer_token');
+    window.sessionStorage.removeItem('mirotalk_allowed_rooms');
+    window.sessionStorage.removeItem('mirotalk_displayname');
+    window.sessionStorage.removeItem('mirotalk_login_name');
+    window.sessionStorage.removeItem('mirotalk_auth_idle_timeout');
+    window.sessionStorage.removeItem('mirotalk_auth_session_max_age');
+    window.sessionStorage.removeItem('mirotalk_auth_session_started_at');
+    window.sessionStorage.removeItem('roomID');
+}
+
+async function terminateAuthenticatedSession(expired = true) {
+    if (authSessionLogoutStarted) return;
+    authSessionLogoutStarted = true;
+    const token = window.sessionStorage.peer_token;
+    if (token) {
+        try {
+            await fetch('/auth/session/logout', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                keepalive: true,
+            });
+        } catch (error) {
+            console.warn('Unable to notify server during session logout', error);
+        }
+    }
+    clearAuthenticatedSession();
+    bypassBeforeUnloadOnce = true;
+    window.location.replace(expired ? '/login?session_expired=1' : '/login');
+}
+
+async function touchAuthenticatedSession() {
+    const token = window.sessionStorage.peer_token;
+    if (!token) return false;
+    try {
+        const response = await fetch('/auth/session/touch', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+            clearAuthenticatedSession();
+            bypassBeforeUnloadOnce = true;
+            window.location.replace('/login?session_expired=1');
+            return false;
+        }
+        authSessionLastTouch = Date.now();
+        return true;
+    } catch (error) {
+        console.warn('Unable to refresh authenticated session', error);
+        return false;
+    }
+}
+
+function startAuthenticatedSessionMonitor() {
+    if (!window.sessionStorage.peer_token) return;
+
+    const idleTimeout = Number(window.sessionStorage.mirotalk_auth_idle_timeout || 0);
+    const maxAge = Number(window.sessionStorage.mirotalk_auth_session_max_age || 0);
+    const startedAt = Number(window.sessionStorage.mirotalk_auth_session_started_at || 0);
+    const idleMs = idleTimeout > 0 ? idleTimeout * 1000 : 0;
+    const maxAgeMs = maxAge > 0 ? maxAge * 1000 : 0;
+    const touchInterval = idleMs > 0 ? Math.max(250, Math.min(15000, Math.floor(idleMs / 3))) : 15000;
+
+    const recordActivity = () => {
+        if (rc && rc.isConnected()) return;
+        authSessionLastActivity = Date.now();
+        if (Date.now() - authSessionLastTouch >= touchInterval) void touchAuthenticatedSession();
+    };
+
+    for (const eventName of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'scroll']) {
+        window.addEventListener(eventName, recordActivity, { passive: true });
+    }
+    window.addEventListener('focus', recordActivity);
+
+    const checkInterval = Math.max(250, Math.min(1000, idleMs > 0 ? Math.floor(idleMs / 4) : 1000));
+    window.setInterval(() => {
+        const now = Date.now();
+        if (maxAgeMs > 0 && startedAt > 0 && now - startedAt >= maxAgeMs) {
+            void terminateAuthenticatedSession();
+            return;
+        }
+
+        if (rc && rc.isConnected()) {
+            authSessionLastActivity = now;
+            if (now - authSessionLastTouch >= touchInterval) void touchAuthenticatedSession();
+            return;
+        }
+
+        if (idleMs > 0 && now - authSessionLastActivity >= idleMs) {
+            void terminateAuthenticatedSession();
+        }
+    }, checkInterval);
+
+    void touchAuthenticatedSession();
+}
+
+window.setTimeout(startAuthenticatedSessionMonitor, 0);
+
 let isScreenAllowed = getScreen();
 let isHideMeActive = getHideMeActive();
 let notify = getNotify();
@@ -436,9 +519,8 @@ let audioContext = null;
 let workletNode = null;
 
 // window.location.origin + '/join/' + roomId
-// window.location.origin + '/join/?room=' + roomId + '&token=' + myToken
 
-let RoomURL = window.location.origin + '/join/' + room_id;
+let RoomURL = window.location.origin + '/';
 
 let isExiting = false;
 let isLeavingRoom = false;
@@ -446,56 +528,6 @@ let isLeavingRoom = false;
 let transcription;
 
 let quill = null;
-
-// ####################################################
-// SIP PHONE (MVP)
-// ####################################################
-
-function initSipPhoneControls() {
-    if (typeof window.initSipPhoneMvp !== 'function') {
-        console.warn('[SIP] initSipPhoneMvp is not available');
-        return;
-    }
-
-    window.initSipPhoneMvp({
-        elements: {
-            tabSipPhoneBtn,
-            sipWsServer,
-            sipDomain,
-            sipUsername,
-            sipAuthUsername,
-            sipPassword,
-            sipTarget,
-            sipHackIpInContact,
-            sipDisplayName,
-            sipOutboundProxy,
-            sipRegisterExpires,
-            sipStatus,
-            sipRemoteAudio,
-            sipGenerateUserBtn,
-            sipCopyUserBtn,
-            sipRegisterBtn,
-            sipUnregisterBtn,
-            sipCallBtn,
-            sipHangupBtn,
-            sipAcceptBtn,
-            sipRejectBtn,
-        },
-        getPeerName: () => peer_name,
-        openSipTab: (e) => rc.openTab(e, 'tabSipPhone'),
-        setIncomingActionsVisible: (showActions) => {
-            if (!sipIncomingActions) return;
-            if (showActions) {
-                show('sipIncomingActions');
-                sipIncomingActions.style.display = 'flex';
-            } else {
-                hide('sipIncomingActions');
-                sipIncomingActions.style.display = '';
-            }
-        },
-        onUsernameCopied: () => userLog('toast', 'SIP username copied', 'top-end', 2000),
-    });
-}
 
 // ####################################################
 // INIT ROOM
@@ -671,7 +703,6 @@ async function initClient() {
     }
     setupWhiteboard();
     initEnumerateDevices();
-    initSipPhoneControls();
     setupInitButtons();
 }
 
@@ -719,7 +750,7 @@ function refreshExitButtonTooltip(placement) {
     }
     const buttonPlacement =
         placement || (BtnsBarPosition.options[BtnsBarPosition.selectedIndex].value == 'vertical' ? 'top' : 'right');
-    setTippy('exitButton', 'Leave room', buttonPlacement);
+    setTippy('exitButton', 'Leave meeting', buttonPlacement);
 }
 
 // ####################################################
@@ -771,13 +802,9 @@ function getQueryParam(param) {
 // ####################################################
 
 function getRoomId() {
-    let queryRoomId = getQueryParam('room');
-    let roomId = queryRoomId ? queryRoomId : location.pathname.substring(6);
-    if (roomId == '' || roomId === 'random') {
-        roomId = makeId(12);
-    }
-    console.log('Direct join', { room: roomId });
-    window.localStorage.lastRoom = roomId;
+    const node = document.getElementById('authorizedMeeting');
+    const roomId = node ? JSON.parse(node.textContent).meeting : null;
+    if (typeof roomId !== 'string' || !roomId) { window.location.replace('/login'); throw new Error('No authorized meeting selection'); }
     return roomId;
 }
 
@@ -797,7 +824,7 @@ function makeId(length) {
 
 async function initRoom() {
     if (!isAudioAllowed && !isVideoAllowed && !joinRoomWithoutAudioVideo) {
-        openURL(`/permission?room_id=${room_id}&message=Not allowed both Audio and Video`);
+        openURL('/permission?message=Not%20allowed%20both%20Audio%20and%20Video');
     } else {
         setButtonsInit();
         handleSelectsInit();
@@ -1234,10 +1261,7 @@ function showMediaUnavailable(kind) {
         icon: 'warning',
         title: info.title,
         text: info.text,
-        footer:
-            info.type === 'blocked'
-                ? `<a href="https://blog.addpipe.com/common-getusermedia-errors/" target="_blank" rel="noopener noreferrer">${window.i18n?.t('Check the common getUserMedia errors', 'dialogs') || 'Check the common getUserMedia errors'}</a>`
-                : undefined,
+        // The translated local explanation above includes the permission/retry guidance.
         showCancelButton: true,
         confirmButtonText: 'Try again',
         cancelButtonText: 'Close',
@@ -1448,7 +1472,7 @@ function hasVideoTrack(mediaStream) {
 }
 
 // ####################################################
-// QUERY PARAMS CHECK
+// Retained capture preferences; query parameters never authorize meeting entry.
 // ####################################################
 
 function getScreen() {
@@ -1494,20 +1518,11 @@ function getChat() {
     return chat;
 }
 
-// Priority: URL param (?noiseSuppression=0|1), then the user's own saved choice, then the server default
+// Preserve an existing participant preference; only new users receive the server default.
 function applyNoiseSuppressionDefault() {
-    let enabled;
-    const queryValue = getQueryParam('noiseSuppression');
-    if (queryValue) {
-        const value = queryValue.toLowerCase();
-        enabled = value === '1' || value === 'true';
-    } else if (!localStorageSettings.mic_noise_suppression_user_set) {
-        enabled = BUTTONS.settings.customNoiseSuppressionDefault !== false;
-    } else {
-        return;
-    }
-    localStorageSettings.mic_noise_suppression = enabled;
-    console.log('Noise suppression default', { enabled });
+    const saved = lS.getLocalStorageSettings();
+    if (saved && typeof saved.mic_noise_suppression === 'boolean') return;
+    localStorageSettings.mic_noise_suppression = BUTTONS.settings.customNoiseSuppressionDefault === true;
 }
 
 function getHideMeActive() {
@@ -1591,14 +1606,7 @@ function getPeerUUID() {
 }
 
 function getPeerToken() {
-    if (window.sessionStorage.peer_token) return window.sessionStorage.peer_token;
-    let token = getQueryParam('token');
-    let queryToken = false;
-    if (token) {
-        queryToken = token;
-    }
-    console.log('Direct join', { token: queryToken });
-    return queryToken;
+    return window.sessionStorage.peer_token || false;
 }
 
 function getRoomPassword() {
@@ -1798,6 +1806,9 @@ async function whoAreYou() {
         if (serverButtons) {
             // Merge serverButtons into BUTTONS, keeping the existing keys in BUTTONS if they are not present in serverButtons
             BUTTONS = mergeConfig(BUTTONS, serverButtons);
+            BUTTONS.main.speechRecButton = false;
+            BUTTONS.main.transcriptionButton = false;
+            BUTTONS.chat.chatSpeechStartButton = false;
 
             console.log('04 ----> AXIOS ROOM BUTTONS SETTINGS', {
                 serverButtons: serverButtons,
@@ -1858,6 +1869,21 @@ async function whoAreYou() {
         hide(initStartScreenButton);
     }
 
+    // Obtain the administrator policy before displaying the identity panel.
+    let preMeetingRecordingAllowed = true;
+    try {
+        const policy = await new Promise((resolve, reject) => {
+            socket.timeout(5000).emit('getMeetingRecordingPolicy',
+                { room_id, peer_token }, (error, response) => {
+                    if (error || response?.error) reject(error || new Error(response.error));
+                    else resolve(response);
+                });
+        });
+        preMeetingRecordingAllowed = policy.recordingAllowed !== false;
+    } catch (error) {
+        console.warn('Unable to retrieve meeting recording policy', error);
+    }
+
     // Fetch the OIDC profile and manage peer_name
     let force_peer_name = false;
 
@@ -1895,6 +1921,12 @@ async function whoAreYou() {
         console.error('AXIOS OIDC Error fetching profile', error.message || error);
     }
 
+    // The HARDENED attendee name comes from the authenticated account.
+    if (window.sessionStorage.mirotalk_displayname) {
+        default_name = window.sessionStorage.mirotalk_displayname;
+        force_peer_name = true;
+    }
+
     Swal.fire({
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -1922,9 +1954,61 @@ async function whoAreYou() {
             }
         },
         didOpen: () => {
+            const nameInput = getId('usernameInput');
+            const panel = document.createElement('dl');
+            panel.className = 'init-identity-panel';
+            const nameRow = document.createElement('dt');
+            nameRow.className = 'init-identity-row';
+            const nameLabel = document.createElement('label');
+            nameLabel.htmlFor = 'usernameInput';
+            nameLabel.textContent = "User's display name:";
+            nameInput.parentNode.insertBefore(panel, nameInput);
+            panel.appendChild(nameRow);
+            nameRow.appendChild(nameLabel);
+            const nameValue = document.createElement('dd');
+            nameValue.appendChild(nameInput);
+            panel.appendChild(nameValue);
+            if (force_peer_name) {
+                const loginName = window.sessionStorage.mirotalk_login_name;
+                if (loginName) {
+                    const loginRow = document.createElement('dt');
+                    loginRow.className = 'init-identity-row';
+                    const loginLabel = document.createElement('span');
+                    loginLabel.textContent = "User's login name:";
+                    const loginValue = document.createElement('strong');
+                    loginValue.className = 'init-login-name';
+                    loginValue.textContent = loginName;
+                    loginRow.appendChild(loginLabel);
+                    const loginDescription = document.createElement('dd');
+                    loginDescription.appendChild(loginValue);
+                    panel.append(loginRow, loginDescription);
+                }
+            }
+            const meetingRow = document.createElement('dt');
+            meetingRow.className = 'init-identity-row';
+            const meetingLabel = document.createElement('span');
+            meetingLabel.textContent = 'Meeting name:';
+            const meetingName = document.createElement('strong');
+            meetingName.dataset.meetingKey = room_id;
+            meetingName.setAttribute('data-i18n-skip', '');
+            meetingName.textContent = window.meetingLabel?.(room_id) || room_id;
+            meetingRow.appendChild(meetingLabel);
+            const meetingDescription = document.createElement('dd');
+            meetingDescription.appendChild(meetingName);
+            panel.append(meetingRow, meetingDescription);
+            if (!preMeetingRecordingAllowed) {
+                const policyLabel = document.createElement('dt');
+                policyLabel.textContent = 'Recording policy:';
+                const policyValue = document.createElement('dd');
+                policyValue.textContent = 'Recording is disabled for this meeting';
+                panel.append(policyLabel, policyValue);
+            }
             showMobileAudioGuidance();
         },
-        inputValidator: (name) => {
+        inputValidator: (submittedName) => {
+            // The name input is displayed inside the identity panel. SweetAlert
+            // can submit an empty value after the input moves out of its container.
+            let name = window.sessionStorage.mirotalk_displayname || getId('usernameInput')?.value || submittedName;
             if (isVideoAllowed && !isInitVideoLoaded) {
                 return 'Please wait for video to initialize...';
             }
@@ -1962,7 +2046,9 @@ async function whoAreYou() {
     initUser.classList.toggle('hidden');
 
     if (force_peer_name) {
-        getId('usernameInput').disabled = true;
+        // SweetAlert excludes disabled inputs from its submitted value.
+        // Read-only keeps the authenticated name available to validation.
+        getId('usernameInput').readOnly = true;
         hide(initUsernameEmojiButton);
     }
 
@@ -2187,12 +2273,7 @@ function updateInitVideoOffAvatar() {
         img.src = src;
     };
 
-    // Same priority as in-room: custom avatar, then Gravatar for emails, then initials
-    const loadGravatar = () => {
-        if (!cfg.useAvatarSvg || !isValidEmail(name)) return;
-        initGravatarTimer = setTimeout(() => loadAvatarImage(RoomClient.prototype.genGravatar(name, 176)), 400);
-    };
-    customAvatar ? loadAvatarImage(customAvatar, loadGravatar) : loadGravatar();
+    if (customAvatar) loadAvatarImage(customAvatar);
 }
 
 function handleInitVideoOffClick() {
@@ -2227,7 +2308,7 @@ function checkMedia() {
     // elemDisplay('tabVideoDevicesBtn', isVideoAllowed);
     // elemDisplay('tabAudioDevicesBtn', isAudioAllowed);
 
-    // Enforce BUTTONS config: URL params cannot override disabled buttons
+    // Enforce BUTTONS configuration independently of client-supplied preferences.
     if (!BUTTONS.main.startAudioButton) isAudioAllowed = false;
     if (!BUTTONS.main.startVideoButton) isVideoAllowed = false;
 
@@ -2244,7 +2325,7 @@ function checkMedia() {
 async function shareRoom(useNavigator = false) {
     if (navigator.share && useNavigator) {
         try {
-            await navigator.share({ url: RoomURL });
+            await navigator.share({ url: RoomURL, text: RoomURL + '\n' + (window.i18n?.t('Meeting name:', 'labels') || 'Meeting name:') + ' ' + (window.meetingLabel?.(room_id) || room_id) });
             userLog('info', 'Room Shared successfully', 'top-end');
         } catch (err) {
             share();
@@ -2262,12 +2343,12 @@ async function shareRoom(useNavigator = false) {
             html: renderRoomTemplate('popupShareRoomTemplate', {
                 text: {
                     roomUrl: RoomURL,
+                    meetingName: window.meetingLabel?.(room_id) || room_id,
                 },
             }),
-            showDenyButton: true,
+            showDenyButton: false,
             showCancelButton: true,
-            confirmButtonText: `Copy URL`,
-            denyButtonText: `Email invite`,
+            confirmButtonText: `Copy`,
             cancelButtonText: `Close`,
             showClass: { popup: 'animate__animated animate__fadeInDown' },
             hideClass: { popup: 'animate__animated animate__fadeOutUp' },
@@ -2301,24 +2382,30 @@ function makeRoomQR() {
 }
 
 function makeRoomPopupQR() {
-    const qr = new QRious({
-        element: document.getElementById('qrRoomPopup'),
-        value: RoomURL,
-    });
-    qr.set({
-        size: 256,
-    });
+    if (typeof QRious !== 'function' || !document.getElementById('qrRoomPopup')) {
+        console.warn('Meeting QR preview unavailable; continuing room initialization');
+        return;
+    }
+    try {
+        const qr = new QRious({
+            element: document.getElementById('qrRoomPopup'),
+            value: RoomURL,
+        });
+        qr.set({ size: 256 });
+    } catch (error) {
+        console.warn('Meeting QR preview unavailable; continuing room initialization', error);
+    }
 }
 
 function copyRoomURL() {
     let tmpInput = document.createElement('input');
     document.body.appendChild(tmpInput);
-    tmpInput.value = RoomURL;
+    tmpInput.value = RoomURL + '\n' + (window.i18n?.t('Meeting name:', 'labels') || 'Meeting name:') + ' ' + (window.meetingLabel?.(room_id) || room_id);
     tmpInput.select();
     tmpInput.setSelectionRange(0, 99999); // For mobile devices
     navigator.clipboard.writeText(tmpInput.value);
     document.body.removeChild(tmpInput);
-    userLog('info', 'Meeting URL copied to clipboard 👍', 'top-end');
+    userLog('info', `Copied to clipboard 👍`, 'top-end');
 }
 
 function copyToClipboard(txt, showTxt = true) {
@@ -2334,62 +2421,16 @@ function copyToClipboard(txt, showTxt = true) {
         : userLog('info', `Copied to clipboard 👍`, 'top-end');
 }
 
-function shareRoomByEmail() {
-    Swal.fire({
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        background: swalBackground,
-        imageUrl: image.email,
-        position: 'center',
-        title: 'Schedule email invitation',
-        html: renderRoomTemplate('popupDateTimePickerTemplate'),
-        showCancelButton: true,
-        confirmButtonText: 'Open email',
-        showClass: { popup: 'animate__animated animate__fadeInDown' },
-        hideClass: { popup: 'animate__animated animate__fadeOutUp' },
-        didOpen: () => {
-            flatpickr('#datetimePicker', {
-                enableTime: true,
-                dateFormat: 'Y-m-d H:i',
-                time_24hr: true,
-            });
-        },
-        preConfirm: () => {
-            const selectedDateTime = Swal.getPopup()?.querySelector('#datetimePicker')?.value?.trim() || '';
-
-            if (!selectedDateTime) {
-                Swal.showValidationMessage('Choose a meeting date and time');
-                return false;
-            }
-
-            const newLine = '\r\n\r\n';
-            const roomPassword =
-                isRoomLocked && (room_password || rc.RoomPassword)
-                    ? 'Password: ' + (room_password || rc.RoomPassword) + newLine
-                    : '';
-            const emailSubject = `Please join our ${BRAND.app.name} Video Chat Meeting`;
-            const emailBody = `The meeting is scheduled at:${newLine}DateTime: ${selectedDateTime}${newLine}${roomPassword}Click to join: ${RoomURL}${newLine}`;
-            const mailtoUrl = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-
-            bypassBeforeUnloadOnce = true;
-            setTimeout(() => {
-                bypassBeforeUnloadOnce = false;
-            }, 1500);
-            window.location.href = mailtoUrl;
-        },
-    });
-}
-
-// ####################################################
-// JOIN ROOM
-// ####################################################
+function shareRoomByEmail() { copyRoomURL(); }
 
 function joinRoom(peer_name, room_id) {
     if (rc && rc.isConnected()) {
         console.log('Already connected to a room');
     } else {
         console.log('05 ----> join Room ' + room_id);
-        roomId.innerText = room_id;
+        roomId.dataset.meetingKey = room_id;
+        roomId.setAttribute('data-i18n-skip', '');
+        roomId.textContent = window.meetingLabel?.(room_id) || room_id;
         userName.innerText = peer_name;
         isUserPresenter.dataset.presenter = String(!!isPresenter);
         rc = new RoomClient(
@@ -2431,11 +2472,11 @@ function roomIsReady() {
 
     updateMyAvatarResetButtonVisibility();
 
-    BUTTONS.main.exitButton && show(exitButton);
+    show(exitButton);
     BUTTONS.main.shareButton && show(shareButton);
     BUTTONS.main.hideMeButton && show(hideMeButton);
-    if (BUTTONS.settings.tabRecording) {
-        show(startRecButton);
+    if (BUTTONS.settings.tabRecording && rc.recordingAllowed) {
+        if (rc.recordingAllowed) show(startRecButton);
     } else {
         hide(startRecButton);
         hide(tabRecordingBtn);
@@ -2551,7 +2592,6 @@ function roomIsReady() {
     !BUTTONS.settings.customNoiseSuppression && hide(noiseSuppressionButton);
     !BUTTONS.settings.customNoiseSuppression && hide(everyoneNoiseSuppressionBtn);
     BUTTONS.settings.tabNotificationsBtn && show(tabNotificationsBtn);
-    (BUTTONS.settings.tabSipPhoneBtn !== undefined ? BUTTONS.settings.tabSipPhoneBtn : true) && show(tabSipPhoneBtn);
     (BUTTONS.settings.tabNetworkBtn !== undefined ? BUTTONS.settings.tabNetworkBtn : true) && show(tabNetworkBtn);
     if (
         BUTTONS.main.settingsButton &&
@@ -2577,7 +2617,8 @@ function roomIsReady() {
     handleDropdownHover();
     setupSettingsExtraDropdown();
     setupQuickDeviceSwitchDropdowns();
-    checkButtonsBar();
+    showButtons();
+    setTimeout(checkButtonsBar, 10000);
     checkBreakoutRoom();
     if (room_password) {
         lockRoomButton.click();
@@ -2632,7 +2673,7 @@ async function updateMyPeerAvatarByUrl() {
         inputValidator: (value) => {
             if (!value) return 'Please enter an image URL';
             if (value.startsWith('data:')) return 'Base64 avatars are not supported';
-            if (!isValidAvatarURL(value)) return 'Only http/https URLs are supported';
+            if (!isValidAvatarURL(value)) return 'Only images hosted on this site are supported';
             return null;
         },
         preConfirm: (url) =>
@@ -2658,7 +2699,7 @@ async function updateMyPeerAvatarByUrl() {
             input.parentNode.insertBefore(preview, input);
 
             function updatePreview(url) {
-                if (!url) {
+                if (!url || !isValidAvatarURL(url)) {
                     preview.style.display = 'none';
                     return;
                 }
@@ -2699,32 +2740,8 @@ async function updateMyPeerAvatarByUrl() {
                 localGrid.appendChild(makeAvatarImg(url));
             }
 
-            // DiceBear random avatars
-            const randomAvatarLabel = document.createElement('p');
-            randomAvatarLabel.textContent = 'Or pick a random avatar:';
-            randomAvatarLabel.style.cssText = 'color:#aaa;font-size:12px;margin:10px 0 6px;text-align:center;';
-
-            const randomAvatarGrid = document.createElement('div');
-            randomAvatarGrid.style.cssText =
-                'display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:4px;';
-            const dicebearStyles = [
-                'bottts-neutral',
-                'adventurer-neutral',
-                'thumbs',
-                'initials',
-                'identicon',
-                'shapes',
-            ];
-
-            for (let i = 0; i < 6; i++) {
-                const seed = Math.random().toString(36).substring(2, 10);
-                const style = dicebearStyles[i % dicebearStyles.length];
-                const url = `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
-                randomAvatarGrid.appendChild(makeAvatarImg(url));
-            }
-
             let insertAfter = input;
-            for (const el of [localLabel, localGrid, randomAvatarLabel, randomAvatarGrid]) {
+            for (const el of [localLabel, localGrid]) {
                 insertAfter.parentNode.insertBefore(el, insertAfter.nextSibling);
                 insertAfter = el;
             }
@@ -3091,7 +3108,6 @@ function handleButtons() {
         toggleExitMenu();
     };
     if (exitLeaveBtn) exitLeaveBtn.onclick = handleExitLeave;
-    if (exitLeaveAllBtn) exitLeaveAllBtn.onclick = handleExitLeaveForAll;
     document.addEventListener('click', handleExitMenuOutsideClick);
     setupExitMenuHover();
 
@@ -3196,31 +3212,13 @@ function handleButtons() {
     saveNotificationsBtn.onclick = () => {
         rc.saveNotifications();
     };
-    tabVideoAIBtn.onclick = (e) => {
-        rc.openTab(e, 'tabVideoAI');
-        rc.loadVideoAIProviderData();
-    };
-    avatarVideoAIStart.onclick = async (e) => {
-        rc.stopSession();
-        await rc.handleVideoAI();
-        if (VideoAI.active && rc.getId('videoAIContainer')) {
-            rc.toggleMySettings();
-        }
-    };
-    avatarProvider.onchange = (e) => {
-        VideoAI.provider = e.target.value;
-        rc.loadVideoAIProviderData();
-    };
-    avatarQuality.selectedIndex = 1;
-    avatarQuality.onchange = (e) => {
-        VideoAI.quality = e.target.value;
-    };
     speakerTestBtn.onclick = () => {
         playSpeaker(speakerSelect?.value, 'speaker');
     };
     copyRoomUrlBtn.onclick = () => {
         navigator.share ? shareRoom(true) : copyRoomURL();
     };
+    roomSendEmail.style.display = 'none';
     roomSendEmail.onclick = () => {
         shareRoomByEmail();
     };
@@ -3456,6 +3454,10 @@ function handleButtons() {
         recordingScreenOption.disabled = true;
     }
     recordingActionButton.onclick = () => {
+        if (!rc.recordingAllowed) {
+            rc.userLog('info', 'Recording is disabled for this meeting', 'top-end');
+            return;
+        }
         isRecording ? stopRecButton.click() : startRecButton.click();
     };
     startRecButton.onclick = () => {
@@ -3656,9 +3658,6 @@ function handleButtons() {
     };
     whiteboardPdfFileBtn.onclick = () => {
         whiteboardAddObj('pdfFile');
-    };
-    whiteboardImgUrlBtn.onclick = () => {
-        whiteboardAddObj('imgUrl');
     };
     whiteboardTextBtn.onclick = () => {
         whiteboardAddObj('text');
@@ -4943,6 +4942,7 @@ function toggleUsernameEmoji() {
 function handleUsernameEmojiPicker() {
     const pickerOptions = {
         theme: 'dark',
+        data: async () => (await fetch('/vendor/@emoji-mart/data/sets/15/native.json')).json(),
         onEmojiSelect: addEmojiToUsername,
     };
     const emojiUsernamePicker = new EmojiMart.Picker(pickerOptions);
@@ -4966,6 +4966,7 @@ function handleUsernameEmojiPicker() {
 function handleChatEmojiPicker() {
     const pickerOptions = {
         theme: 'dark',
+        data: async () => (await fetch('/vendor/@emoji-mart/data/sets/15/native.json')).json(),
         onEmojiSelect: addEmojiToMsg,
     };
     const emojiPicker = new EmojiMart.Picker(pickerOptions);
@@ -5174,6 +5175,11 @@ function handleRoomEmojiPicker() {
 // ####################################################
 
 function handleEditor() {
+    if (typeof Quill !== 'function') {
+        console.warn('Editor unavailable; continuing room initialization');
+        return;
+    }
+    const syntaxAvailable = typeof hljs !== 'undefined' && typeof hljs.highlightElement === 'function';
     const toolbarOptions = [
         [{ header: [1, 2, 3, false] }, { align: [] }, { background: [] }],
         ['bold', 'italic', 'underline', 'strike', 'link', 'image', 'code-block'],
@@ -5188,7 +5194,7 @@ function handleEditor() {
             toolbar: {
                 container: toolbarOptions,
             },
-            syntax: true,
+            syntax: syntaxAvailable,
         },
         theme: 'snow',
     });
@@ -5220,6 +5226,7 @@ function handleEditor() {
 }
 
 function applySyntaxHighlighting() {
+    if (typeof hljs === 'undefined' || typeof hljs.highlightElement !== 'function') return;
     const codeBlocks = document.querySelectorAll('.ql-syntax');
     codeBlocks.forEach((block) => {
         hljs.highlightElement(block);
@@ -5319,7 +5326,7 @@ function handleRoomClientEvents() {
         hide(pauseRecButton);
         hide(resumeRecButton);
         hide(recordingTime);
-        show(startRecButton);
+        if (rc.recordingAllowed) show(startRecButton);
         recordingActionButton.querySelector('p').textContent = 'Start recording';
         recordingActionButton.classList.remove('recording-active');
         stopRecordingTimer();
@@ -5506,7 +5513,7 @@ function handleRoomClientEvents() {
     rc.on(RoomClient.EVENTS.hostOnlyRecordingOff, () => {
         if (isRulesActive && !isPresenter) {
             console.log('Room event: host only recording disabled');
-            show(startRecButton);
+            if (rc.recordingAllowed) show(startRecButton);
             show(recordingActionButton);
             show(recordingTypeField);
             hide(roomHostOnlyRecording);
@@ -5564,8 +5571,8 @@ function handleRoomClientEvents() {
 // ####################################################
 
 function initLeaveMeeting() {
-    if (!rc) return openURL('/newroom');
-    return completeRoomExit(false, false, '/newroom');
+    if (!rc) return openURL('/login?select=1');
+    return completeRoomExit(false, false, '/login?select=1');
 }
 
 async function leaveRoom(allowCancel = true, disconnectAll = false, ejectReason = '') {
@@ -5655,38 +5662,8 @@ function leaveFeedback(allowCancel, disconnectAll = false, ejectReason = '') {
 function redirectOnLeave(disconnectAll = false, ejectReason = '') {
     isExiting = true;
     endRoomSession();
-    rc.exitRoom(disconnectAll, ejectReason);
-
-    const url = new URL(redirect && redirect.enabled ? redirect.url : '/newroom', window.location.href).href;
-    const target = isEmbedded
-        ? window.parent
-        : getQueryParam('mirotalk_widget') === '1' && window.opener && !window.opener.closed
-          ? window.opener
-          : null;
-
-    if (target) {
-        const requestId = `${Date.now()}-${Math.random()}`;
-        let acknowledged = false;
-        const handleAcknowledgment = (event) => {
-            if (event.source !== target || event.data?.type !== 'mirotalk:redirect-ack' || event.data.id !== requestId)
-                return;
-
-            acknowledged = true;
-            window.removeEventListener('message', handleAcknowledgment);
-            if (!isEmbedded) window.close();
-        };
-
-        window.addEventListener('message', handleAcknowledgment);
-        target.postMessage({ type: 'mirotalk:redirect', url, id: requestId }, '*');
-        setTimeout(() => {
-            window.removeEventListener('message', handleAcknowledgment);
-            // Host did not ack: stay inside the frame and load the destination there
-            if (!acknowledged) openURL(url);
-        }, 500);
-        return;
-    }
-
-    openURL(url);
+    rc.exitRoom(disconnectAll);
+    redirect && redirect.enabled ? openURL(redirect.url) : openURL('/login?select=1');
 }
 
 function userLog(icon, message, position = 'top-end', timer = 3000) {
@@ -5758,9 +5735,8 @@ function getUUID() {
 
 function handleButtonsBar() {
     const showButtonsHandler = () => showButtons();
-    isDesktopDevice
-        ? document.body.addEventListener('mousemove', showButtonsHandler)
-        : document.body.addEventListener('touchstart', showButtonsHandler);
+    document.body.addEventListener('pointermove', showButtonsHandler);
+    document.body.addEventListener('touchstart', showButtonsHandler);
 }
 
 function handleDropdownHover(dropdownElement = null) {
@@ -5950,18 +5926,7 @@ function isValidAvatarURL(url) {
     if (!url || typeof url !== 'string') return false;
     try {
         const parsed = new URL(url);
-        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-        return false;
-    }
-}
-
-async function isImageURL(url) {
-    if (!url) return false;
-    try {
-        const response = await fetch(url, { method: 'HEAD' });
-        const contentType = response.headers.get('content-type');
-        return contentType && contentType.startsWith('image/');
+        return parsed.origin === window.location.origin;
     } catch {
         return false;
     }
@@ -6123,7 +6088,7 @@ function updateSettingsExtraGroups() {
         const ids = (header.dataset.buttons || '').split(',');
         const anyVisible = ids.some((id) => {
             const btn = document.getElementById(id.trim());
-            return btn && !btn.classList.contains('hidden') && btn.style.display !== 'none';
+            return btn && !btn.classList.contains('hidden') && getComputedStyle(btn).display !== 'none';
         });
         header.style.display = anyVisible ? '' : 'none';
     });
@@ -6502,31 +6467,7 @@ function setupQuickDeviceSwitchDropdowns() {
         });
         videoMenu.appendChild(settingsBtn);
 
-        // Video AI button (mirror the Video AI settings tab: show only when that tab is visible)
-        const videoAITabBtn = getId('tabVideoAIBtn');
-        const videoAITabVisible =
-            VideoAI.enabled &&
-            videoAITabBtn &&
-            !videoAITabBtn.classList.contains('hidden') &&
-            videoAITabBtn.style.display !== 'none';
-        if (videoAITabVisible) {
-            appendMenuDivider(videoMenu);
-            const videoAIBtn = document.createElement('button');
-            videoAIBtn.type = 'button';
-            videoAIBtn.className = 'device-menu-action-btn';
-            const videoAIIcon = document.createElement('i');
-            videoAIIcon.className = 'fas fa-robot';
-            videoAIBtn.appendChild(videoAIIcon);
-            videoAIBtn.appendChild(document.createTextNode(' Open Video AI'));
-            videoAIBtn.addEventListener('click', () => {
-                rc.toggleMySettings();
-                // Simulate tab click to open video AI tab
-                setTimeout(() => {
-                    tabVideoAIBtn.click();
-                }, 100);
-            });
-            videoMenu.appendChild(videoAIBtn);
-        }
+
     }
 
     function buildAudioMenu() {
@@ -6740,6 +6681,7 @@ function toggleWhiteboard() {
     whiteboardCenter();
     whiteboard.classList.toggle('show');
     wbIsOpen = !wbIsOpen;
+    rc?.socket?.emit('whiteboardPanelState', { open: wbIsOpen });
 }
 
 function whiteboardCenter() {
@@ -6916,28 +6858,6 @@ function whiteboardAddObj(type) {
     wbCanvas.freeDrawingBrush.color = wbDrawingColorEl.value;
 
     switch (type) {
-        case 'imgUrl':
-            Swal.fire({
-                background: swalBackground,
-                title: 'Image URL',
-                input: 'text',
-                showCancelButton: true,
-                confirmButtonText: 'OK',
-                showClass: { popup: 'animate__animated animate__fadeInDown' },
-                hideClass: { popup: 'animate__animated animate__fadeOutUp' },
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    let wbCanvasImgURL = result.value;
-                    if (isImageURL(wbCanvasImgURL)) {
-                        fabric.Image.fromURL(wbCanvasImgURL, function (myImg) {
-                            addWbCanvasObj(myImg);
-                        });
-                    } else {
-                        userLog('error', 'The URL is not a valid image', 'top-end');
-                    }
-                }
-            });
-            break;
         case 'imgFile':
             setupFileSelection('Select the image', wbImageInput, renderImageToCanvas);
             break;
@@ -7851,14 +7771,23 @@ function wbCanvasToJson() {
     rc.socket.emit('wbCanvasToJson', wbCanvasJson);
 }
 
-function JsonToWbCanvas(json) {
-    if (!wbIsOpen) toggleWhiteboard();
+function getWhiteboardSnapshot() {
+    if (!wbCanvas) return null;
+    // An untouched, closed canvas is not an active meeting whiteboard.
+    if (!wbIsOpen && wbCanvas.getObjects().length === 0) return null;
+    wbCanvas.getObjects().forEach((obj) => wbGetObjectId(obj));
+    return JSON.stringify(wbCanvas.toJSON(['wbId', 'wbAuthor', 'wbAuthorId']));
+}
+
+function JsonToWbCanvas(json, onLoaded = () => {}, openPanel = true) {
+    if (openPanel && !wbIsOpen) toggleWhiteboard();
     wbIsRedoing = true;
     wbIsApplyingRemote = true;
     wbCanvas.loadFromJSON(json, function () {
         setupWhiteboardCanvasSize();
         wbIsRedoing = false;
         wbIsApplyingRemote = false;
+        onLoaded();
     });
     if (!isPresenter && !wbCanvas.isDrawingMode && wbIsLock) {
         wbDrawing(false);
@@ -8157,10 +8086,6 @@ function setupWhiteboardShortcuts() {
                     break;
                 case 'KeyN': // Sticky Note
                     whiteboardAddObj('stickyNote');
-                    event.preventDefault();
-                    break;
-                case 'KeyU': // Image (from URL)
-                    whiteboardAddObj('imgUrl');
                     event.preventDefault();
                     break;
                 case 'KeyV': // Vanishing Pen
@@ -8560,7 +8485,6 @@ function getParticipantsList(peers) {
         const peer_hand = peer_info.peer_hand ? _PEER.raiseHand : _PEER.lowerHand;
         const peer_ban = _PEER.banPeer;
         const peer_eject = _PEER.ejectPeer;
-        const peer_geoLocation = _PEER.geoLocation;
         const peer_sendFile = _PEER.sendFile;
         const peer_id = peer_info.peer_id;
         const avatarImg = getParticipantAvatar(peer_name, peer_avatar);
@@ -8688,28 +8612,7 @@ function getParticipantsList(peers) {
                     })
                 );
 
-                if (BUTTONS.participantsList.geoLocationButton) {
-                    menuItems += renderParticipantMenuItem(
-                        renderParticipantActionButton({
-                            buttonClass: 'btn-sm ml5',
-                            buttonId: `${peer_id}___geoLocation`,
-                            onClick: `rc.askPeerGeoLocation('${peer_id}')`,
-                            iconHtml: peer_geoLocation,
-                            label: 'Get geolocation',
-                        })
-                    );
-                }
-                if (rc.remoteControlEnabled) {
-                    menuItems += renderParticipantMenuItem(
-                        renderParticipantActionButton({
-                            buttonClass: 'btn-sm ml5',
-                            buttonId: `${peer_id}___remoteControl`,
-                            onClick: `rc.askPeerRemoteControl('${peer_id}')`,
-                            iconHtml: _PEER.remoteControl,
-                            label: 'Remote control',
-                        })
-                    );
-                }
+
                 if (BUTTONS.participantsList.banButton || BUTTONS.participantsList.ejectButton) {
                     menuItems += renderParticipantMenuGroup('Danger zone');
                 }
@@ -9369,7 +9272,7 @@ function adaptAspectRatio(participantsCount) {
             : elemDisplay('participantsCountBadge', false);
     }
 
-    /* 
+    /*
         ['0:0', '4:3', '16:9', '1:1', '1:2'];
     */
     let desktop,
@@ -9544,9 +9447,9 @@ function showImageSelector() {
             await new Promise((resolve) => {
                 reader.onload = async (e) => {
                     const imgData = e.target.result;
-                    await indexedDBHelper.saveImage(imgData);
-                    addImageToUI(imgData);
-                    resolve();
+                    try { await indexedDBHelper.saveImage(imgData); addImageToUI(imgData); }
+                    catch (error) { console.warn('Unable to save background image', error); }
+                    finally { resolve(); }
                 };
                 reader.onerror = resolve;
                 reader.readAsDataURL(file);
@@ -9594,7 +9497,8 @@ function showImageSelector() {
     // Function to fetch and store an image from URL
     async function fetchAndStoreImage(url) {
         try {
-            const response = await fetch(url);
+            if (!isValidImageURL(url)) throw new Error('Only images hosted on this site are supported');
+            const response = await fetch(url, { redirect: 'error' });
             const blob = await response.blob();
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -9710,9 +9614,12 @@ async function applyVirtualBackground(videoElement, stream, blurLevel, backgroun
 }
 
 function isValidImageURL(url) {
-    return (
-        url.match(/\.(jpeg|jpg|png|gif|webp|bmp|svg|apng|avif|heif|heic|tiff?|ico|cur|jfif|pjpeg|pjp|raw)$/i) !== null
-    );
+    try {
+        const parsed = new URL(url, window.location.href);
+        return parsed.origin === window.location.origin &&
+            ['http:', 'https:'].includes(parsed.protocol) &&
+            /\.(jpeg|jpg|png|gif|webp|bmp|svg|apng|avif|heif|heic|tiff?|ico|cur|jfif|pjpeg|pjp|raw)$/i.test(parsed.pathname);
+    } catch { return false; }
 }
 
 // ####################################################
@@ -10130,15 +10037,21 @@ window.addEventListener('beforeunload', (e) => {
 function showAbout() {
     sound('open');
 
+    const content = document.createElement('div');
+    content.innerHTML = BRAND.about?.html || '';
+    for (const element of content.querySelectorAll('[data-about-key]')) {
+        element.textContent = window.i18n?.tKey(element.dataset.aboutKey, element.textContent) || element.textContent;
+    }
+
     Swal.fire({
         background: swalBackground,
         position: 'center',
-        imageUrl: BRAND.about?.imageUrl && BRAND.about.imageUrl.trim() !== '' ? BRAND.about.imageUrl : image.about,
+        imageUrl: BRAND.about?.imageUrl?.trim() || undefined,
         customClass: { image: 'img-about' },
-        title: BRAND.about?.title && BRAND.about.title.trim() !== '' ? BRAND.about.title : 'WebRTC SFU v2.6.48',
+        title: window.i18n?.tKey('projectTitle', BRAND.about?.title || 'About Kaigi') || BRAND.about?.title || 'About Kaigi',
         html: renderRoomTemplate('popupAboutTemplate', {
             html: {
-                aboutContent: BRAND.about.html,
+                aboutContent: content.innerHTML,
             },
         }),
         showClass: { popup: 'animate__animated animate__fadeInDown' },
@@ -10167,23 +10080,7 @@ function parseDurationToSeconds(duration) {
 }
 
 function navigateToRoom(room, extraParams = {}) {
-    const baseUrl = `${window.location.origin}/join`;
-    const queryParams = new URLSearchParams({
-        room: room,
-        name: peer_name,
-        audio: rc.peer_info.peer_audio ? '1' : '0',
-        video: rc.peer_info.peer_video ? '1' : '0',
-        notify: '0',
-        ...extraParams,
-    });
-    if (peer_token) queryParams.set('token', peer_token);
-
-    return runRoomExit(() => {
-        isExiting = true;
-        endRoomSession();
-        rc.exit(true);
-        openURL(`${baseUrl}?${queryParams.toString()}`);
-    });
+    window.location.replace('/login?select=1');
 }
 
 function checkBreakoutRoom() {
@@ -10966,7 +10863,6 @@ function updateTimerDisplay(el, seconds) {
 // ####################################################
 
 function toggleExitMenu() {
-    if (!exitMenu) return leaveRoom();
     // Only presenters with other participants need the end-for-all choice.
     if (!isPresenter || participantsCount <= 1) {
         setExitMenuOpen(false);

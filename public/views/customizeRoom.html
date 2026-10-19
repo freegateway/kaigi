@@ -21,7 +21,7 @@
         <link rel="stylesheet" type="text/css" href="../css/CustomizeRoom.css" />
 
         <!-- xss (provides filterXSS) -->
-        <script src="https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js"></script>
+        <script src="/vendor/xss/dist/xss.min.js"></script>
     </head>
     <body>
         <header class="cr-header">
@@ -242,13 +242,13 @@
                     </div>
                     <p id="crStatus" class="cr-status" role="status" aria-live="polite"></p>
                     <p id="crError" class="cr-error" role="alert" hidden></p>
-                    <button class="cr-submit" type="submit">Join room <span aria-hidden="true">→</span></button>
+                    <button class="cr-submit" type="submit">Join meeting <span aria-hidden="true">→</span></button>
                     <p class="cr-privacy">Your settings are encoded in the link and are not saved here.</p>
                 </aside>
             </form>
         </main>
 
-        <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+        <script src="/vendor/qrcodejs/qrcode.min.js"></script>
         <script src="../js/CustomizeRoom.js"></script>
     </body>
 </html>

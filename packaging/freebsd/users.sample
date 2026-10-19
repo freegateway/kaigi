@@ -1,0 +1,8 @@
+# MiroTalk local users
+#
+# username | password | display name | allowed rooms
+
+# Allowed meetings: * for explicit local wildcard access, or a JSON array of keys.
+# JSON arrays preserve commas, pipes, Unicode and significant spaces in keys.
+# Example format (inactive):
+# user | replace-with-password | Display name | ["staff", "会議, A|B"]

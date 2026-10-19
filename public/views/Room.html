@@ -3,9 +3,9 @@
     <head>
         <!-- Title and Icon -->
 
-        <title id="title">MiroTalk SFU - Room Video Calls, Messaging and Screen Sharing.</title>
-        <link id="icon" rel="shortcut icon" href="../images/logo.svg" />
-        <link id="appleTouchIcon" rel="apple-touch-icon" href="../images/logo.svg" />
+        <title id="title">Kaigi - Meeting</title>
+        <link id="icon" rel="shortcut icon" href="data:," />
+        <link id="appleTouchIcon" rel="apple-touch-icon" href="data:," />
 
         <!-- Meta Information -->
 
@@ -18,7 +18,7 @@
         <meta
             id="description"
             name="description"
-            content="MiroTalk SFU powered by WebRTC and mediasoup, Real-time Simple Secure Fast video calls, messaging and screen sharing capabilities in the browser."
+            content="Self-hosted video conferencing with authenticated access to authorized meetings."
         />
 
         <!-- https://ogp.me -->
@@ -37,94 +37,88 @@
         <link rel="stylesheet" href="../css/GroupChat.css" />
         <link rel="stylesheet" href="../css/Polls.css" />
         <link rel="stylesheet" href="../css/Editor.css" />
-        <link rel="stylesheet" href="../css/Translate.css" />
         <link rel="stylesheet" href="../css/Swal.css" />
 
         <!-- https://cdnjs.com/libraries/font-awesome -->
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+        <link rel="stylesheet" href="/vendor/@fortawesome/fontawesome-free/css/all.min.css" />
 
         <!-- https://animate.style 4 using for swal fadeIn-Out -->
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link rel="stylesheet" href="/vendor/animate.css/animate.min.css" />
 
         <!-- Bootstrap 5  https://getbootstrap.com/docs/5.0/components/-->
 
-        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+        <link rel="stylesheet" href="/vendor/w3-css/w3.css" />
 
         <!-- flatpickr  https://flatpickr.js.org/themes/ -->
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" />
+        <link rel="stylesheet" href="/vendor/flatpickr/dist/flatpickr.min.css" />
+        <link rel="stylesheet" href="/vendor/flatpickr/dist/themes/dark.css" />
 
         <!--  pickr  https://github.com/simonwep/pickr -->
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css" />
+        <link rel="stylesheet" href="/vendor/@simonwep/pickr/dist/themes/classic.min.css" />
+        <link rel="stylesheet" href="/vendor/@simonwep/pickr/dist/themes/monolith.min.css" />
+        <link rel="stylesheet" href="/vendor/@simonwep/pickr/dist/themes/nano.min.css" />
 
         <!-- Highlight  https://github.com/highlightjs/highlight.js -->
 
         <link
             rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css"
+            href="/vendor/highlight.js/styles/atom-one-dark.min.css"
         />
 
         <!-- Quill  https://github.com/slab/quill -->
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" />
+        <link rel="stylesheet" href="/vendor/quill/dist/quill.snow.css" />
 
         <!-- Bootstrap 5 -->
 
         <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            href="/vendor/bootstrap/dist/css/bootstrap.min.css"
             rel="stylesheet"
             integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
             crossorigin="anonymous"
         />
         <script
             defer
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
             crossorigin="anonymous"
         ></script>
 
         <!-- axios -->
 
-        <script async src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script async src="/vendor/axios/dist/axios.min.js"></script>
 
         <!-- UAParser -->
 
-        <script defer src="https://cdn.jsdelivr.net/npm/ua-parser-js@latest/dist/ua-parser.min.js"></script>
+        <script defer src="/vendor/ua-parser-js/dist/ua-parser.min.js"></script>
 
-        <script async src="../js/Stats.js"></script>
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
-        <script defer src="../js/Translate.js"></script>
 
         <!-- Js scripts https://cdn.jsdelivr.net -->
 
-        <script defer src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/fabric@5.3.0-browser/dist/fabric.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/jspdf@3.0.4/dist/jspdf.umd.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.8"></script>
+        <script defer src="/vendor/@simonwep/pickr/dist/pickr.min.js"></script>
+        <script defer src="/vendor/@simonwep/pickr/dist/pickr.es5.min.js"></script>
+        <script defer src="/vendor/marked/lib/marked.umd.js"></script>
+        <script defer src="/vendor/qrious/dist/qrious.min.js"></script>
+        <script defer src="/vendor/fabric/dist/fabric.min.js"></script>
+        <script defer src="/vendor/sweetalert2/dist/sweetalert2.all.min.js"></script>
         <script defer src="../js/Swal.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
-        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"></script>
-        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tippy.js/6.3.7/tippy-bundle.umd.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/gifler@0.1.0/gifler.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js"></script>
+        <script defer src="/vendor/emoji-mart/dist/browser.js"></script>
+        <script defer src="/vendor/@popperjs/core/dist/umd/popper.min.js"></script>
+        <script defer src="/vendor/tippy.js/dist/tippy-bundle.umd.min.js"></script>
+        <script defer src="/vendor/flatpickr/dist/flatpickr.min.js"></script>
+        <script defer src="/vendor/pdfjs-dist/build/pdf.min.js"></script>
+        <script defer src="/vendor/crypto-js/crypto-js.js"></script>
+        <script defer src="/vendor/highlight.js/highlight.min.js"></script>
+        <script defer src="/vendor/quill/dist/quill.js"></script>
+        <script defer src="/vendor/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+        <script defer src="/vendor/gifler/gifler.min.js"></script>
+        <script defer src="/vendor/xss/dist/xss.min.js"></script>
 
         <script defer src="/socket.io/socket.io.js"></script>
         <script defer src="../sfu/MediasoupClient.js"></script>
@@ -134,6 +128,8 @@
         <script defer src="../js/SpeechRec.js"></script>
         <script defer src="../js/WhisperTranscription.js"></script>
         <script defer src="../js/Transcription.js"></script>
+        <script defer src="/vendor/html2canvas/dist/html2canvas.min.js"></script>
+        <script defer src="/vendor/jspdf/dist/jspdf.umd.min.js"></script>
         <script defer src="../js/VideoDrawing.js"></script>
         <script defer src="../js/VideoGrid.js"></script>
         <script defer src="../js/VirtualBackground.js"></script>
@@ -143,7 +139,6 @@
         <script defer src="../js/RoomTemplate.js"></script>
         <script defer src="../js/NetworkStats.js"></script>
         <script defer src="../js/RoomClient.js"></script>
-        <script defer src="../js/SipPhone.js"></script>
         <script defer src="../js/Room.js"></script>
     </head>
     <body>
@@ -168,7 +163,7 @@
                     >
                 </div>
                 <span id="disconnectBannerMeta" class="disconnect-banner__meta">Retrying...</span>
-                <button id="disconnectBannerAction" class="disconnect-banner__action" type="button">Join Room</button>
+                <button id="disconnectBannerAction" class="disconnect-banner__action" type="button">Join meeting</button>
                 <span id="disconnectBannerSpinner" class="disconnect-banner__spinner" aria-hidden="true">
                     <i class="fa-solid fa-circle-notch fa-spin"></i>
                 </span>
@@ -180,7 +175,7 @@
         <div id="loadingDiv" class="center" role="status" aria-live="polite" aria-busy="true">
             <div class="loading-spinner" aria-hidden="true">
                 <div class="spinner-ring"></div>
-                <img class="spinner-logo" src="../images/logo.svg" alt="" />
+                <img class="spinner-logo" data-brand-logo alt="" />
             </div>
             <h1 id="loadingTitle">Loading</h1>
             <p id="loadingMessage" class="loading-message">
@@ -196,7 +191,7 @@
                     <div id="initVideoLoader" class="init-video-loader">
                         <div class="loading-spinner">
                             <div class="spinner-ring"></div>
-                            <img class="spinner-logo" src="../images/logo.svg" alt="logo" />
+                            <img class="spinner-logo" data-brand-logo alt="logo" />
                         </div>
                     </div>
                     <div id="initVideoOff" class="init-video-off" aria-label="Turn on camera">
@@ -546,20 +541,10 @@
                     id="exitButton"
                     class="hidden"
                     type="button"
-                    aria-label="Leave room"
-                    aria-controls="exitMenu"
-                    aria-expanded="false"
+                    aria-label="Leave meeting"
                 >
                     <i class="fa-solid fa-phone-slash red" aria-hidden="true"></i>
                 </button>
-                <div id="exitMenu" class="hidden" aria-labelledby="exitButton">
-                    <button id="exitLeaveBtn" type="button">
-                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Leave room
-                    </button>
-                    <button id="exitLeaveAllBtn" class="hidden" type="button">
-                        <i class="fas fa-power-off" aria-hidden="true"></i> End room for all
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -622,18 +607,14 @@
                         <p class="tabButtonText">Audio</p>
                     </button>
                     <span class="settings-nav-label">Share and stream</span>
-                    <button id="tabVideoAIBtn" class="fas fa-robot tablinks">
-                        <p class="tabButtonText">AI avatar</p>
-                    </button>
+
                     <button id="tabVideoShareBtn" class="fab fa-youtube tablinks">
                         <p class="tabButtonText">Share media</p>
                     </button>
                     <button id="tabRTMPStreamingBtn" class="fa-solid fa-satellite-dish tablinks">
                         <p class="tabButtonText">Live stream</p>
                     </button>
-                    <button id="tabSipPhoneBtn" class="fa-solid fa-phone tablinks hidden">
-                        <p class="tabButtonText">SIP phone</p>
-                    </button>
+
                     <span class="settings-nav-label">Personal</span>
                     <button id="tabProfileBtn" class="fas fa-user tablinks">
                         <p class="tabButtonText">Profile</p>
@@ -1526,256 +1507,9 @@
                         <div id="lastRecordingInfo" class="hidden"></div>
                     </div>
 
-                    <div id="tabSipPhone" class="tabcontent">
-                        <div class="settings-section-intro">
-                            <h3>SIP phone</h3>
-                            <p>Register a SIP user and call another SIP extension from this room.</p>
-                        </div>
 
-                        <table class="settingsTable">
-                            <tr>
-                                <td>
-                                    <div class="title">
-                                        <i class="fa-solid fa-link"></i>
-                                        <p>WS server</p>
-                                    </div>
-                                </td>
-                                <td><input id="sipWsServer" type="text" placeholder="ws://127.0.0.1:5066" /></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="title">
-                                        <i class="fa-solid fa-globe"></i>
-                                        <p>SIP domain</p>
-                                    </div>
-                                </td>
-                                <td><input id="sipDomain" type="text" placeholder="127.0.0.1" /></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="title">
-                                        <i class="fa-solid fa-user"></i>
-                                        <p>SIP username</p>
-                                    </div>
-                                </td>
-                                <td><input id="sipUsername" type="text" placeholder="random extension" /></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="title">
-                                        <i class="fa-solid fa-id-badge"></i>
-                                        <p>Auth username</p>
-                                    </div>
-                                </td>
-                                <td>
-                                    <input
-                                        id="sipAuthUsername"
-                                        type="text"
-                                        placeholder="optional (defaults to SIP username)"
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="title">
-                                        <i class="fa-solid fa-key"></i>
-                                        <p>SIP password</p>
-                                    </div>
-                                </td>
-                                <td>
-                                    <input
-                                        id="sipPassword"
-                                        type="password"
-                                        placeholder="optional / required by your SIP server"
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="title">
-                                        <i class="fa-solid fa-phone-volume"></i>
-                                        <p>Call target</p>
-                                    </div>
-                                </td>
-                                <td><input id="sipTarget" type="text" placeholder="target extension" /></td>
-                            </tr>
-                            <tr>
-                                <td class="sip-switch-row" colspan="2">
-                                    <div class="sip-switch-row-head">
-                                        <div class="title">
-                                            <i class="fa-solid fa-network-wired"></i>
-                                            <p>Contact IP compatibility hack</p>
-                                        </div>
-                                        <div
-                                            class="form-check form-switch form-switch-md sip-switch-cell sip-switch-no-label"
-                                        >
-                                            <input
-                                                id="sipHackIpInContact"
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                checked
-                                            />
-                                        </div>
-                                    </div>
-                                    <p class="sip-help-text">
-                                        Use this if registration fails behind NAT/proxy or with strict SIP servers.
-                                    </p>
-                                </td>
-                            </tr>
-                        </table>
 
-                        <details class="sip-advanced-details">
-                            <summary><strong>Advanced compatibility</strong></summary>
-                            <table class="settingsTable" style="margin-top: 10px">
-                                <tr>
-                                    <td>
-                                        <div class="title">
-                                            <i class="fa-solid fa-signature"></i>
-                                            <p>Display name</p>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input id="sipDisplayName" type="text" placeholder="optional display name" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="title">
-                                            <i class="fa-solid fa-route"></i>
-                                            <p>Outbound proxy / route set</p>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input
-                                            id="sipOutboundProxy"
-                                            type="text"
-                                            placeholder="sip:proxy.example.com;lr (optional)"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="title">
-                                            <i class="fa-solid fa-hourglass-half"></i>
-                                            <p>Register expires (s)</p>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input id="sipRegisterExpires" type="number" min="60" max="86400" value="600" />
-                                    </td>
-                                </tr>
-                            </table>
-                        </details>
 
-                        <hr />
-
-                        <div class="recording-controls">
-                            <button id="sipGenerateUserBtn" class="btn-custom">
-                                <i class="fa-solid fa-shuffle"></i>
-                                <p>Random user</p>
-                            </button>
-                            <button id="sipCopyUserBtn" class="btn-custom">
-                                <i class="fa-solid fa-copy"></i>
-                                <p>Copy user</p>
-                            </button>
-                        </div>
-
-                        <div class="recording-controls">
-                            <button id="sipRegisterBtn" class="btn-custom">
-                                <i class="fa-solid fa-plug-circle-check"></i>
-                                <p>Register</p>
-                            </button>
-                            <button id="sipUnregisterBtn" class="btn-custom">
-                                <i class="fa-solid fa-plug-circle-xmark"></i>
-                                <p>Unregister</p>
-                            </button>
-                        </div>
-
-                        <div class="recording-controls">
-                            <button id="sipCallBtn" class="btn-custom">
-                                <i class="fa-solid fa-phone"></i>
-                                <p>Call</p>
-                            </button>
-                            <button id="sipHangupBtn" class="btn-custom">
-                                <i class="fa-solid fa-phone-slash red"></i>
-                                <p>Hang up</p>
-                            </button>
-                        </div>
-
-                        <div id="sipIncomingActions" class="recording-controls hidden">
-                            <button id="sipAcceptBtn" class="btn-custom">
-                                <i class="fa-solid fa-phone-volume"></i>
-                                <p>Accept</p>
-                            </button>
-                            <button id="sipRejectBtn" class="btn-custom">
-                                <i class="fa-solid fa-ban red"></i>
-                                <p>Reject</p>
-                            </button>
-                        </div>
-
-                        <div class="recording-time" aria-live="polite">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <p>Status:</p>
-                            <span id="sipStatus" translate="no">Idle</span>
-                        </div>
-
-                        <audio id="sipRemoteAudio" autoplay></audio>
-                    </div>
-
-                    <div id="tabVideoAI" class="tabcontent">
-                        <div class="settings-section-intro">
-                            <h3>AI avatar</h3>
-                            <p>Select an avatar and voice to present in the meeting.</p>
-                        </div>
-                        <div class="avatarsVideoAI">
-                            <div id="avatarVideoAIPreviewContainer" class="avatar-preview-container">
-                                <div id="avatarVideoAISpinner" class="loading-spinner">
-                                    <div class="spinner-ring"></div>
-                                    <img class="spinner-logo" src="../images/logo.svg" alt="logo" />
-                                </div>
-                                <img id="avatarVideoAIPreview" src="" alt="Avatar Preview" class="hidden" />
-                            </div>
-                            <div id="avatarVideoAISelectedName" class="avatarSelectedName"></div>
-                            <hr />
-                            <div class="container-flex">
-                                <div class="avatarSearchRow">
-                                    <div id="avatarVideoAICount" class="avatarCount"></div>
-                                    <input
-                                        id="avatarSearchInput"
-                                        type="text"
-                                        class="form-control avatarSearch"
-                                        placeholder="Search avatars..."
-                                    />
-                                </div>
-                                <div id="avatarVideoAIcontainer"></div>
-                                <hr />
-                                <div class="avatar-config-row">
-                                    <select id="avatarProvider" class="form-select text-light bg-dark">
-                                        <option value="liveavatar">Provider - LiveAvatar</option>
-                                        <option value="anam">Provider - Anam</option>
-                                    </select>
-                                    <select id="avatarQuality" class="form-select text-light bg-dark">
-                                        <option value="low">Avatar Quality - Low (360p)</option>
-                                        <option value="medium">Avatar Quality - Medium (480p)</option>
-                                        <option value="high" selected>Avatar Quality - High (720p)</option>
-                                        <option value="very_high">Avatar Quality - Very High (1080p)</option>
-                                    </select>
-                                    <select
-                                        id="avatarVoiceIDs"
-                                        name="avatarVoiceIDs"
-                                        class="form-select text-light bg-dark"
-                                    >
-                                        <option value="">Select Avatar Voice</option>
-                                    </select>
-                                </div>
-                                <audio id="avatarVoicePreview"></audio>
-                                <button id="avatarVideoAIStart" class="btn-custom">
-                                    <i class="fas fa-play"></i> Start Avatar Session
-                                </button>
-                                <hr />
-                            </div>
-                        </div>
-                    </div>
 
                     <div id="tabVideoShare" class="tabcontent">
                         <div class="settings-section-intro">
@@ -2082,16 +1816,7 @@
                             <div class="profile-identity">
                                 <span class="profile-field-label">Display name</span>
                                 <span id="userName" class="profile-name notranslate" translate="no">UserName</span>
-                                <span id="isUserPresenter" class="profile-role" data-presenter="false">
-                                    <span class="profile-role-badge profile-role-presenter">
-                                        <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
-                                        <span>Presenter</span>
-                                    </span>
-                                    <span class="profile-role-badge profile-role-guest">
-                                        <i class="fa-solid fa-user" aria-hidden="true"></i>
-                                        <span>Participant</span>
-                                    </span>
-                                </span>
+                                <span id="isUserPresenter" hidden data-presenter="false"></span>
                             </div>
                             <div id="myProfileAvatarButtons" class="profile-avatar-actions">
                                 <button id="myProfileAvatarUploadBtn" type="button">
@@ -2111,6 +1836,7 @@
                             </div>
                             <div id="extraInfo"></div>
                         </div>
+                        <p id="meetingRecordingPolicy" hidden>Recording is disabled for this meeting</p>
                     </div>
 
                     <div id="tabShortcuts" class="tabcontent">
@@ -2535,7 +2261,8 @@
                             <i class="fa-solid fa-language"></i>
                             <p>Language:</p>
                         </div>
-                        <div id="google_translate_element"></div>
+                        <br />
+                        <br />
                     </div>
                 </div>
             </main>
@@ -2759,7 +2486,6 @@
                                 <i class="fas fa-eraser"></i> Eraser
                             </button>
                             <button id="whiteboardImgFileBtn"><i class="far fa-image"></i> Add image file</button>
-                            <button id="whiteboardImgUrlBtn"><i class="fas fa-link"></i> Add image URL</button>
                             <button id="whiteboardPdfFileBtn"><i class="far fa-file-pdf"></i> Add pdf file</button>
                             <button id="whiteboardTextBtn"><i class="fas fa-spell-check"></i> Add text</button>
                             <button id="whiteboardStickyNoteBtn">
@@ -3738,12 +3464,10 @@
                 <canvas id="qrRoom"></canvas>
             </div>
             <br />
-            <p class="qr-room-copy qr-room-copy--accent">Join from your mobile device</p>
-            <p class="qr-room-copy qr-room-copy--body">
-                No need for apps, simply capture the QR code with your mobile camera Or Invite someone else to join by
-                sending them the following URL
-            </p>
+            <p class="qr-room-copy qr-room-copy--accent">Login</p>
             <p class="qr-room-copy qr-room-copy--accent" data-template-text="roomUrl"></p>
+            <p class="qr-room-copy qr-room-copy--body">Meeting name:</p>
+            <p class="qr-room-copy qr-room-copy--accent" data-template-text="meetingName"></p>
         </template>
 
         <template id="popupStickyNoteTemplate">
@@ -3783,15 +3507,6 @@ Note</textarea>
             <div id="about" data-template-html="aboutContent"></div>
         </template>
 
-        <template id="popupUsernameInUseTemplate">
-            <div class="username-in-use">
-                <div class="username-in-use__icon"><i class="fas fa-user-slash"></i></div>
-                <p class="username-in-use__title">This username is already taken</p>
-                <p class="username-in-use__text">
-                    Someone in this room is already using that name. Please pick a different one to join.
-                </p>
-            </div>
-        </template>
 
         <template id="popupMirotalkFilePickerTemplate">
             <div class="mirotalk-file-picker">
@@ -3823,99 +3538,7 @@ Note</textarea>
             </div>
         </template>
 
-        <template id="popupGeoLocationPromptTemplate">
-            <div data-template-text="message"></div>
-        </template>
 
-        <template id="popupRemoteControlConfirmTemplate">
-            <div class="remote-control">
-                <div class="remote-control__brand">
-                    <div class="remote-control__icon"><i class="fas fa-desktop" aria-hidden="true"></i></div>
-                    <span class="notranslate" translate="no">RustDesk</span>
-                </div>
-                <p class="remote-control__target">
-                    <i class="fas fa-user" aria-hidden="true"></i>
-                    <b data-template-text="name"></b>
-                </p>
-                <p class="remote-control__text">Ask permission to control their mouse and keyboard.</p>
-                <ol class="remote-control__steps">
-                    <li>They can accept or decline your request.</li>
-                    <li>If they accept, they share their RustDesk ID and one-time password.</li>
-                    <li>Open RustDesk to connect. Both of you need the RustDesk app.</li>
-                </ol>
-                <p class="remote-control__warning">
-                    <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                    Sending a request does not start remote control. The participant stays in control and can end the
-                    session anytime.
-                </p>
-            </div>
-        </template>
-
-        <template id="popupRemoteControlPromptTemplate">
-            <div class="remote-control">
-                <div class="remote-control__icon"><i class="fas fa-computer-mouse"></i></div>
-                <p class="remote-control__text">
-                    <b data-template-text="name"></b> asks to control your mouse and keyboard with RustDesk.
-                </p>
-                <ol class="remote-control__steps">
-                    <li>
-                        Open RustDesk
-                        <a data-template-attr-href="downloadUrl" target="_blank" rel="noopener noreferrer"
-                            >(get it here)</a
-                        >
-                    </li>
-                    <li>Enter your ID and one-time password below</li>
-                </ol>
-                <label class="remote-control__field">
-                    <i class="fas fa-id-badge"></i>
-                    <input
-                        id="remoteControlId"
-                        type="text"
-                        inputmode="numeric"
-                        placeholder="RustDesk ID"
-                        autocomplete="off"
-                        spellcheck="false"
-                    />
-                </label>
-                <label class="remote-control__field">
-                    <i class="fas fa-key"></i>
-                    <input
-                        id="remoteControlPassword"
-                        type="password"
-                        placeholder="One-time password"
-                        autocomplete="off"
-                        spellcheck="false"
-                    />
-                </label>
-                <p class="remote-control__warning">
-                    <i class="fas fa-triangle-exclamation"></i>
-                    Only allow people you trust. You can end the session anytime from RustDesk.
-                </p>
-            </div>
-        </template>
-
-        <template id="popupRemoteControlReadyTemplate">
-            <div class="remote-control">
-                <div class="remote-control__icon remote-control__icon--ok"><i class="fas fa-circle-check"></i></div>
-                <p class="remote-control__text">
-                    <b data-template-text="name"></b> accepted your
-                    <span class="remote-control__highlight">remote control</span> request.
-                </p>
-                <div class="remote-control__credential">
-                    <span>ID</span>
-                    <code data-template-text="id"></code>
-                    <button type="button" data-copy="id" title="Copy ID"><i class="far fa-copy"></i></button>
-                </div>
-                <div class="remote-control__credential">
-                    <span>Password</span>
-                    <code data-template-text="password"></code>
-                    <button type="button" data-copy="password" title="Copy password">
-                        <i class="far fa-copy"></i>
-                    </button>
-                </div>
-                <p class="remote-control__hint">On desktop, RustDesk asks for the password: paste it when prompted.</p>
-            </div>
-        </template>
 
         <template id="popupDateTimePickerTemplate">
             <div class="email-invitation-date-field">
@@ -4251,7 +3874,7 @@ Note</textarea>
         <template id="videoLoaderTemplate">
             <div class="loading-spinner">
                 <div class="spinner-ring"></div>
-                <img class="spinner-logo" src="../images/logo.svg" alt="logo" />
+                <img class="spinner-logo" data-brand-logo alt="logo" />
             </div>
         </template>
 

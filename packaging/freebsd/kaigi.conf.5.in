@@ -1,0 +1,486 @@
+.Dd October 19, 2026
+.Dt KAIGI.CONF 5
+.Os
+.Sh NAME
+.Nm kaigi.conf
+.Nd Kaigi deployment configuration
+.Sh DESCRIPTION
+The file
+.Pa %%PREFIX%%/etc/kaigi/kaigi.conf
+contains non-secret deployment, site, network, localization and presentation
+settings for the Kaigi service on FreeBSD.
+Kaigi reads it during startup;
+it is not sourced by
+.Xr rc 8
+and is not shell code.
+.Pp
+Each setting is written as
+.Dq NAME=VALUE .
+Leading and trailing whitespace around names and values is ignored.
+Blank lines and lines beginning with
+.Ql #
+are ignored.
+Matching single or double quotes surrounding an entire value are optional and
+are removed.
+The first
+.Ql =
+separates the name from the value.
+Inline comments are not supported.
+.Pp
+The sample deliberately leaves optional settings commented out.
+An explicitly supplied application environment variable has highest priority,
+followed by the corresponding setting in this file, with Kaigi's defaults
+as the final fallback.
+Language-specific site text is configured separately as described below.
+.Sh SITE TEXT TRANSLATIONS
+User-facing site text examples are provided in
+.Pa %%PREFIX%%/etc/kaigi/site-translations.json.sample .
+The installed
+.Pa %%PREFIX%%/etc/kaigi/site-translations.json
+is administrator-owned configuration and is preserved by package upgrades.
+It is read at startup; restart the service after editing it.
+.Pp
+The JSON object is keyed by language code (for example en, en-CA, fr-CA, ja).
+Each language object maps a supported setting name to a string:
+SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE,
+JOIN_DESCRIPTION, JOIN_BUTTON_LABEL, CUSTOMIZE_BUTTON_LABEL, JOIN_LAST_LABEL,
+NEW_ROOM_TITLE, NEW_ROOM_DESCRIPTION, LOGIN_HEADING, LOGIN_INSTRUCTIONS,
+and LOGIN_BUTTON_LABEL.
+URLs, email addresses and asset paths remain in kaigi.conf.
+.Pp
+Browser text uses an exact language entry, then its base language, then en,
+then the existing deployment/environment or application default value.
+Configure language-specific text in site-translations.json.
+If no translation is available, the configured text or application default is used.
+The selected language follows UI_LANGUAGE and the permitted UI_LANGUAGES menu.
+An empty translation is an explicit override, not a missing entry.
+The file must contain valid JSON without comments or variable expansion.
+Unknown text-setting names and invalid value types stop startup with an error.
+The translation contents are public; never put passwords, tokens or other
+secrets in this file.
+.Sh SECRET FILES
+.Pa %%PREFIX%%/etc/kaigi/users
+contains local-user passwords and meeting grants; keep it root:wheel mode 0600.
+.Pa %%PREFIX%%/etc/rc.d/kaigi
+reads it as root and exports HOST_USERS before starting the service user.
+.Pp
+The rc script creates
+.Pa %%PREFIX%%/etc/kaigi/jwt-secret
+if absent, with 32 random bytes encoded as 64 hexadecimal characters and
+umask 077. It reuses the file on subsequent starts and exports JWT_SECRET;
+it rejects an empty file and does not automatically rotate an existing secret.
+The daemon requires at least 32 characters and rejects the published default.
+Independent authentication, recording-upload and RTMP keys are derived from
+this master secret; token verification accepts only HS256.
+Keep the file root-owned and private. Changing it invalidates outstanding
+signed tokens after a service restart.
+.Pp
+LDAP_BIND_PASSWORD_FILE in ldap/ldap.conf identifies a different secret:
+the administrator-managed LDAP search-account password, read directly by
+the daemon. See kaigi-ldap.conf(5) for permissions.
+WEB_SSL_KEY identifies a TLS private key, which must also be protected.
+.Sh VARIABLE EXPANSION
+A value may reference another variable defined in this file as
+.Dq ${VARIABLE} .
+References may point forward or backward and may be nested.
+For example:
+.Bd -literal -offset indent
+WEB_LISTEN_PORT=3010
+WEB_URL=https://meet.example.com:${WEB_LISTEN_PORT}
+.Ed
+.Pp
+Undefined and circular references are configuration errors.
+Only variables in
+.Nm
+participate in expansion; process environment variables are not consulted
+while expanding values.
+.Sh SITE IDENTITY
+These settings identify the particular hosted service while preserving
+upstream MiroTalk attribution.
+.Bl -tag -width "SITE_CONTACT_EMAIL"
+.It Ev SITE_NAME
+Site or service name.
+.It Ev SITE_DESCRIPTION
+Short site description.
+.It Ev SITE_URL
+Public site URL.
+.It Ev SITE_CONTACT_EMAIL
+Site contact email address.
+.It Ev SITE_COPYRIGHT
+Optional copyright notice for site-owned material such as logos, artwork,
+site-authored text, policies, and other site-specific content.
+If omitted, no site copyright notice is displayed.
+MiroTalk software copyright and licensing information remains on the local
+About page.
+.It Ev SITE_LOGO_NAME
+Logo file name relative to
+.Pa %%PREFIX%%/etc/kaigi/site-assets .
+.It Ev SITE_LOGO_URL
+Optional target URL for the clickable logo; normally the same as
+.Ev SITE_URL .
+.El
+.Pp
+Files in
+.Pa %%PREFIX%%/etc/kaigi/site-assets
+are served under
+.Pa /site-assets/ .
+Asset settings ending in
+.Dq _NAME
+contain names relative to that directory, not URL paths.
+The administrator stylesheet
+.Pa site.css
+is loaded after Kaigi's packaged CSS.
+.Sh PRESENTATION OVERRIDES
+These settings override selected high-visibility UI strings.
+Leave them absent to retain Kaigi's defaults and localization.
+They may intentionally contain bilingual text.
+.Bl -tag -width "CUSTOMIZE_BUTTON_LABEL"
+.It Ev PAGE_TITLE
+Browser page-title override.
+.It Ev SITE_ICON_NAME
+Favicon file name in the site-assets directory.
+.It Ev APPLE_TOUCH_ICON_NAME
+Apple touch-icon file name in the site-assets directory.
+.It Ev ABOUT_IMAGE_NAME
+About-page/dialog image file name in the site-assets directory.
+Kaigi maps this setting to
+.Ev ABOUT_IMAGE_URL
+as
+.Pa /site-assets/<name> .
+If omitted, the configured site logo is used, followed by the packaged
+MiroTalk logo.
+.It Ev JOIN_DESCRIPTION
+Join-room description.
+.It Ev JOIN_BUTTON_LABEL
+Meeting-join button label.
+.It Ev CUSTOMIZE_BUTTON_LABEL
+Customize-room button label.
+.It Ev JOIN_LAST_LABEL
+Recent-room label.
+.It Ev NEW_ROOM_TITLE
+Meeting-selection title displayed after login.
+.It Ev NEW_ROOM_DESCRIPTION
+Description below the meeting-selection title after login.
+.It Ev LOGIN_HEADING
+Login-page heading.
+.It Ev LOGIN_INSTRUCTIONS
+Instructions displayed on the login panel.
+.It Ev LOGIN_BUTTON_LABEL
+Login button label.
+.It Ev SHOW_SHARE_ROOM_POPUP
+Set to
+.Dq false
+to suppress the automatic invitation dialog while retaining the invitation command.
+Invitations show the site URL and meeting name separately; QR codes contain
+only the site URL.
+.El
+.Sh LOCALIZATION
+Kaigi uses bundled language files for general interface localization.
+Site text in site-translations.json follows the selected UI language.
+General interface labels use the application's local language files.
+.Bl -tag -width "UI_LANGUAGE"
+.It Ev UI_LANGUAGE
+Interface language override.  The default is
+.Li en .
+.It Ev UI_LANGUAGES
+Optional comma-separated language codes to offer in the local language menus,
+in menu order (for example,
+.Li ja,fr-CA ) .
+If unset or empty, all bundled languages are offered.
+Language codes are case-sensitive.  An unsupported code in either setting,
+or an empty entry in a nonempty
+.Ev UI_LANGUAGES
+list, causes the service to fail at startup with an error naming the
+invalid code and listing the supported codes.
+The default
+.Ev UI_LANGUAGE
+should be included when restricting the menu; otherwise the first listed
+language becomes the initial selection.
+.El
+Supported language codes are:
+.Bl -column "fr-CA" "French (Canada)" -offset indent
+.It Sy Code Ta Sy Language
+.It Li en Ta English
+.It Li en-CA Ta English (Canada)
+.It Li hu Ta Hungarian
+.It Li es Ta Spanish
+.It Li fr Ta French
+.It Li fr-CA Ta French (Canada)
+.It Li de Ta German
+.It Li pt Ta Portuguese
+.It Li it Ta Italian
+.It Li ru Ta Russian
+.It Li zh Ta Chinese
+.It Li ja Ta Japanese
+.It Li ar Ta Arabic
+.It Li hi Ta Hindi
+.It Li sr Ta Serbian
+.It Li id Ta Indonesian
+.It Li ko Ta Korean
+.It Li tr Ta Turkish
+.It Li nl Ta Dutch
+.El
+.Sh MEETING ENTRY
+Every participant must authenticate and have permission to join the selected
+meeting. Any authorized participant can start an empty meeting.
+Kaigi has no presenter or host role, lobby, or action that ends a meeting
+for all attendees. Participants cannot control another participant's media
+or admission. See
+.Pa %%DOCSDIR%%/HARDENING.md
+for the security model.
+.Sh AUTHENTICATED SESSION LIFETIME
+These settings control authenticated session lifetime in Kaigi.
+Values are expressed in seconds.
+.Bl -tag -width "AUTH_SESSION_MAX_AGE"
+.It Ev AUTH_IDLE_TIMEOUT
+Maximum permitted inactivity before the authenticated session is terminated.
+Meaningful browser activity refreshes this timeout while the user is on the
+room-selection or pre-join pages.
+While the user is connected to an active meeting, the authenticated browser
+periodically refreshes the session so a quiet participant is not logged out
+merely for not using the keyboard or mouse.
+Default: 1800 seconds.
+Set to 0 to disable the inactivity limit.
+.It Ev AUTH_SESSION_MAX_AGE
+Absolute maximum lifetime of an authenticated session.
+This limit is measured from successful login and is never extended by browser
+activity or active meeting participation.
+When the limit expires, the authentication token and server-side authorization
+are invalidated and the browser is returned to the login page.
+Default: 28800 seconds.
+Set to 0 to disable the absolute session-age limit.
+.El
+.Pp
+On an idle or absolute timeout, Kaigi clears the session-scoped browser
+authentication state and revokes the corresponding server-side authorization.
+.Sh LISTENER AND MEDIA CONFIGURATION
+.Bl -tag -width "MEDIA_ANNOUNCED_HOST"
+.It Ev WEB_LISTEN_HOST
+Externally meaningful hostname of the Kaigi service.
+When
+.Ev WEB_LISTEN_IP
+is omitted, this hostname is resolved through the system resolver and must
+match exactly one IPv4 address assigned to the local host.
+.It Ev WEB_LISTEN_IP
+Optional local bind address.
+Set this explicitly for NAT, reverse-proxy, jail or other deployments where
+the public hostname resolves to an address not assigned directly to the host.
+.It Ev WEB_LISTEN_PORT
+Local listen port.
+Default: 3010.
+.It Ev WEB_URL
+Canonical public URL of the Kaigi conferencing service.
+When omitted and both
+.Ev WEB_LISTEN_HOST
+and
+.Ev WEB_LISTEN_PORT
+are configured, Kaigi derives an HTTPS URL from that hostname and port.
+Set it explicitly when a reverse proxy or port mapping makes that URL
+inappropriate.
+.It Ev WEB_SSL_CERT
+TLS certificate pathname.
+Absolute pathnames are supported.
+.It Ev WEB_SSL_KEY
+TLS private-key pathname.
+Absolute pathnames are supported.
+.El
+.Pp
+.Ev SITE_URL
+and
+.Ev WEB_URL
+serve different purposes.
+.Ev SITE_URL
+identifies the organization or site associated with the service and is the
+normal destination of the site logo.
+.Ev WEB_URL
+identifies the conferencing service itself.
+For example, they may respectively be
+.Dq https://www.example.com/
+and
+.Dq https://meet.example.com/ .
+.Sh WEBRTC MEDIA
+These settings control mediasoup's WebRTC media sockets and are independent
+of the web/signaling listener.
+.Bl -tag -width "MEDIA_ANNOUNCED_HOST"
+.It Ev MEDIA_LISTEN_IP
+Optional local media bind address.
+When omitted it defaults to the effective
+.Ev WEB_LISTEN_IP .
+.It Ev MEDIA_ANNOUNCED_HOST
+Optional hostname whose IPv4 address is announced to remote WebRTC peers.
+The hostname is resolved through the system resolver when Kaigi starts.
+.It Ev MEDIA_ANNOUNCED_IP
+Optional literal IPv4 address announced to remote WebRTC peers.
+.Ev MEDIA_ANNOUNCED_HOST
+and
+.Ev MEDIA_ANNOUNCED_IP
+are mutually exclusive.
+When neither is configured,
+.Ev WEB_LISTEN_HOST
+is resolved and used as the announced media address.
+If the announced hostname resolves to more than one IPv4 address, startup
+fails and the administrator must set
+.Ev MEDIA_ANNOUNCED_IP
+explicitly.
+.It Ev MEDIA_MIN_PORT
+First media port.
+Default: 40000.
+.It Ev MEDIA_MAX_PORT
+Last media port.
+Default: 40100.
+.It Ev MEDIA_NUM_WORKERS
+Optional mediasoup worker count.
+When omitted, Kaigi derives the worker count from the available CPUs.
+.El
+.Pp
+The FreeBSD port does not contact public IP-discovery services.
+Administrators control addressing through DNS and the settings above.
+.Pp
+For a directly addressed host, a typical configuration needs only:
+.Bd -literal -offset indent
+WEB_LISTEN_HOST=meet.example.com
+WEB_LISTEN_PORT=3010
+.Ed
+.Pp
+For a NAT deployment where public DNS does not resolve to an address assigned
+to the Kaigi host, specify the local bind address:
+.Bd -literal -offset indent
+WEB_LISTEN_HOST=meet.example.com
+WEB_LISTEN_IP=192.168.1.20
+.Ed
+.Pp
+For a reverse proxy, the service URL may differ from the local listener:
+.Bd -literal -offset indent
+WEB_LISTEN_HOST=meet.example.com
+WEB_LISTEN_IP=127.0.0.1
+WEB_LISTEN_PORT=3010
+WEB_URL=https://meet.example.com/
+.Ed
+.Pp
+For a separate media network, override the media settings independently:
+.Bd -literal -offset indent
+MEDIA_LISTEN_IP=192.168.2.20
+MEDIA_ANNOUNCED_HOST=media.example.com
+.Ed
+.Pp
+The recommended configuration interface does not expose
+.Ev SFU_SERVER
+shared-listener mode.
+Use the media listener and port-range settings documented above.
+.Sh AUTHENTICATION
+Local host protection defaults are supplied by the package sample.
+The root-only users file supplies
+.Ev HOST_USERS
+transiently at startup; the JWT secret is likewise kept out of this file.
+See
+.Xr kaigi 8 .
+.Sh ENVIRONMENT OVERRIDES
+The settings above are the recommended administration interface.
+At startup Kaigi reads this file, expands references and maps the settings
+to its application environment variables.
+Environment entries that are already defined are not replaced and take
+precedence over settings in this file.
+For example,
+.Ev SERVER_LISTEN_IP
+overrides
+.Ev WEB_LISTEN_IP ,
+and
+.Ev SFU_LISTEN_IP
+overrides
+.Ev MEDIA_LISTEN_IP .
+Kaigi's application defaults are the final fallback.
+.Sh FILES
+.Bl -tag -width "%%PREFIX%%/etc/kaigi/kaigi.conf.sample"
+.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf
+Administrator-maintained deployment configuration.
+.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf.sample
+Current package-provided example.
+.It Pa %%PREFIX%%/etc/kaigi/site-assets/site.css
+Administrator-maintained site stylesheet.
+.It Pa %%PREFIX%%/etc/kaigi/users
+Root-only local-user database.
+.It Pa %%PREFIX%%/etc/kaigi/jwt-secret
+Root-only generated JWT signing secret.
+.El
+.Sh SEE ALSO
+.Xr rc.conf 5 ,
+.Xr kaigi 8
+.Sh PRIVACY POLICY
+The site administrator defines the deployment's privacy policy.
+The footer displays a Privacy Policy link only when one of the following is configured:
+.Bl -tag -width PRIVACY_POLICY_NAME
+.It Va PRIVACY_POLICY_NAME
+Name of an administrator-owned HTML file below
+.Pa %%PREFIX%%/etc/kaigi/site-assets .
+For example,
+.Dq privacy-private.html .
+.It Va PRIVACY_POLICY_URL
+Absolute URL of an externally hosted site privacy policy.
+This takes precedence over
+.Va PRIVACY_POLICY_NAME .
+.El
+If neither setting is present, no Privacy Policy link is displayed.
+The package installs
+.Pa privacy-private.html.sample
+and
+.Pa privacy-public.html.sample
+as starting points only; administrators must review them against the site's actual operation before publication.
+.Sh SITE PRESENTATION
+The administrator-owned
+.Pa %%PREFIX%%/etc/kaigi/site-assets/site.css
+file is loaded after Kaigi's packaged stylesheets.  It may be used for local
+presentation changes without modifying packaged application files.  The
+installed sample includes commented examples for wide logos, custom static
+landing/login backgrounds, and suppressing the animated hero illustration.
+.Sh NETWORK PRIVACY
+Kaigi does not configure a third-party STUN or TURN service by default.
+WebRTC media connects directly to the configured mediasoup SFU.
+A trusted TURN service may be configured explicitly when client network
+conditions require one.
+.Pp
+Kaigi does not substitute a third-party service endpoint when an optional
+service endpoint has not been configured.
+.Sh LDAP AUTHENTICATION
+.Va LDAP_ENABLED
+accepts true or false and defaults to false.
+LDAP support is included in Kaigi and disabled by default.
+When enabled, settings are read from
+.Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf .
+When disabled, that file is neither read nor validated.
+No inherited LDAP environment overrides are used.
+All other LDAP variables belong in the separate file.
+See
+.Xr kaigi-ldap.conf 5 .
+.Sh MEETING PROPERTIES
+.Pa %%PREFIX%%/etc/kaigi/meeting-properties.json
+is a JSON object keyed by stable meeting key. Each entry contains an optional
+names object (language codes mapped to display labels) and an optional
+restrictions array. RP prohibits built-in recording and server recording uploads.
+Names fall back from the exact language to its base language, English, then the key.
+.Pp
+A missing file or unlisted key imposes no restrictions and displays the key.
+Unknown properties/codes, duplicate JSON keys, invalid labels, malformed JSON
+and unreadable or unsafe existing files stop startup. Files must be regular,
+non-symlink UTF-8 files no larger than 256 KiB and not writable by group or others.
+This file grants no access. Labels for authorized meetings are provided only after login.
+Restart after changes.
+.Pp
+Keys contain 1–128 printable Unicode characters, including spaces and punctuation.
+Control/format/surrogate/unassigned characters and line/paragraph separators
+are forbidden. Matching is exact; no normalization or case folding occurs.
+.Sh CONNECTION DEADLINES
+CONNECTION_INITIAL_TIMEOUT (15 seconds) bounds initial TCP/TLS and HTTP progress.
+HTTP_HEADERS_TIMEOUT (30), HTTP_REQUEST_TIMEOUT (120), HTTP_IDLE_TIMEOUT (30),
+and HTTP_KEEPALIVE_TIMEOUT (5) control HTTP lifetimes.
+SOCKET_AUTH_TIMEOUT (30) closes Engine.IO transports that never authenticate.
+These settings accept integers from 1 through 3600 seconds; zero is rejected.
+Socket.IO handshakes require a valid, revocable session token.
+Authenticated conference WebSockets are exempt from HTTP idle deadlines.
+ENABLE_CHAT_TYPING defaults to false; enabling it shares typing activity, not draft text.
+.Sh SECURITY EVENTS
+JSON lines with component conference-security contain a UTC timestamp,
+a stable event, verified direct peer IP and a fixed reason code.
+No credentials, tokens or LDAP attributes are included in these event lines.
+Kaigi uses the direct peer address for security attribution and ignores
+client-supplied forwarded-address headers.
+See HARDENING.md for Fail2ban integration on PF and IPFW hosts.

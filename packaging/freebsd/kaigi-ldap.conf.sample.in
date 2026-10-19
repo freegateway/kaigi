@@ -1,0 +1,134 @@
+# MiroTalk LDAP configuration. Read only when LDAP_ENABLED=true in kaigi.conf.
+# LDAP support is included in Kaigi and disabled by default. This is not shell code.
+# Use NAME=VALUE assignments, optional matching quotes, and full-line # comments.
+# ${NAME} references refer only to variables within this file.
+# Directory and authorization settings have no defaults and must be explicit.
+# Commented assignments are examples unless marked Default below.
+# Replace directory-specific placeholders. Environment variables cannot override settings.
+# Keep only LDAP_ENABLED in kaigi.conf; do not set it in this file.
+# Store the search-account password separately in the protected bind-secret file.
+# LDAP URL must include an explicit port. TLS verification cannot be disabled.
+# No automatic fallback from TLS to plaintext is permitted.
+# Local users take precedence, including failed local passwords.
+# See kaigi-ldap.conf(5) and HARDENING.md for policy and session behavior.
+
+# ====================================================================
+# Connection and search account
+# ====================================================================
+
+# !!! REQUIRED: choose ldaps (verified TLS), ldap-starttls (verified upgrade before binding), or ldap-plain (literal 127.0.0.0/8 or ::1 only). No TLS downgrade. ldapi is not implemented.
+# LDAP_TRANSPORT=<ldaps, ldap-starttls, or ldap-plain>
+
+# !!! REQUIRED: absolute LDAP URL with an explicit port, matching LDAP_TRANSPORT. This localhost URL is an example, not a default.
+# LDAP_URL=ldap://127.0.0.1:389
+
+# !!! REQUIRED: DN of the restricted search account. No default.
+# LDAP_BIND_DN=<restricted search account DN>
+
+# !!! REQUIRED: absolute path to the search-account password file. Example path; no default. Use mode 0600 or 0640 with appropriate ownership.
+# LDAP_BIND_PASSWORD_FILE=%%PREFIX%%/etc/kaigi/ldap/bind-secret
+
+# ====================================================================
+# User lookup and identity
+# ====================================================================
+
+# !!! REQUIRED: base DN for locating a unique user. No default.
+# LDAP_USER_BASE=<user search base DN>
+
+# !!! REQUIRED: search scope. No default.
+# LDAP_USER_SCOPE=<base, one, or sub>
+
+# !!! REQUIRED: LDAP filter containing {username}. No default. The complete entered login is escaped; username/domain splitting is not performed.
+# LDAP_USER_FILTER=(&(objectClass=<user object class>)(<login attribute>={username}))
+
+# !!! REQUIRED: canonical login attribute. No default.
+# LDAP_USERNAME_ATTRIBUTE=<canonical unique account attribute>
+
+# !!! REQUIRED: display-name attribute. No default. If the entry lacks it, the canonical username is displayed.
+# LDAP_DISPLAY_NAME_ATTRIBUTE=<display name attribute>
+
+# ====================================================================
+# Operational limits and session lifetime
+# ====================================================================
+
+# Default: 3000 milliseconds. Positive integer; connection timeout.
+# LDAP_CONNECT_TIMEOUT_MS=3000
+
+# Default: 5000 milliseconds. Positive integer; per-operation timeout, not a whole-login deadline.
+# LDAP_OPERATION_TIMEOUT_MS=5000
+
+# Default: 1000. Positive integer; maximum accepted group entries or values.
+# LDAP_MAX_GROUPS=1000
+
+# Default: true. Request password-policy control; policy errors and grace logins are denied.
+# LDAP_PASSWORD_POLICY=true
+
+# Default: 28800 seconds. Positive integer; absolute LDAP session lifetime, also bounded by AUTH_SESSION_MAX_AGE when enabled.
+# LDAP_SESSION_MAX_AGE=28800
+
+# ====================================================================
+# Group membership source
+# ====================================================================
+
+# !!! REQUIRED: whether to read LDAP group membership. No default.
+# LDAP_GROUPS_ENABLED=<true or false>
+
+# !!! REQUIRED when LDAP_GROUPS_ENABLED=true: membership source. No default.
+# LDAP_GROUP_SOURCE=<user-attribute or group-search>
+
+# !!! REQUIRED when LDAP_GROUP_SOURCE=user-attribute: user-entry group names. No default. Mapped mode requires LDAP_MAPPING_KEY=name.
+# LDAP_USER_GROUP_ATTRIBUTE=<multi-valued group-name attribute>
+
+# ====================================================================
+# Separate group search (only with group-search)
+# ====================================================================
+
+# !!! REQUIRED when LDAP_GROUP_SOURCE=group-search: group base DN. No default.
+# LDAP_GROUP_BASE=<group search base DN>
+
+# !!! REQUIRED when LDAP_GROUP_SOURCE=group-search: group search scope. No default.
+# LDAP_GROUP_SCOPE=<base, one, or sub>
+
+# !!! REQUIRED when LDAP_GROUP_SOURCE=group-search: filter with {member}. No default; substituted values are LDAP-escaped.
+# LDAP_GROUP_FILTER=(&(objectClass=<group object class>)(<member attribute>={member}))
+
+# !!! REQUIRED when LDAP_GROUP_SOURCE=group-search: group name attribute. No default.
+# LDAP_GROUP_NAME_ATTRIBUTE=<group name attribute>
+
+# !!! REQUIRED when LDAP_GROUP_SOURCE=group-search: value substituted for {member}. No default.
+# LDAP_GROUP_MEMBER_VALUE=<dn or username>
+
+# !!! REQUIRED when group-search uses direct mode or name mappings: uniqueness filter containing {group}. No default.
+# LDAP_GROUP_UNIQUE_FILTER=(&(objectClass=<group object class>)(<group name attribute>={group}))
+
+# ====================================================================
+# Meeting authorization and fallback groups
+# ====================================================================
+
+# !!! REQUIRED: direct treats group names as meeting names; mapped combines grants from group mapping files. No default.
+# LDAP_MEETING_MODE=<direct or mapped>
+
+# !!! REQUIRED when LDAP_MEETING_MODE=mapped: mapping key. No default. DN keys require group-search.
+# LDAP_MAPPING_KEY=<name or dn>
+
+# Default groups and group-to-meeting grants are in:
+# %%PREFIX%%/etc/kaigi/ldap/group-meetings.json
+# defaultGroups is an array of stable group keys, used only when no groups are returned.
+# groupMeetings maps stable group keys to arrays of exact meeting keys.
+# Mapped mode uses the union of all matching grants; direct mode uses group keys as meetings.
+# Empty defaultGroups disables fallback. No environment or per-file mapping overrides.
+# The policy is validated on each login; malformed or unsafe files deny LDAP login.
+
+# ====================================================================
+# Verified TLS (not used with ldap-plain)
+# ====================================================================
+
+# !!! REQUIRED when using ldaps or ldap-starttls: CA bundle path. No default. Certificate verification cannot be disabled.
+# LDAP_TLS_CA_FILE=<absolute path to CA bundle>
+
+# Default: TLSv1.2. Allowed values: TLSv1.2 or TLSv1.3.
+# LDAP_TLS_MIN_VERSION=TLSv1.2
+
+# Default: empty. Verify the host in LDAP_URL; set an explicit certificate server name when required.
+# LDAP_TLS_SERVER_NAME=
+

@@ -16,6 +16,15 @@ class VirtualBackground {
         this.resetState();
     }
 
+    static isLocalImageSource(src) {
+        if (typeof src !== 'string') return false;
+        if (/^data:image\/(?:png|jpeg|gif|webp|bmp|avif);base64,/i.test(src)) return true;
+        try {
+            const url = new URL(src, window.location.href);
+            return url.origin === window.location.origin && ['http:', 'https:', 'blob:'].includes(url.protocol);
+        } catch { return false; }
+    }
+
     checkSupport() {
         if (this.supportsTrackPipeline() || this.supportsCanvasPipeline()) return true;
         console.warn('Virtual background requires track processing APIs or canvas captureStream and WebGL.');
@@ -92,7 +101,7 @@ class VirtualBackground {
 
         try {
             this.segmentation = new SelfieSegmentation({
-                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+                locateFile: (file) => `/vendor/@mediapipe/selfie_segmentation/${file}`,
             });
 
             this.segmentation.setOptions({
@@ -543,6 +552,7 @@ class VirtualBackground {
     }
 
     async loadImage(src) {
+        if (!VirtualBackground.isLocalImageSource(src)) throw new Error('Only local background images are supported');
         // Load an image from the provided source URL
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -554,6 +564,7 @@ class VirtualBackground {
     }
 
     async loadGifImage(src) {
+        if (!VirtualBackground.isLocalImageSource(src)) throw new Error('Only local background images are supported');
         // Load and animate a GIF using gifler
         return new Promise((resolve, reject) => {
             try {

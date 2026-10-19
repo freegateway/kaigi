@@ -1,0 +1,29 @@
+[
+{ type: install
+  message: <<EOM
+Kaigi has been installed under %%WWWDIR%%.
+See %%DOCSDIR%%/BASELINE.md for source provenance.
+
+Enable and start the independent Kaigi service:
+    sysrc kaigi_enable="YES"
+    service kaigi start
+
+Configure %%PREFIX%%/etc/kaigi/kaigi.conf, users, meeting-properties.json
+and site-translations.json before starting. Protect credentials and TLS keys.
+LDAP support is included, disabled by default; configure ldap/ldap.conf and
+ldap/group-meetings.json before setting LDAP_ENABLED=true.
+MiroTalk may coexist using its own service and settings.
+Choose distinct listener addresses or ports when running both services.
+
+See kaigi(8), kaigi.conf(5), kaigi-ldap.conf(5), and
+%%DOCSDIR%%/BASELINE.md for the pending release validation gates.
+The example fail2ban filter is in %%EXAMPLESDIR%%/fail2ban/kaigi.conf.
+
+Before public deployment, run make corresponding-source and publish the
+result at %%KAIGI_SOURCE_URL%%. This target collects the application and
+locked npm inputs; inherited RNNoise source/rebuild provenance remains
+a separate release gate. Add the matching mediasoup port and complete
+Corresponding Source inputs for the actual deployed combination.
+EOM
+}
+]

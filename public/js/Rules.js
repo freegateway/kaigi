@@ -54,11 +54,9 @@ let BUTTONS = {
         sendEmailInvitation: true, // presenter
         micOptionsButton: true,
         tabRTMPStreamingBtn: true, // presenter
-        tabSipPhoneBtn: true,
         tabNotificationsBtn: true, // presenter
         tabNetworkBtn: true,
         tabModerator: true, // presenter
-        tabVideoAIBtn: true, // presenter
         tabRecording: true,
         host_only_recording: true, // presenter
         pushToTalk: true,
@@ -93,7 +91,6 @@ let BUTTONS = {
         muteVideoButton: true,
         muteAudioButton: true,
         audioVolumeInput: true,
-        geolocationButton: true, // Presenter
         banButton: true, // presenter
         ejectButton: true, // presenter
         presenterRoleButton: true, // presenter
@@ -107,7 +104,6 @@ let BUTTONS = {
         sendVideoButton: true,
         muteAudioButton: true,
         audioVolumeInput: true,
-        geolocationButton: true, // Presenter
         banButton: true, // presenter
         ejectButton: true, // presenter
         presenterRoleButton: true, // presenter
@@ -137,7 +133,6 @@ let BUTTONS = {
         sendFileAllButton: true, // presenter
         ejectAllButton: true, // presenter
         sendFileButton: true, // presenter & guests
-        geoLocationButton: true, // presenter
         banButton: true, // presenter
         ejectButton: true, // presenter
         presenterRoleButton: true, // presenter
@@ -180,11 +175,9 @@ function handleRules(isPresenter, roomSetup = true) {
         BUTTONS.settings.tabModerator = false;
         BUTTONS.settings.tabNotificationsBtn = false;
         BUTTONS.videoOff.muteAudioButton = false;
-        BUTTONS.videoOff.geolocationButton = false;
         BUTTONS.videoOff.banButton = false;
         BUTTONS.videoOff.ejectButton = false;
         BUTTONS.videoOff.presenterRoleButton = false;
-        BUTTONS.consumerVideo.geolocationButton = false;
         BUTTONS.consumerVideo.banButton = false;
         BUTTONS.consumerVideo.ejectButton = false;
         BUTTONS.consumerVideo.presenterRoleButton = false;
@@ -198,78 +191,7 @@ function handleRules(isPresenter, roomSetup = true) {
         hide(transcriptionAllLi);
         hide(breakoutRoomButton);
 
-        // VideoAI is presenter-only
-        VideoAI.enabled = false;
-        elemDisplay('tabVideoAIBtn', false);
 
-        // If a presenter-only settings tab was open, reset to the default Room tab so its
-        // content isn't left visible after the tab button is hidden.
-        const openPresenterTab = ['tabModerator', 'tabRTMPStreaming', 'tabNotifications', 'tabVideoAI'].some((id) => {
-            const el = rc.getId(id);
-            return el && el.style.display === 'block';
-        });
-        if (openPresenterTab) {
-            const roomTabBtn = rc.getId('tabRoomBtn');
-            if (roomTabBtn) roomTabBtn.click();
-        }
-
-        //...
-    } else {
-        // ##################################
-        // PRESENTER
-        // ##################################
-        BUTTONS.main.shareButton = true;
-        BUTTONS.settings.tabRTMPStreamingBtn = true;
-        BUTTONS.settings.lockRoomButton = BUTTONS.settings.lockRoomButton && !isRoomLocked;
-        BUTTONS.settings.unlockRoomButton = BUTTONS.settings.lockRoomButton && isRoomLocked;
-        BUTTONS.settings.sendEmailInvitation = true;
-
-        show(editorUnlockBtn);
-        show(transcriptionAllLi);
-
-        BUTTONS.main.breakoutRoomButton && show(breakoutRoomButton);
-        //...
-
-        // ##################################
-        // Auto detected rules for presenter
-        // ##################################
-
-        // Skipped when a participant is promoted mid-session, so the room state
-        // (broadcasting, lobby, recording, moderator) set by the original presenter is preserved.
-        if (roomSetup) {
-            // Room broadcasting
-            isBroadcastingEnabled = localStorageSettings.broadcasting;
-            switchBroadcasting.checked = isBroadcastingEnabled;
-            rc.roomAction('broadcasting', true, false);
-            if (isBroadcastingEnabled) rc.toggleRoomBroadcasting();
-            // Room lobby
-            isLobbyEnabled = localStorageSettings.lobby;
-            switchLobby.checked = isLobbyEnabled;
-            rc.roomAction(isLobbyEnabled ? 'lobbyOn' : 'lobbyOff', true, false);
-            // Room host-only-recording
-            hostOnlyRecording = localStorageSettings.host_only_recording;
-            switchHostOnlyRecording.checked = hostOnlyRecording;
-            rc.roomAction(hostOnlyRecording ? 'hostOnlyRecordingOn' : 'hostOnlyRecordingOff', true, false);
-            // Room moderator Sync moderator settings...
-            syncModeratorData();
-        } else {
-            // Promoted mid-session: reflect the room's current state on the switches without
-            // broadcasting, so the panel matches reality instead of showing this peer's defaults.
-            switchBroadcasting.checked = isBroadcastingEnabled;
-            switchLobby.checked = isLobbyEnabled;
-            switchHostOnlyRecording.checked = hostOnlyRecording;
-            loadModeratorDataFromRoom();
-        }
-        // VideoAI is presenter-only and shown only when enabled and at least one provider is available
-        const videoAIProviders = rc.videoAIProviders?.available || {};
-        const hasVideoAIProvider = !!(videoAIProviders.liveavatar || videoAIProviders.anam);
-        if (rc.videoAIEnabled && hasVideoAIProvider && BUTTONS.settings.tabVideoAIBtn) {
-            VideoAI.enabled = true;
-            elemDisplay('tabVideoAIBtn', true, 'flex');
-        } else {
-            VideoAI.enabled = false;
-            elemDisplay('tabVideoAIBtn', false);
-        }
     }
     // main. settings...
     BUTTONS.main.shareButton ? show(shareButton) : hide(shareButton);
@@ -423,13 +345,11 @@ function handleRulesBroadcasting() {
     BUTTONS.settings.tabRTMPStreamingBtn = false;
     BUTTONS.settings.tabNotificationsBtn = false;
     BUTTONS.videoOff.muteAudioButton = false;
-    BUTTONS.videoOff.geolocationButton = false;
     BUTTONS.videoOff.banButton = false;
     BUTTONS.videoOff.ejectButton = false;
     BUTTONS.consumerVideo.sendMessageButton = false;
     BUTTONS.consumerVideo.sendFileButton = false;
     BUTTONS.consumerVideo.sendVideoButton = false;
-    BUTTONS.consumerVideo.geolocationButton = false;
     BUTTONS.consumerVideo.banButton = false;
     BUTTONS.consumerVideo.ejectButton = false;
     BUTTONS.consumerVideo.muteAudioButton = false;

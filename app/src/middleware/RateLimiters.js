@@ -6,12 +6,7 @@ const config = require('../config');
 const MINUTE_MS = 60 * 1000;
 
 // Extract client IP (only trust X-Forwarded-For when behind a trusted reverse proxy)
-const ipKeyGenerator = (req) => {
-    const forwarded = Boolean(config?.server?.trustProxy)
-        ? req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For']
-        : null;
-    return (forwarded || '').split(',')[0].trim() || req.socket?.remoteAddress || req.ip;
-};
+const ipKeyGenerator = (req) => req.socket?.remoteAddress || 'unknown';
 
 // Pluralize "N minute(s)" consistently across limiter messages
 const minutesLabel = (n) => `${n} minute${n === 1 ? '' : 's'}`;
@@ -83,6 +78,7 @@ function createRateLimiters({ getRequesterKey }) {
             message: `Too many login attempts. Please try again after ${minutesLabel(minBlockTime)}.`,
         },
         keyGenerator: (req) => req.body?.username || ipKeyGenerator(req),
+        skipSuccessfulRequests: true,
     });
 
     // Room scheduler

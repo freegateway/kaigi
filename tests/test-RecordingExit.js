@@ -200,7 +200,7 @@ describe('recording finalization before room exit', () => {
         h.timers.shift()();
         await exit;
         assert.ok(h.events.indexOf('cleanup') < h.events.indexOf('exit-room'));
-        assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/newroom']);
+        assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
         assert.equal(h.client.hasPendingRecordingSave(), false);
         assert.equal(h.context.recordedBlobs.length, 0);
     });
@@ -340,7 +340,7 @@ describe('recording finalization before room exit', () => {
         download.resolve();
         await exit;
         assert.equal(h.events.filter((event) => event === 'exit-room').length, 1);
-        assert.equal(h.events.at(-1)[1], 'https://meet.example/newroom');
+        assert.equal(h.events.at(-1)[1], '/login?select=1');
     });
 
     for (const action of ['survey', 'newroom', 'back']) {
@@ -361,7 +361,7 @@ describe('recording finalization before room exit', () => {
             await exit;
             await tick();
             if (action === 'back') assert.equal(h.events.at(-1), 'back');
-            else assert.equal(h.events.at(-1)[1], action === 'survey' ? 'https://survey.example' : '/newroom');
+            else assert.equal(h.events.at(-1)[1], action === 'survey' ? 'https://survey.example' : '/login?select=1');
         });
     }
 
@@ -423,22 +423,13 @@ describe('recording finalization before room exit', () => {
         assert.deepEqual(h.events.at(-1), ['navigate', 'https://host.example/done']);
     });
 
-    it('sends the presenter end-for-all reason with the eject-all command', () => {
-        const h = createHarness();
-        const sent = [];
-        h.context.isPresenter = true;
-        h.context.getId = () => null;
-        Object.assign(h.client, {
-            peer_name: 'Host',
-            peer_uuid: 'uuid',
-            emitCmd: (cmd) => sent.push(cmd),
-            exit: () => {},
-        });
-        h.client.exitRoom = h.context.Client.prototype.exitRoom;
-        h.client.exitRoom(true, '  Out of time  ');
-        h.client.exitRoom(true);
-        assert.equal(sent[0].message, 'Out of time');
-        assert.equal('message' in sent[1], false);
+    it('never sends end-for-all even with a forged client presenter flag', () => {
+        const h=createHarness(), sent=[];
+        h.context.isPresenter=true;
+        Object.assign(h.client,{emitCmd:cmd=>sent.push(cmd),exit:()=>{}});
+        h.context.Client.prototype.exitRoom.call(h.client,true,'forged');
+        h.context.Client.prototype.ejectAllOnLeave.call(h.client,'forged');
+        assert.deepEqual(sent,[]);
     });
 
     it('waits before reconnect navigation', async () => {
@@ -458,7 +449,7 @@ describe('recording finalization before room exit', () => {
         assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/join?room=test']);
     });
 
-    it('does not notify an embedded host to redirect until saving completes', async () => {
+    it('keeps navigation local after saving even in an embedded context', async () => {
         const h = createHarness();
         const download = deferred();
         h.client.handleLocalRecordingStop = () => download.promise;
@@ -472,8 +463,8 @@ describe('recording finalization before room exit', () => {
         h.stopEvent();
         download.resolve();
         await exit;
-        assert.equal(h.events.at(-1)[0], 'redirect-message');
-        assert.equal(h.events.at(-1)[1].url, 'https://meet.example/newroom');
+        assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
+        assert.equal(h.events.some(event => event[0] === 'redirect-message'), false);
     });
 
     it('restores the back-button guard when the user stays after saving fails', async () => {
@@ -530,7 +521,7 @@ describe('recording finalization before room exit', () => {
         await h.context.completeRoomExit();
         assert.equal(h.events.includes('progress'), false);
         assert.equal(h.events.includes('exit-room'), true);
-        assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/newroom']);
+        assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
     });
 
     it('keeps the mobile download link and room open until saving is explicitly confirmed', async () => {
@@ -653,7 +644,7 @@ describe('recording finalization before room exit', () => {
         const h = createHarness();
         h.context.rc = null;
         h.context.initLeaveMeeting();
-        assert.deepEqual(h.events.at(-1), ['navigate', '/newroom']);
+        assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
         assert.doesNotThrow(() => h.listeners.beforeunload({ preventDefault() {} }));
     });
 
@@ -704,7 +695,7 @@ describe('recording finalization before room exit', () => {
                 assert.equal(dialogs.current, null);
                 assert.equal(h.events.filter((event) => event === 'offline-exit').length, 1);
                 assert.equal(h.events.filter((event) => event === 'exit-room').length, 1);
-                assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/newroom']);
+                assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
                 assert.equal(h.context.recShowInfo, true);
                 assert.equal(h.client._forcedExitPending, false);
                 assert.equal(
@@ -740,7 +731,7 @@ describe('recording finalization before room exit', () => {
         assert.equal(dialogs.current, null);
         assert.equal(h.client.hasPendingRecordingSave(), false);
         assert.equal(h.context.isLeavingRoom, false);
-        assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/newroom']);
+        assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
     });
 
     it('ignores duplicate forced-exit commands without replacing the save dialog', async () => {
@@ -784,7 +775,7 @@ describe('recording finalization before room exit', () => {
         dialogs.finish({ isDenied: true });
         await exit;
         assert.equal(dialogs.current, null);
-        assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/newroom']);
+        assert.deepEqual(h.events.at(-1), ['navigate', '/login?select=1']);
     });
 
     it('does not replace the recording progress dialog when an exiting peer is ejected', async () => {

@@ -30,8 +30,8 @@ describe('test-Validator', () => {
             checkValidator.isValidRoomName(undefined).should.be.false();
         });
 
-        it('should return false for xss injection inputs', () => {
-            checkValidator.isValidRoomName('<script>alert("xss")</script>').should.be.false();
+        it('treats authorized printable meeting keys as opaque text, never HTML', () => {
+            checkValidator.isValidRoomName('<script>alert("xss")</script>').should.be.true();
         });
 
         it('should return true for valid room name', () => {
@@ -42,11 +42,11 @@ describe('test-Validator', () => {
             checkValidator.isValidRoomName('dbc4a9d9-6879-479a-b8fe-cedaad176b0d').should.be.true();
         });
 
-        it('should return false for room name with path traversal', () => {
-            checkValidator.isValidRoomName('../etc/passwd').should.be.false();
-            checkValidator.isValidRoomName('..\\etc\\passwd').should.be.false();
-            checkValidator.isValidRoomName('Room/../../etc').should.be.false();
-            checkValidator.isValidRoomName('Room\\..\\..\\etc').should.be.false();
+        it('does not interpret opaque meeting keys as filesystem paths', () => {
+            checkValidator.isValidRoomName('../etc/passwd').should.be.true();
+            checkValidator.isValidRoomName('..\\etc\\passwd').should.be.true();
+            checkValidator.isValidRoomName('Room/../../etc').should.be.true();
+            checkValidator.isValidRoomName('Room\\..\\..\\etc').should.be.true();
         });
 
         it('should return true for room names with special characters that do not imply path traversal', () => {
