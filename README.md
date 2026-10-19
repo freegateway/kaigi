@@ -1,45 +1,64 @@
 # FreeGateway Kaigi
 
-Kaigi is the FreeGateway Project's FreeBSD conferencing application, derived
-from MiroTalk SFU by Miroslav Pejic and powered by mediasoup. It continues under
-GNU AGPLv3; original authorship, copyright and dependency notices are retained.
+Kaigi is a privacy-focused, self-hosted video conferencing system from the
+[FreeGateway Project](https://www.freegateway.org/). It gives organizations
+control over their meeting infrastructure, user access and data.
 
-This is a development baseline, not a production release. It combines the
-HARDENED FreeBSD port with upstream commit
-`bb49feb24ed35938cd7cd6916ddd2256cacb1c20`. See
-[the baseline record](docs/BASELINE.md), [security policy](HARDENING.md), and
-[upstream documentation](docs/UPSTREAM-README.md).
+Kaigi is developed independently as a fork of
+[MiroTalk SFU](https://github.com/miroslavpejic85/mirotalksfu), created by
+Miroslav Pejic. It uses [mediasoup](https://mediasoup.org/) to handle WebRTC
+media and retains the upstream authorship, copyright and licence notices.
+
+## Features
+
+- Video and audio conferencing, screen sharing, chat and shared whiteboards.
+- Authentication for every participant, with access limited to authorized meetings.
+- Local user accounts and optional LDAP authentication.
+- Equal participant permissions: no participant receives presenter authority
+  over another participant's media, access or connection.
+- Locally served browser assets and translations, without built-in third-party
+  tracking or cloud-service integrations.
+- A customizable site identity, with support for Japanese and other interface languages.
+
+Kaigi is developed for FreeBSD. It is under active development; a stable
+release has not yet been published.
+
+## Getting started
+
+Administrators configure accounts, meeting permissions, TLS and media networking
+before opening the service to users. LDAP is optional and disabled by default.
+FreeBSD packaging is maintained in
+[kaigi-freebsd-port](https://github.com/freegateway/kaigi-freebsd-port).
+Application configuration examples and administrator manuals are kept here
+under [packaging/freebsd](packaging/freebsd).
+
+Read the [security and privacy documentation](HARDENING.md) for the access
+model, deployment requirements and limits of the privacy protections.
+Administrator-selected external services and user-opened links can still
+contact third parties.
 
 ## Development
 
-Use Node 24 and npm. Install with `npm ci --ignore-scripts`, then run `npm test`.
-The suite supplies isolated test configuration; its signing key is test-only.
-Browser vendor resources are frozen under `public/vendor` with their notices.
-`npm run build:mediasoup-client` rebuilds the local client bundle. FreeBSD uses
-its separately built, matching mediasoup worker; never silently download a
-prebuilt worker during packaging.
+Use Node.js 24 and npm:
 
-Application behavior is maintained directly in this source tree. The files in
-`packaging/freebsd` preserve service, configuration, manual and filter templates;
-they are not a newly generated port. No application patch replay is needed.
+```sh
+npm ci --ignore-scripts
+npm test
+```
 
-## Configuration and deployment
+The test suite uses isolated configuration. Native mediasoup setup is a
+separate installation step; the commands above prepare dependencies for testing.
 
-The package-owned `app/src/config.js` loads `config.template.js`. Administrator
-settings live in `/usr/local/etc/kaigi/kaigi.conf` by default. Set
-`KAIGI_CONFIG_DIR` explicitly for another installation or test jail.
-The FreeBSD service is `kaigi`, enabled with `kaigi_enable="YES"`; application,
-runtime and log directories are `/usr/local/www/kaigi`, `/var/run/kaigi` and
-`/var/log/kaigi`. Kaigi does not read MiroTalk configuration or share its JWT
-secret. MiroTalk STANDARD can remain installed separately; configure distinct
-listener addresses or ports when running both services.
-Local account/JWT-secret provisioning remains the FreeBSD service's job.
-LDAP is included in the dependency set but remains disabled until configured.
-No production credentials or live deployment configuration belong in Git.
+See the [development rules](AGENTS.md),
+[project provenance](docs/BASELINE.md) and
+[upstream change record](docs/UPSTREAM.md) for contributor information.
 
-A release must set `KAIGI_SOURCE_URL` to the exact available Corresponding Source
-for the deployed build, including required dependency and build/install material.
-The default repository URL is a development pointer, not release certification.
+## Licence and credits
 
-Before installation, complete FreeBSD/Poudriere, LDAP, browser/media and
-Corresponding Source checks listed in `docs/BASELINE.md`. First release tagging and rollout are separate changes.
+Kaigi is distributed under the [GNU Affero General Public License, version 3](LICENSE),
+without warranty. MiroTalk SFU and its contributors remain credited for their
+work; dependency notices are retained with the bundled resources.
+
+Operators must make the Corresponding Source for their deployed version
+available, including its modifications and required build and installation
+material.
