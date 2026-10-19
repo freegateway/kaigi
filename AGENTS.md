@@ -31,3 +31,8 @@
   installable; never add implicit configuration or credential sharing.
   Generate no port/release archives, tags or PORTREVISION bumps unless
   explicitly requested. Follow the FreeBSD Port Workflow for packaging work.
+
+- FreeBSD port metadata and OS integration are maintained separately at
+  https://github.com/freegateway/kaigi-freebsd-port. Keep application manuals,
+  configuration examples and application-specific fail2ban rules here; do not
+  duplicate the port’s rc script, newsyslog template or package message.

@@ -74,3 +74,18 @@ or JWT secrets. LDAP settings remain under `etc/kaigi/ldap`.
 Use separate listener addresses or ports for simultaneous services.
 The original 13ce82a9 port archive predates this change and must be regenerated
 with a new source pin before testing the separate Kaigi namespace.
+
+## FreeBSD port ownership
+
+The baseline history above records the original source import. Subsequent
+namespace changes established the independent `kaigi` service and paths.
+FreeBSD packaging is now maintained separately in
+https://github.com/freegateway/kaigi-freebsd-port, initially imported from
+`kaigi-0.1.0_2.tar.gz` pinned to application merge commit
+`4a4acc3d1f4e279543b90fe88a276f322d4e06da`.
+
+Application manuals, configuration examples and the application-specific
+fail2ban filter remain under `packaging/freebsd`. The port reads these from
+its fixed application pin. The service script, newsyslog template and package
+message are owned by the port repository. Existing source commits and release
+archives remain reproducible; no historical commit is rewritten.

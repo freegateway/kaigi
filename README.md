@@ -27,8 +27,10 @@ release has not yet been published.
 
 Administrators configure accounts, meeting permissions, TLS and media networking
 before opening the service to users. LDAP is optional and disabled by default.
-The application includes configuration examples and administrator manuals under
-[packaging/freebsd](packaging/freebsd).
+FreeBSD packaging is maintained in
+[kaigi-freebsd-port](https://github.com/freegateway/kaigi-freebsd-port).
+Application configuration examples and administrator manuals are kept here
+under [packaging/freebsd](packaging/freebsd).
 
 Read the [security and privacy documentation](HARDENING.md) for the access
 model, deployment requirements and limits of the privacy protections.
