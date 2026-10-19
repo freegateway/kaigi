@@ -1,6 +1,6 @@
-# MiroTalk SFU deployment configuration.
+# Kaigi deployment configuration.
 #
-# This file is read directly by MiroTalk's config.js.  It is not shell code
+# Kaigi reads this file during startup.  It is not shell code
 # and is not sourced by the rc.d script.  Use NAME=VALUE assignments; leading
 # and trailing whitespace around names and values is ignored.  Blank lines and
 # lines beginning with '#' are ignored.  Matching single or double quotes
@@ -9,7 +9,7 @@
 # forward or backward and may be nested.
 #
 # Commented settings are examples, not empty overrides.  If a setting is not
-# present, MiroTalk retains its upstream environment/default behavior.
+# present, Kaigi uses its application environment settings or defaults.
 #
 # Secrets are kept outside this non-secret deployment file:
 # - %%PREFIX%%/etc/kaigi/users contains local-user passwords and grants.
@@ -47,7 +47,7 @@ NODE_ENV=production
 # URLs, email addresses and asset names below are not translated.
 # SITE_ICON_NAME=favicon.svg
 # APPLE_TOUCH_ICON_NAME=apple-touch-icon.png
-# About-page/dialog image in the site-assets directory. This sets upstream
+# About-page/dialog image in the site-assets directory. This sets
 # ABOUT_IMAGE_URL to /site-assets/<name>; use ABOUT_IMAGE_NAME for a local image.
 # ABOUT_IMAGE_NAME=about.svg
 
@@ -55,7 +55,7 @@ NODE_ENV=production
 # PRIVACY_POLICY_NAME=privacy-private.html
 # PRIVACY_POLICY_URL=https://www.example.com/privacy/
 
-# General MiroTalk localization and language-menu policy.
+# Interface language and language-menu policy.
 # UI_LANGUAGE=en
 # UI_LANGUAGES=en-CA,fr-CA,ja
 
@@ -88,7 +88,7 @@ HOST_USER_AUTH=true
 HOST_USERS_FROM_DB=false
 
 # Local authenticated-session lifetime.  AUTH_IDLE_TIMEOUT is refreshed by
-# meaningful browser activity.  While connected to an active meeting, MiroTalk
+# meaningful browser activity.  While connected to an active meeting, Kaigi
 # keeps the session active even when the participant is quiet.
 # AUTH_SESSION_MAX_AGE is absolute and is never extended by activity.
 # Set either value to 0 to disable that limit.  Values are seconds.
@@ -114,7 +114,7 @@ SHOW_SHARE_ROOM_POPUP=false
 # See kaigi-ldap.conf(5). No LDAP environment overrides are used.
 LDAP_ENABLED=false
 
-# HARDENED browser resources are restricted to this site. Virtual-background
+# Browser resources are restricted to this site. Virtual-background
 # URL imports accept only locally hosted images; file uploads remain supported.
 # Browser geolocation and external Video AI providers are unavailable.
 

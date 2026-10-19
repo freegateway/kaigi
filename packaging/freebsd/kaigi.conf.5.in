@@ -1,15 +1,15 @@
-.Dd September 24, 2026
+.Dd October 19, 2026
 .Dt KAIGI.CONF 5
 .Os
 .Sh NAME
 .Nm kaigi.conf
-.Nd MiroTalk SFU deployment configuration
+.Nd Kaigi deployment configuration
 .Sh DESCRIPTION
 The file
 .Pa %%PREFIX%%/etc/kaigi/kaigi.conf
 contains non-secret deployment, site, network, localization and presentation
-settings for the FreeBSD MiroTalk service.
-It is read directly by MiroTalk's JavaScript configuration during startup;
+settings for the Kaigi service on FreeBSD.
+Kaigi reads it during startup;
 it is not sourced by
 .Xr rc 8
 and is not shell code.
@@ -28,10 +28,9 @@ separates the name from the value.
 Inline comments are not supported.
 .Pp
 The sample deliberately leaves optional settings commented out.
-An omitted setting does not replace an upstream MiroTalk definition.
-An explicitly supplied upstream environment variable has highest priority,
-followed by the corresponding setting in this file, with MiroTalk's own
-default behavior as the final fallback.
+An explicitly supplied application environment variable has highest priority,
+followed by the corresponding setting in this file, with Kaigi's defaults
+as the final fallback.
 Language-specific site text is configured separately as described below.
 .Sh SITE TEXT TRANSLATIONS
 User-facing site text examples are provided in
@@ -130,10 +129,10 @@ Asset settings ending in
 contain names relative to that directory, not URL paths.
 The administrator stylesheet
 .Pa site.css
-is loaded after MiroTalk's packaged CSS.
+is loaded after Kaigi's packaged CSS.
 .Sh PRESENTATION OVERRIDES
 These settings override selected high-visibility UI strings.
-Leave them absent to retain MiroTalk's normal defaults and localization.
+Leave them absent to retain Kaigi's defaults and localization.
 They may intentionally contain bilingual text.
 .Bl -tag -width "CUSTOMIZE_BUTTON_LABEL"
 .It Ev PAGE_TITLE
@@ -144,7 +143,7 @@ Favicon file name in the site-assets directory.
 Apple touch-icon file name in the site-assets directory.
 .It Ev ABOUT_IMAGE_NAME
 About-page/dialog image file name in the site-assets directory.
-The port maps this setting to upstream
+Kaigi maps this setting to
 .Ev ABOUT_IMAGE_URL
 as
 .Pa /site-assets/<name> .
@@ -176,13 +175,12 @@ Invitations show the site URL and meeting name separately; QR codes contain
 only the site URL.
 .El
 .Sh LOCALIZATION
-MiroTalk's normal language subsystem remains active for general interface
-localization.
+Kaigi uses bundled language files for general interface localization.
 Site text in site-translations.json follows the selected UI language.
 General interface labels use the application's local language files.
 .Bl -tag -width "UI_LANGUAGE"
 .It Ev UI_LANGUAGE
-MiroTalk UI language override.  The default is
+Interface language override.  The default is
 .Li en .
 .It Ev UI_LANGUAGES
 Optional comma-separated language codes to offer in the local language menus,
@@ -223,16 +221,15 @@ Supported language codes are:
 .It Li nl Ta Dutch
 .El
 .Sh MEETING ENTRY
-In the HARDENED build, every participant must authenticate and be allowed
-into the selected meeting. Any authorized participant can start an empty
-meeting; a designated host need not arrive first. The upstream host-wait
-page is not part of this flow. The HARDENED build disables automatic presenter
-assignment, the lobby and the action that ends a meeting for all attendees.
-Upstream presenter-only controls are unavailable. See
+Every participant must authenticate and have permission to join the selected
+meeting. Any authorized participant can start an empty meeting.
+Kaigi has no presenter or host role, lobby, or action that ends a meeting
+for all attendees. Participants cannot control another participant's media
+or admission. See
 .Pa %%DOCSDIR%%/HARDENING.md
 for the security model.
 .Sh AUTHENTICATED SESSION LIFETIME
-These settings apply to local authenticated sessions in the HARDENED build.
+These settings control authenticated session lifetime in Kaigi.
 Values are expressed in seconds.
 .Bl -tag -width "AUTH_SESSION_MAX_AGE"
 .It Ev AUTH_IDLE_TIMEOUT
@@ -254,13 +251,12 @@ Default: 28800 seconds.
 Set to 0 to disable the absolute session-age limit.
 .El
 .Pp
-On an idle or absolute timeout, HARDENED clears its session-scoped browser
-authentication state and revokes the corresponding server-side local
-authorization.
+On an idle or absolute timeout, Kaigi clears the session-scoped browser
+authentication state and revokes the corresponding server-side authorization.
 .Sh LISTENER AND MEDIA CONFIGURATION
 .Bl -tag -width "MEDIA_ANNOUNCED_HOST"
 .It Ev WEB_LISTEN_HOST
-Externally meaningful hostname of this MiroTalk service.
+Externally meaningful hostname of the Kaigi service.
 When
 .Ev WEB_LISTEN_IP
 is omitted, this hostname is resolved through the system resolver and must
@@ -273,13 +269,12 @@ the public hostname resolves to an address not assigned directly to the host.
 Local listen port.
 Default: 3010.
 .It Ev WEB_URL
-Canonical public URL of this MiroTalk conferencing service.
+Canonical public URL of the Kaigi conferencing service.
 When omitted and both
 .Ev WEB_LISTEN_HOST
 and
 .Ev WEB_LISTEN_PORT
-are configured, the FreeBSD configuration layer derives
-.Dq https://${WEB_LISTEN_HOST}:${WEB_LISTEN_PORT} .
+are configured, Kaigi derives an HTTPS URL from that hostname and port.
 Set it explicitly when a reverse proxy or port mapping makes that URL
 inappropriate.
 .It Ev WEB_SSL_CERT
@@ -313,7 +308,7 @@ When omitted it defaults to the effective
 .Ev WEB_LISTEN_IP .
 .It Ev MEDIA_ANNOUNCED_HOST
 Optional hostname whose IPv4 address is announced to remote WebRTC peers.
-The hostname is resolved through the system resolver when MiroTalk starts.
+The hostname is resolved through the system resolver when Kaigi starts.
 .It Ev MEDIA_ANNOUNCED_IP
 Optional literal IPv4 address announced to remote WebRTC peers.
 .Ev MEDIA_ANNOUNCED_HOST
@@ -335,7 +330,7 @@ Last media port.
 Default: 40100.
 .It Ev MEDIA_NUM_WORKERS
 Optional mediasoup worker count.
-When omitted MiroTalk retains its upstream CPU-based behavior.
+When omitted, Kaigi derives the worker count from the available CPUs.
 .El
 .Pp
 The FreeBSD port does not contact public IP-discovery services.
@@ -348,7 +343,7 @@ WEB_LISTEN_PORT=3010
 .Ed
 .Pp
 For a NAT deployment where public DNS does not resolve to an address assigned
-to the MiroTalk host, specify the local bind address:
+to the Kaigi host, specify the local bind address:
 .Bd -literal -offset indent
 WEB_LISTEN_HOST=meet.example.com
 WEB_LISTEN_IP=192.168.1.20
@@ -368,11 +363,10 @@ MEDIA_LISTEN_IP=192.168.2.20
 MEDIA_ANNOUNCED_HOST=media.example.com
 .Ed
 .Pp
-MiroTalk's poorly named upstream
+The recommended configuration interface does not expose
 .Ev SFU_SERVER
-shared-listener mode is intentionally not part of the recommended FreeBSD
-configuration interface yet; its port-allocation behavior will be documented
-separately before exposure under a clearer name.
+shared-listener mode.
+Use the media listener and port-range settings documented above.
 .Sh AUTHENTICATION
 Local host protection defaults are supplied by the package sample.
 The root-only users file supplies
@@ -380,15 +374,12 @@ The root-only users file supplies
 transiently at startup; the JWT secret is likewise kept out of this file.
 See
 .Xr kaigi 8 .
-.Sh UPSTREAM COMPATIBILITY
-The FreeBSD names above are the recommended administration interface.
-At startup MiroTalk reads this file, expands references, translates the
-FreeBSD-facing names into MiroTalk's existing environment-variable names,
-and populates only environment entries that are not already defined.
-The remainder of MiroTalk therefore continues to use its upstream
-process.env configuration interface unchanged.
-An explicitly supplied upstream environment variable remains the
-highest-priority override.
+.Sh ENVIRONMENT OVERRIDES
+The settings above are the recommended administration interface.
+At startup Kaigi reads this file, expands references and maps the settings
+to its application environment variables.
+Environment entries that are already defined are not replaced and take
+precedence over settings in this file.
 For example,
 .Ev SERVER_LISTEN_IP
 overrides
@@ -397,7 +388,7 @@ and
 .Ev SFU_LISTEN_IP
 overrides
 .Ev MEDIA_LISTEN_IP .
-MiroTalk's own defaults remain the final fallback.
+Kaigi's application defaults are the final fallback.
 .Sh FILES
 .Bl -tag -width "%%PREFIX%%/etc/kaigi/kaigi.conf.sample"
 .It Pa %%PREFIX%%/etc/kaigi/kaigi.conf
@@ -415,7 +406,7 @@ Root-only generated JWT signing secret.
 .Xr rc.conf 5 ,
 .Xr kaigi 8
 .Sh PRIVACY POLICY
-Privacy is site policy rather than MiroTalk software policy.
+The site administrator defines the deployment's privacy policy.
 The footer displays a Privacy Policy link only when one of the following is configured:
 .Bl -tag -width PRIVACY_POLICY_NAME
 .It Va PRIVACY_POLICY_NAME
@@ -434,23 +425,21 @@ The package installs
 and
 .Pa privacy-public.html.sample
 as starting points only; administrators must review them against the site's actual operation before publication.
-
 .Sh SITE PRESENTATION
 The administrator-owned
 .Pa %%PREFIX%%/etc/kaigi/site-assets/site.css
-file is loaded after MiroTalk's own stylesheets.  It may be used for local
+file is loaded after Kaigi's packaged stylesheets.  It may be used for local
 presentation changes without modifying packaged application files.  The
 installed sample includes commented examples for wide logos, custom static
 landing/login backgrounds, and suppressing the animated hero illustration.
-.Sh HARDENED NETWORK PRIVACY
-The HARDENED profile does not configure a third-party STUN or TURN service by
-default.  WebRTC media connects directly to the configured mediasoup SFU.
+.Sh NETWORK PRIVACY
+Kaigi does not configure a third-party STUN or TURN service by default.
+WebRTC media connects directly to the configured mediasoup SFU.
 A trusted TURN service may be configured explicitly when client network
 conditions require one.
 .Pp
-HARDENED does not substitute a MiroTalk-operated or other third-party service
-endpoint when an optional service endpoint has not been configured.
-
+Kaigi does not substitute a third-party service endpoint when an optional
+service endpoint has not been configured.
 .Sh LDAP AUTHENTICATION
 .Va LDAP_ENABLED
 accepts true or false and defaults to false.
@@ -462,7 +451,6 @@ No inherited LDAP environment overrides are used.
 All other LDAP variables belong in the separate file.
 See
 .Xr kaigi-ldap.conf 5 .
-
 .Sh MEETING PROPERTIES
 .Pa %%PREFIX%%/etc/kaigi/meeting-properties.json
 is a JSON object keyed by stable meeting key. Each entry contains an optional
@@ -480,7 +468,6 @@ Restart after changes.
 Keys contain 1–128 printable Unicode characters, including spaces and punctuation.
 Control/format/surrogate/unassigned characters and line/paragraph separators
 are forbidden. Matching is exact; no normalization or case folding occurs.
-
 .Sh CONNECTION DEADLINES
 CONNECTION_INITIAL_TIMEOUT (15 seconds) bounds initial TCP/TLS and HTTP progress.
 HTTP_HEADERS_TIMEOUT (30), HTTP_REQUEST_TIMEOUT (120), HTTP_IDLE_TIMEOUT (30),
@@ -494,5 +481,6 @@ ENABLE_CHAT_TYPING defaults to false; enabling it shares typing activity, not dr
 JSON lines with component conference-security contain a UTC timestamp,
 a stable event, verified direct peer IP and a fixed reason code.
 No credentials, tokens or LDAP attributes are included in these event lines.
-Forwarded client-address headers are ignored by HARDENED security attribution.
+Kaigi uses the direct peer address for security attribution and ignores
+client-supplied forwarded-address headers.
 See HARDENING.md for Fail2ban integration on PF and IPFW hosts.

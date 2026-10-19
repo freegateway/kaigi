@@ -1,7 +1,7 @@
 [
 { type: install
   message: <<EOM
-Kaigi HARDENED development snapshot has been installed under %%WWWDIR%%.
+Kaigi has been installed under %%WWWDIR%%.
 See %%DOCSDIR%%/BASELINE.md for source provenance.
 
 Enable and start the independent Kaigi service:
@@ -12,7 +12,7 @@ Configure %%PREFIX%%/etc/kaigi/kaigi.conf, users, meeting-properties.json
 and site-translations.json before starting. Protect credentials and TLS keys.
 LDAP support is included, disabled by default; configure ldap/ldap.conf and
 ldap/group-meetings.json before setting LDAP_ENABLED=true.
-MiroTalk STANDARD may coexist using its own service and settings.
+MiroTalk may coexist using its own service and settings.
 Choose distinct listener addresses or ports when running both services.
 
 See kaigi(8), kaigi.conf(5), kaigi-ldap.conf(5), and

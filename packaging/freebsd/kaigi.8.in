@@ -1,24 +1,27 @@
-.Dd September 22, 2026
+.Dd October 19, 2026
 .Dt KAIGI 8
 .Os
 .Sh NAME
 .Nm kaigi
-.Nd administer the MiroTalk SFU service on FreeBSD
+.Nd administer the Kaigi conferencing service on FreeBSD
 .Sh SYNOPSIS
 .Nm service
 .Cm kaigi
 .Ar start | stop | restart | status
 .Sh DESCRIPTION
-Kaigi is the FreeGateway privacy-hardened fork of MiroTalk SFU.
-It provides the customizable and privacy-hardened FreeBSD configuration layer.
-MiroTalk STANDARD remains a separate port and service.
+Kaigi is the FreeGateway Project's self-hosted video conferencing service,
+derived from MiroTalk SFU and built on mediasoup.
+Every participant authenticates and receives access to explicitly authorized
+meetings. Browser resources are served locally.
+Kaigi uses its own service, configuration, runtime and log directories,
+allowing a separate MiroTalk installation to coexist.
 .Pp
-The HARDENED build only supports self-hosted, open-source, administrator-controlled infrastructure.
-Upstream integrations that depend on third-party-controlled services are disabled in this build and are not exposed as supported configuration.
+Kaigi supports self-hosted, open-source, administrator-controlled infrastructure.
+Integrations that require third-party-controlled services are not supported.
 .Pp
 The
 .Nm
-port installs MiroTalk SFU under
+port installs Kaigi under
 .Pa %%WWWDIR%%
 and integrates it with the FreeBSD rc system.
 Enable it with:
@@ -43,15 +46,14 @@ Group used for the service runtime and log directories.  Default:
 .Sh APPLICATION CONFIGURATION
 Use
 .Xr kaigi.conf 5
-for deployment, site, and supported upstream environment settings.
+for deployment, site, and application environment settings.
 The application configuration code at
 .Pa %%WWWDIR%%/app/src/config.js
 is package-owned and is replaced on upgrades.
 Do not edit it to configure the service.
-If an earlier HARDENED installation left a customized
-.Pa %%PREFIX%%/etc/kaigi/config.js ,
-compare it with the new configuration and move needed supported settings to
-.Pa kaigi.conf .
+Administrator settings belong in
+.Pa %%PREFIX%%/etc/kaigi/kaigi.conf .
+Kaigi does not read or migrate settings from a MiroTalk installation.
 .Sh SITE ASSETS
 Site-owned logos and other presentation files may be stored in
 .Pa %%PREFIX%%/etc/kaigi/site-assets
@@ -59,7 +61,7 @@ and are served under
 .Pa /site-assets/ .
 The administrator-owned
 .Pa site.css
-is loaded after MiroTalk's own stylesheets so local CSS can adjust such things
+is loaded after Kaigi's packaged stylesheets so local CSS can adjust such things
 as logo dimensions without patching package-owned CSS.
 .Pp
 The unauthenticated
@@ -100,13 +102,12 @@ mary    | N8vK2pT7YsQa | Mary Smith  | ["staff", "weekly"]
 A template is installed as
 .Pa %%PREFIX%%/etc/kaigi/users.sample .
 .Sh JWT SECRET
-
 On first start the rc script creates
 .Pa %%PREFIX%%/etc/kaigi/jwt-secret
 from 32 bytes of kernel-provided random data.
 The resulting 256-bit secret is root-owned, mode 0600, and reused on later
 starts.
-MiroTalk consumes it during configuration and removes
+Kaigi consumes it during configuration and removes
 .Ev JWT_SECRET
 from the Node process environment.
 .Sh LOGGING
@@ -137,7 +138,7 @@ Runtime state and pid file.
 Service log.
 .El
 .Sh SECURITY CONSIDERATIONS
-The HARDENED changes, administrator choices, and audit limits are documented in
+Kaigi's security model, administrator choices and audit limits are documented in
 .Pa %%DOCSDIR%%/HARDENING.md .
 .Pp
 The files
@@ -147,7 +148,7 @@ and
 contain secrets and should remain root-owned mode 0600.
 .Pp
 .Pa kaigi.conf
-is read as configuration data by MiroTalk and is not executed as shell code.
+is read as configuration data by Kaigi and is not executed as shell code.
 Do not place user passwords or the JWT secret in it or in
 .Pa rc.conf .
 .Sh SEE ALSO
@@ -155,21 +156,20 @@ Do not place user passwords or the JWT secret in it or in
 .Xr rc.conf 5 ,
 .Xr service 8
 .Sh PRIVACY
-MiroTalk's upstream privacy page describes an upstream deployment and is not assumed to describe this FreeBSD installation.
-A site privacy policy is optional and is configured with
+The site administrator defines the deployment's privacy policy.
+A site privacy policy link is optional and is configured with
 .Va PRIVACY_POLICY_NAME
 or
 .Va PRIVACY_POLICY_URL
 in
 .Pa %%PREFIX%%/etc/kaigi/kaigi.conf .
 If neither is configured, the user interface does not display a Privacy Policy link.
-
 .Sh SITE COPYRIGHT
-Site-specific material may have a different copyright owner from the MiroTalk
-software.  Set
+Site-specific material may have a different copyright owner from the Kaigi
+software and its upstream components.  Set
 .Va SITE_COPYRIGHT
 in
 .Pa %%PREFIX%%/etc/kaigi/kaigi.conf
 to display an optional site copyright notice in the login footer and local
-About page.  MiroTalk software attribution, copyright, license, and
-Corresponding Source information remain on the About page.
+About page. Kaigi and upstream software attribution, copyright, license
+and Corresponding Source information remain on the About page.
