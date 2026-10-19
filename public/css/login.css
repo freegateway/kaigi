@@ -1,3 +1,52 @@
+/* Keep the premeeting language control legible over custom backgrounds. */
+#preMeetingLanguage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-left: auto;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.72);
+}
+
+#preMeetingLanguage label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    margin: 0;
+    color: #fff;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+#preMeetingLanguage select {
+    box-sizing: border-box;
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    height: 32px;
+    padding: 3px 20px 3px 6px;
+    font-size: 13px;
+    margin-top: 0 !important;
+}
+
+#preMeetingLanguage select option {
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    #preMeetingLanguage {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        min-width: 0;
+    }
+}
+
 /* Center card section (shared with waitingRoom.css) */
 .center-card-section {
     display: flex;
@@ -215,6 +264,7 @@
 /* Focus indicators for accessibility */
 .login-btn:focus-visible,
 .join-room-btn:focus-visible,
+.logout-icon-btn:focus-visible,
 .random-room-btn:focus-visible,
 .password-toggle:focus-visible {
     outline: 2px solid #4678f9;
@@ -254,9 +304,12 @@
 
 /* Login button */
 .login-btn {
-    width: 100%;
-    padding: 15px;
+    width: auto;
+    min-width: 170px;
+    padding: 15px 30px;
     margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: 0;
     border: none;
     border-radius: 16px;
@@ -293,6 +346,7 @@
 
 /* Join Room form background */
 #joinRoomForm {
+    position: relative;
     display: none;
     background: linear-gradient(160deg, rgba(15, 15, 25, 0.95) 40%, rgba(70, 120, 249, 0.12) 100%);
     border-radius: 20px;
@@ -358,8 +412,12 @@
 
 /* Join room button */
 .join-room-btn {
-    width: 100%;
-    padding: 15px;
+    display: block;
+    width: auto;
+    min-width: 170px;
+    padding: 15px 30px;
+    margin-left: auto;
+    margin-right: auto;
     border: none;
     border-radius: 16px;
     background: linear-gradient(135deg, #2ece89, #27b578);
@@ -376,6 +434,35 @@
 }
 .join-room-btn:active {
     box-shadow: 0 2px 8px rgba(46, 206, 137, 0.15);
+}
+
+/* Authenticated selector logout */
+.logout-icon-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 75, 75, 0.28);
+    border-radius: 50%;
+    background: rgba(255, 75, 75, 0.08);
+    color: #ff4b4b;
+    font-size: 18px;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.15s ease;
+}
+.logout-icon-btn:hover {
+    border-color: rgba(255, 75, 75, 0.55);
+    background: rgba(255, 75, 75, 0.16);
+}
+.logout-icon-btn:active {
+    transform: scale(0.95);
 }
 
 /* Schedule meeting button (login page) */
@@ -434,3 +521,5 @@
         font-size: 26px;
     }
 }
+
+.landing-with-footer .center-card-section { min-height: 0; padding: 24px 0 !important; align-items: flex-start; }

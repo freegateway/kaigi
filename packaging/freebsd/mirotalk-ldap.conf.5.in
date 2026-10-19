@@ -1,0 +1,147 @@
+.Dd October 4, 2026
+.Dt MIROTALK-LDAP.CONF 5
+.Os
+.Sh NAME
+.Nm mirotalk-ldap.conf
+.Nd optional LDAP authentication configuration for MiroTalk
+.Sh DESCRIPTION
+The actual configuration file is
+.Pa %%PREFIX%%/etc/mirotalk/ldap/ldap.conf .
+It uses the same NAME=VALUE syntax as mirotalk.conf, but variable references are
+resolved within this file only.
+Requires the HARDENED build and LDAP port option.
+Set LDAP_ENABLED=true in mirotalk.conf to activate it.
+Disabled LDAP configurations are not opened or validated.
+The users file retains precedence; failed local passwords never fall back to LDAP.
+.Sh TRANSPORTS
+ldaps uses verified TLS immediately; ldap-starttls upgrades before binding.
+ldap-plain is permitted only for literal IPv4 loopback addresses in 127.0.0.0/8
+and IPv6 ::1. No TLS downgrade is allowed.
+ldapi is reserved for Unix sockets and is not implemented; selecting it is an error.
+.Sh LDAP AUTHENTICATION
+LDAP is an optional supplement to the users file.
+A local username takes precedence, including when its password is incorrect.
+LDAP variables are read exclusively from ldap/ldap.conf and have no environment overrides.
+When enabled, every applicable setting is mandatory.
+.Pp
+The following settings are documented in the sample configuration and HARDENING.md:
+.Bl -tag -width LDAP_GROUP_UNIQUE_FILTER
+.It Va LDAP_TRANSPORT
+ldaps, ldap-starttls, or ldap-plain; explicit selection required.
+.It Va LDAP_URL
+Directory URL including the selected protocol, host and explicit port. ldap-plain permits only literal addresses in 127.0.0.0/8 and ::1.
+.It Va LDAP_BIND_DN
+Restricted search-account DN.
+.It Va LDAP_BIND_PASSWORD_FILE
+Absolute path to a protected search-account password file readable by the daemon.
+.It Va LDAP_USER_BASE
+User search base DN.
+.It Va LDAP_USER_SCOPE
+base, one, or sub.
+.It Va LDAP_USER_FILTER
+Administrator filter template containing {username}; substituted login names are escaped.
+.It Va LDAP_USERNAME_ATTRIBUTE
+Attribute containing the canonical unique account name.
+.It Va LDAP_DISPLAY_NAME_ATTRIBUTE
+Attribute containing the display name; a missing value uses the canonical account name.
+.It Va LDAP_CONNECT_TIMEOUT_MS
+Positive connection timeout in milliseconds.
+.It Va LDAP_OPERATION_TIMEOUT_MS
+Positive operation timeout in milliseconds.
+.It Va LDAP_MAX_GROUPS
+Positive maximum number of relevant groups accepted.
+.It Va LDAP_PASSWORD_POLICY
+true to request the password-policy control; false to omit it.
+.It Va LDAP_SESSION_MAX_AGE
+Positive absolute LDAP session lifetime in seconds; the shorter AUTH_SESSION_MAX_AGE also applies when enabled.
+.It Va LDAP_GROUPS_ENABLED
+true to retrieve LDAP groups; false to use defaultGroups from group-meetings.json.
+.It Va LDAP_GROUP_BASE
+Relevant group search base DN; required for group-search.
+.It Va LDAP_GROUP_SCOPE
+base, one, or sub; required for group-search.
+.It Va LDAP_GROUP_FILTER
+Membership filter template containing {member}; required for group-search.
+.It Va LDAP_GROUP_NAME_ATTRIBUTE
+Group name attribute; required for group-search.
+.It Va LDAP_GROUP_MEMBER_VALUE
+dn or username; selects the escaped {member} substitution.
+.It Va LDAP_GROUP_UNIQUE_FILTER
+Uniqueness filter containing {group}, required for group-search with direct mode or name mappings.
+.It Va LDAP_MEETING_MODE
+direct or mapped; grants are combined by union.
+.It Va LDAP_TLS_CA_FILE
+Explicit absolute CA bundle path; required for ldaps and ldap-starttls.
+.It Va LDAP_TLS_MIN_VERSION
+TLSv1.2 or TLSv1.3; required for ldaps and ldap-starttls.
+.It Va LDAP_TLS_SERVER_NAME
+Explicit TLS verification hostname, or explicitly empty to use the URL host.
+.El
+.Pp
+Group membership and the complete group-meetings.json policy are checked on every login.
+Account and group changes take effect at the next login or session expiry.
+Passwords are not retained in tokens or reused when creating or joining meetings.
+
+.Bl -tag -width LDAP_USER_GROUP_ATTRIBUTE
+.It Va LDAP_GROUP_SOURCE
+user-attribute or group-search; explicitly required when groups are enabled.
+.It Va LDAP_USER_GROUP_ATTRIBUTE
+Attribute containing group names on the user entry; required for user-attribute.
+.It Va LDAP_MAPPING_KEY
+name or dn; explicitly required in mapped mode.
+User-attribute supports name mappings only.
+Group-search supports both.
+.El
+.Pp
+Direct mode treats group names as approved meeting identifiers.
+Mapped mode grants the union of meetings listed by the user's groups.
+A meeting may belong to multiple groups.
+
+.Sh OPERATIONAL DEFAULTS
+Omitted operational settings use these defaults:
+LDAP_CONNECT_TIMEOUT_MS=3000,
+LDAP_OPERATION_TIMEOUT_MS=5000,
+LDAP_MAX_GROUPS=1000,
+LDAP_PASSWORD_POLICY=true,
+LDAP_SESSION_MAX_AGE=28800 (seconds),
+LDAP_TLS_MIN_VERSION=TLSv1.2, and
+LDAP_TLS_SERVER_NAME empty (verify the URL host).
+Explicit invalid or empty values are rejected except where empty is permitted.
+Directory, transport, group and meeting policy settings remain explicit;
+commented examples without a stated default are not active values.
+.Sh FILES
+.Bl -tag -width "ldap/group-meetings.json"
+.It Pa %%PREFIX%%/etc/mirotalk/ldap/ldap.conf
+LDAP connection, identity and group lookup settings.
+.It Pa %%PREFIX%%/etc/mirotalk/ldap/bind-secret
+Protected search-account password.
+.It Pa %%PREFIX%%/etc/mirotalk/ldap/group-meetings.json
+Default groups and group-to-meeting grants.
+.El
+.Sh GROUP MEETING POLICY
+The file contains exactly defaultGroups (array) and groupMeetings (object).
+groupMeetings maps each stable LDAP group key to a nonempty array of exact
+meeting keys. Matching uses LDAP_MAPPING_KEY=name or dn in mapped mode.
+Grants are the union of matching groups, with duplicate meetings removed.
+.Pp
+defaultGroups applies only after successful authentication returns no groups.
+It never supplements existing membership or masks LDAP errors. Empty defaults
+disable fallback. Direct mode uses group keys as meeting keys; mapped mode
+resolves them through groupMeetings. Display attributes never affect matching.
+.Pp
+The complete policy is validated on each login and replaced atomically.
+A missing file in mapped mode denies login; direct mode allows a missing file
+with no default groups. Malformed JSON, duplicate JSON keys, unknown fields,
+invalid keys, empty grants, unreadable files, symlinks and unsafe permissions
+deny login. The file is limited to 256 KiB and must not be writable by group or others.
+A literal * LDAP meeting key grants only that meeting, never wildcard access.
+.Sh DIAGNOSTICS
+Server logs identify the failed setting, file or LDAP operation.
+LDAP passwords and bind-secret contents are never included.
+Credential failures use a generic browser alert.
+An authenticated account with no meeting grants receives a separate,
+localized alert and is denied a login session.
+
+.Sh SEE ALSO
+.Xr mirotalk.conf 5 ,
+.Xr mirotalk 8

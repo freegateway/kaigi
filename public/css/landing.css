@@ -295,7 +295,7 @@ button,
 input,
 select,
 textarea {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Noto Sans CJK JP', sans-serif;
 }
 a {
     color: #8a94a7;
@@ -1818,6 +1818,29 @@ main {
     }
 }
 
+
+/* Keep the authenticated login footer on one visible row. */
+.login-footer-inner {
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 16px;
+}
+.login-footer-inner .footer-copyright,
+.login-footer-inner .footer-links {
+    flex: 0 1 auto;
+    width: auto;
+    margin-bottom: 0;
+}
+.login-footer-inner .footer-copyright {
+    justify-content: flex-start;
+}
+.login-footer-inner .footer-links {
+    order: 0;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
 /*Pulse Button*/
 .pulse {
     box-shadow: 0 0 0 rgba(22, 140, 255, 0.4);
@@ -1861,6 +1884,7 @@ main {
             0 0 0 0 rgba(22, 140, 255, 0);
     }
 }
+
 /*Pulse Button*/
 
 .tiles-wrap {
@@ -3289,3 +3313,32 @@ a:focus-visible {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Keep the landing footer visible while the logo and content scroll above it. */
+.body-wrap.landing-with-footer {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.landing-with-footer > .landing-scroll-content {
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.landing-with-footer > .site-footer {
+    position: relative;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Panels and footer stay in document flow at enlarged display scaling. */
+.body-wrap.landing-with-footer { overflow: visible; height: auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.landing-with-footer > .landing-scroll-content { overflow: visible; flex: 1 0 auto; min-height: auto; }
+.landing-with-footer .hero-inner { min-height: 0; }
+.landing-with-footer > .site-footer { position: static; flex-shrink: 0; }
+.login-footer-inner { flex-wrap: wrap; }
+@media (max-height: 800px) { .landing-with-footer .hero { padding-top: 20px; padding-bottom: 20px; } }

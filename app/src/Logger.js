@@ -14,6 +14,31 @@ const options = {
 const LOGS_JSON = config.system?.console?.json;
 const LOGS_JSON_PRETTY = config.system?.console?.json_pretty;
 
+const sensitiveKeyPattern = /(password|passwd|secret|token|authorization|cookie|api[_-]?key|private[_-]?key|dsn)/i;
+
+function sanitizeLogValue(value, seen = new WeakSet()) {
+    if (value === null || value === undefined || typeof value !== 'object') return value;
+
+    if (seen.has(value)) return '[Circular]';
+    seen.add(value);
+
+    if (value instanceof Error) {
+        return {
+            name: value.name,
+            message: value.message,
+            stack: value.stack,
+        };
+    }
+
+    if (Array.isArray(value)) return value.map((entry) => sanitizeLogValue(entry, seen));
+
+    const sanitized = {};
+    for (const [key, entry] of Object.entries(value)) {
+        sanitized[key] = sensitiveKeyPattern.test(key) ? '[REDACTED]' : sanitizeLogValue(entry, seen);
+    }
+    return sanitized;
+}
+
 module.exports = class Logger {
     constructor(appName = 'miroTalkSfu') {
         this.appName = colors.yellow(appName);
@@ -36,7 +61,7 @@ module.exports = class Logger {
             ...extra,
         };
         if (op && typeof op === 'object' && Object.keys(op).length > 0) {
-            logObj.data = op;
+            logObj.data = sanitizeLogValue(op);
         }
         LOGS_JSON_PRETTY ? console.log(JSON.stringify(logObj, null, 2)) : console.log(JSON.stringify(logObj));
     }
@@ -50,7 +75,7 @@ module.exports = class Logger {
             } else {
                 console.debug(
                     '[' + this.getDateTime() + '] [' + this.appName + '] ' + msg,
-                    util.inspect(op, options),
+                    util.inspect(sanitizeLogValue(op), options),
                     this.timeElapsedMs
                 );
             }
@@ -62,7 +87,7 @@ module.exports = class Logger {
         if (LOGS_JSON) {
             this.jsonLog('log', this.appName, msg, op);
         } else {
-            console.log('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(op, options));
+            console.log('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(sanitizeLogValue(op), options));
         }
     }
 
@@ -72,7 +97,7 @@ module.exports = class Logger {
         } else {
             console.info(
                 '[' + this.getDateTime() + '] [' + this.appName + '] ' + colors.green(msg),
-                util.inspect(op, options)
+                util.inspect(sanitizeLogValue(op), options)
             );
         }
     }
@@ -83,7 +108,7 @@ module.exports = class Logger {
         } else {
             console.warn(
                 '[' + this.getDateTime() + '] [' + this.appName + '] ' + colors.yellow(msg),
-                util.inspect(op, options)
+                util.inspect(sanitizeLogValue(op), options)
             );
         }
     }
@@ -94,7 +119,7 @@ module.exports = class Logger {
         } else {
             console.error(
                 '[' + this.getDateTime() + '] [' + this.appName + '] ' + colors.red(msg),
-                util.inspect(op, options)
+                util.inspect(sanitizeLogValue(op), options)
             );
         }
     }

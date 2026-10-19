@@ -153,74 +153,11 @@ describe('test-ServerAPI', () => {
         });
     });
 
-    describe('getMeetingURL', () => {
-        it('should return a meeting URL with a generated UUID', () => {
-            const uuidV4Stub = sinon.stub().returns('12345');
-            const ServerApi = proxyquire('../app/src/ServerApi', {
-                uuid: { v4: uuidV4Stub },
-            });
-
-            serverApi = new ServerApi(host, authorization);
-
-            const result = serverApi.getMeetingURL();
-            result.should.equal('https://example.com/join/12345');
-        });
-    });
-
-    describe('getJoinURL', () => {
-        it('should return a valid join URL with the given data', () => {
-            const data = {
-                room: 'room1',
-                roomPassword: 'password123',
-                name: 'John Doe',
-                avatar: 'test.jpg',
-                audio: true,
-                video: false,
-                screen: false,
-                chat: false,
-                hide: false,
-                notify: false,
-                duration: '00:30:00',
-                token: { username: 'user', password: 'pass', presenter: true, expire: '1h' },
-            };
-
-            const tokenStub = sinon.stub(serverApi, 'getToken').returns('testToken');
-
-            const result = serverApi.getJoinURL(data);
-            result.should.equal(
-                'https://example.com/join?room=room1&roomPassword=password123&name=John%20Doe&avatar=test.jpg&audio=true&video=false&screen=false&chat=false&hide=false&notify=false&duration=00:30:00&token=testToken'
-            );
-
-            tokenStub.restore();
-        });
-
-        it('should add noiseSuppression only when provided', () => {
-            const ServerApi = proxyquire('../app/src/ServerApi', {
-                uuid: { v4: sinon.stub().returns('room1') },
-            });
-            serverApi = new ServerApi(host, authorization);
-
-            serverApi
-                .getJoinURL({ room: 'room1', noiseSuppression: false })
-                .should.containEql('&noiseSuppression=false');
-            serverApi.getJoinURL({ room: 'room1', noiseSuppression: '1' }).should.containEql('&noiseSuppression=1');
-            serverApi.getJoinURL({ room: 'room1' }).should.not.containEql('noiseSuppression');
-        });
-
-        it('should use default values when data is not provided', () => {
-            const randomStub = sinon.stub().returns('123456');
-            const uuidV4Stub = sinon.stub().returns('room1');
-            const ServerApi = proxyquire('../app/src/ServerApi', {
-                uuid: { v4: uuidV4Stub },
-            });
-
-            serverApi = new ServerApi(host, authorization);
-            sinon.stub(serverApi, 'getRandomNumber').callsFake(randomStub);
-
-            const result = serverApi.getJoinURL({});
-            result.should.equal(
-                'https://example.com/join?room=room1&roomPassword=false&name=User-123456&avatar=false&audio=false&video=false&screen=false&chat=false&hide=false&notify=false&duration=unlimited'
-            );
+    describe('opaque meeting navigation', () => {
+        it('never embeds meeting keys, tokens, credentials, or media preferences in invitations', () => {
+            const data={room:'private-key',token:{username:'secret-user',password:'secret-pass'},noiseSuppression:true};
+            serverApi.getMeetingURL().should.equal('https://example.com/');
+            serverApi.getJoinURL(data).should.equal('https://example.com/');
         });
     });
 

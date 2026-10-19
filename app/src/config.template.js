@@ -20,11 +20,230 @@
  * 9. Mediasoup (WebRTC) Settings
  */
 
-const dotenv = require('dotenv').config();
-const packageJson = require('../../package.json');
 const os = require('os');
 const fs = require('fs');
 const splitChar = ',';
+// Retain the existing installation path during the source-only transition.
+const configDirectory = process.env.KAIGI_CONFIG_DIR || '/usr/local/etc/mirotalk';
+const sourceCodeUrl = process.env.KAIGI_SOURCE_URL || 'https://github.com/freegateway/kaigi';
+
+const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'mirotalk.conf'), requiredFile = false) => {
+
+    if (!fs.existsSync(configPath)) {
+        if (requiredFile) throw new Error(`Required configuration file is missing: ${configPath}`);
+        return Object.create(null);
+    }
+
+    const values = new Map();
+
+    for (const [lineNumber, sourceLine] of fs.readFileSync(configPath, 'utf8').split(/\r?\n/).entries()) {
+        const line = sourceLine.trim();
+
+        if (!line || line.startsWith('#')) {
+            continue;
+        }
+
+        const separator = line.indexOf('=');
+        if (separator < 1) {
+            throw new Error(`Invalid mirotalk.conf entry at line ${lineNumber + 1}`);
+        }
+
+        const name = line.slice(0, separator).trim();
+        let value = line.slice(separator + 1).trim();
+
+        if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
+            throw new Error(`Invalid mirotalk.conf variable name at line ${lineNumber + 1}: ${name}`);
+        }
+
+        if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
+            value = value.slice(1, -1);
+        }
+
+        if (requiredFile && values.has(name)) throw new Error(`Duplicate LDAP configuration setting: ${name}`);
+        values.set(name, value);
+    }
+
+    const resolved = new Map();
+    const resolving = new Set();
+
+    const resolve = (name) => {
+        if (resolved.has(name)) {
+            return resolved.get(name);
+        }
+        if (!values.has(name)) {
+            throw new Error(`Undefined mirotalk.conf variable referenced: ${name}`);
+        }
+        if (resolving.has(name)) {
+            throw new Error(`Circular mirotalk.conf variable reference involving: ${name}`);
+        }
+
+        resolving.add(name);
+        const value = values.get(name).replace(/\$\{([A-Z][A-Z0-9_]*)\}/g, (_match, referencedName) => resolve(referencedName));
+        resolving.delete(name);
+        resolved.set(name, value);
+        return value;
+    };
+
+    const config = Object.create(null);
+    for (const name of values.keys()) {
+        config[name] = resolve(name);
+    }
+    return config;
+};
+
+const freeBSDConfig = loadFreeBSDConfig();
+const ldapCompiled = true;
+for (const name of Object.keys(freeBSDConfig)) {
+    if (name.startsWith('LDAP_') && name !== 'LDAP_ENABLED') throw new Error(`${name} belongs in ${configDirectory}/ldap/ldap.conf`);
+}
+if (freeBSDConfig.LDAP_ENABLED !== undefined && !['true', 'false'].includes(freeBSDConfig.LDAP_ENABLED)) throw new Error('LDAP_ENABLED must be true or false');
+let ldapSettings = { enabled: false };
+if (freeBSDConfig.LDAP_ENABLED === 'true') {
+    if (!ldapCompiled) throw new Error('LDAP_ENABLED=true requires the LDAP port option with HARDENED');
+    const ldapValues = loadFreeBSDConfig(require('path').join(configDirectory, 'ldap/ldap.conf'), true);
+    if (Object.hasOwn(ldapValues, 'LDAP_ENABLED')) throw new Error('LDAP_ENABLED belongs only in mirotalk.conf');
+    for (const name of Object.keys(ldapValues)) if (!name.startsWith('LDAP_')) throw new Error(`Invalid LDAP configuration setting: ${name}`);
+    ldapSettings = require('./LdapAuth.cjs').ldapConfig({ ...ldapValues, LDAP_ENABLED: 'true' }, require('path').join(configDirectory, 'ldap/group-meetings.json'));
+}
+
+// Administrator-owned public text only; never publish the deployment config.
+const siteTextSettings = Object.freeze(["SITE_NAME", "SITE_DESCRIPTION", "SITE_COPYRIGHT", "PAGE_TITLE", "JOIN_DESCRIPTION", "JOIN_BUTTON_LABEL", "CUSTOMIZE_BUTTON_LABEL", "JOIN_LAST_LABEL", "NEW_ROOM_TITLE", "NEW_ROOM_DESCRIPTION", "LOGIN_HEADING", "LOGIN_INSTRUCTIONS", "LOGIN_BUTTON_LABEL"]);
+const siteTranslationsPath = require('path').join(configDirectory, 'site-translations.json');
+const loadSiteTranslations = () => {
+    let source;
+    try { source = fs.readFileSync(siteTranslationsPath, 'utf8'); }
+    catch (error) { if (error.code === 'ENOENT') return {}; throw new Error(`Cannot read site translation file ${siteTranslationsPath} (${error.code}).`); }
+    if (require('node:buffer').Buffer.byteLength(source, 'utf8') > 262144) throw new Error(`Site translation file ${siteTranslationsPath} exceeds 256 KiB.`);
+    let data;
+    try { data = JSON.parse(source); } catch { throw new Error(`Site translation file ${siteTranslationsPath} is not valid JSON.`); }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Site translations must be an object keyed by language code.');
+    const result = Object.create(null);
+    for (const [language, entries] of Object.entries(data)) {
+        if (!/^[a-z]{2}(?:-[A-Z]{2})?$/.test(language) || !entries || typeof entries !== 'object' || Array.isArray(entries)) throw new Error(`Invalid site translation language entry: ${language}`);
+        result[language] = Object.create(null);
+        for (const [name, value] of Object.entries(entries)) {
+            if (!siteTextSettings.includes(name)) throw new Error(`Unsupported site translation setting: ${name}`);
+            if (typeof value !== 'string' || value.includes('\0') || value.length > 8192) throw new Error(`Site translation ${language}.${name} must be text without NUL, at most 8192 characters.`);
+            result[language][name] = value;
+        }
+    }
+    return result;
+};
+const siteTranslations = loadSiteTranslations();
+const meetingSettings = require('./MeetingSettings').loadMeetingSettings(configDirectory);
+// English supplies startup text; the browser applies the selected language.
+// Configured text and application defaults cover missing translations.
+for (const [name, value] of Object.entries(siteTranslations.en || {})) {
+    const target = name === 'PAGE_TITLE' ? 'SITE_TITLE' : name === 'NEW_ROOM_DESCRIPTION' ? 'NEW_ROOM_DESC' : name;
+    if (process.env[target] === undefined && freeBSDConfig[name] === undefined) process.env[target] = value;
+}
+
+// FreeBSD-facing names are translated once into MiroTalk's existing
+// environment-variable configuration interface.  Existing environment values
+// always win, so mirotalk.conf is an override layer above upstream defaults,
+// not a replacement for them.
+if (freeBSDConfig.MEDIA_LISTEN_IP === undefined && freeBSDConfig.WEB_LISTEN_IP !== undefined) {
+    freeBSDConfig.MEDIA_LISTEN_IP = freeBSDConfig.WEB_LISTEN_IP;
+}
+
+if (freeBSDConfig.WEB_URL === undefined && freeBSDConfig.WEB_LISTEN_HOST) {
+    const webListenPort = freeBSDConfig.WEB_LISTEN_PORT || '3010';
+    freeBSDConfig.WEB_URL = `https://${freeBSDConfig.WEB_LISTEN_HOST}:${webListenPort}`;
+}
+
+if (freeBSDConfig.MEDIA_ANNOUNCED_HOST && freeBSDConfig.MEDIA_ANNOUNCED_IP) {
+    throw new Error('MEDIA_ANNOUNCED_HOST and MEDIA_ANNOUNCED_IP are mutually exclusive');
+}
+
+const siteAssetUrl = (name) => (name ? `/site-assets/${name}` : '');
+const aliases = {
+    PAGE_TITLE: 'SITE_TITLE',
+    SITE_ICON_NAME: 'SITE_ICON_PATH',
+    APPLE_TOUCH_ICON_NAME: 'APPLE_TOUCH_ICON_PATH',
+    ABOUT_IMAGE_NAME: 'ABOUT_IMAGE_URL',
+    NEW_ROOM_DESCRIPTION: 'NEW_ROOM_DESC',
+    WEB_LISTEN_IP: 'SERVER_LISTEN_IP',
+    WEB_LISTEN_PORT: 'SERVER_LISTEN_PORT',
+    WEB_URL: 'SERVER_HOST_URL',
+    WEB_SSL_CERT: 'SERVER_SSL_CERT',
+    WEB_SSL_KEY: 'SERVER_SSL_KEY',
+    MEDIA_LISTEN_IP: 'SFU_LISTEN_IP',
+    MEDIA_ANNOUNCED_IP: 'SFU_ANNOUNCED_IP',
+    MEDIA_MIN_PORT: 'SFU_MIN_PORT',
+    MEDIA_MAX_PORT: 'SFU_MAX_PORT',
+    MEDIA_NUM_WORKERS: 'SFU_NUM_WORKERS',
+};
+
+const assetAliases = {
+    SITE_ICON_NAME: 'SITE_ICON_PATH',
+    APPLE_TOUCH_ICON_NAME: 'APPLE_TOUCH_ICON_PATH',
+    ABOUT_IMAGE_NAME: 'ABOUT_IMAGE_URL',
+};
+
+for (const [name, value] of Object.entries(freeBSDConfig)) {
+    if (name.startsWith('LDAP_')) continue;
+    const target = aliases[name] || name;
+    const mappedValue = assetAliases[name] ? siteAssetUrl(value) : value;
+
+    if (process.env[target] === undefined) {
+        process.env[target] = mappedValue;
+    }
+}
+
+// Site identity is a FreeBSD convenience layer.  Populate the corresponding
+// upstream branding variables only when they were not explicitly supplied.
+const setDefaultEnvironment = (name, value) => {
+    if (value && process.env[name] === undefined) {
+        process.env[name] = value;
+    }
+};
+
+setDefaultEnvironment('APP_NAME', process.env.SITE_NAME);
+if (process.env.SITE_NAME && process.env.APP_TITLE === undefined) {
+    process.env.APP_TITLE = `<h1>${process.env.SITE_NAME}</h1>${process.env.SITE_DESCRIPTION || ''}`;
+}
+setDefaultEnvironment('APP_DESCRIPTION', process.env.SITE_DESCRIPTION);
+setDefaultEnvironment('SITE_TITLE', process.env.SITE_NAME);
+setDefaultEnvironment('META_DESCRIPTION', process.env.SITE_DESCRIPTION);
+setDefaultEnvironment('OG_SITE_NAME', process.env.SITE_NAME);
+setDefaultEnvironment('OG_TITLE', process.env.SITE_NAME);
+setDefaultEnvironment('OG_DESCRIPTION', process.env.SITE_DESCRIPTION);
+setDefaultEnvironment('OG_URL', process.env.SITE_URL);
+
+const parseNonNegativeSeconds = (name, fallback) => {
+    const value = process.env[name];
+    if (value === undefined || value === '') return fallback;
+    if (!/^\d+$/.test(value)) {
+        throw new Error(`${name} must be a non-negative integer number of seconds`);
+    }
+    return Number.parseInt(value, 10);
+};
+
+const authIdleTimeout = parseNonNegativeSeconds('AUTH_IDLE_TIMEOUT', 1800);
+const authSessionMaxAge = parseNonNegativeSeconds('AUTH_SESSION_MAX_AGE', 28800);
+
+// Keep these codes in sync with LANG_DISPLAY in public/js/I18n.js.
+const supportedUILanguages = Object.freeze([
+    'en', 'en-CA', 'hu', 'es', 'fr', 'fr-CA', 'de', 'pt', 'it', 'ru',
+    'zh', 'ja', 'ar', 'hi', 'sr', 'id', 'ko', 'tr', 'nl',
+]);
+
+const validateUILanguage = (name, code) => {
+    if (!supportedUILanguages.includes(code)) {
+        throw new Error(`Unsupported ${name} code: ${code || '(empty)'}; supported codes: ${supportedUILanguages.join(', ')}`);
+    }
+};
+
+if (process.env.UI_LANGUAGE !== undefined) {
+    validateUILanguage('UI_LANGUAGE', process.env.UI_LANGUAGE);
+}
+
+if (process.env.UI_LANGUAGES) {
+    const codes = process.env.UI_LANGUAGES.split(',').map((code) => code.trim());
+    for (const code of codes) validateUILanguage('UI_LANGUAGES', code);
+}
+
+const packageJson = require('../../package.json');
 
 // ==============================================
 // 1. Environment Detection & System Configuration
@@ -33,8 +252,9 @@ const splitChar = ',';
 const PLATFORM = os.platform();
 const IS_DOCKER = fs.existsSync('/.dockerenv');
 const ENVIRONMENT = process.env.NODE_ENV || 'development';
+const WEB_LISTEN_IP = process.env.SERVER_LISTEN_IP || '0.0.0.0';
 const ANNOUNCED_IP = process.env.SFU_ANNOUNCED_IP || '';
-const LISTEN_IP = process.env.SFU_LISTEN_IP || '0.0.0.0';
+const LISTEN_IP = process.env.SFU_LISTEN_IP || WEB_LISTEN_IP;
 const IPv4 = getIPv4();
 
 // ==============================================
@@ -57,6 +277,8 @@ const RTMP_FFMPEG_PATH = process.env.RTMP_FFMPEG_PATH || getFFmpegPath(PLATFORM)
 // ==============================================
 
 module.exports = {
+    meetingRestrictions: meetingSettings.restrictions,
+    meetingTranslations: meetingSettings.translations,
     // ==============================================
     // 1. Core System Configuration
     // ==============================================
@@ -101,15 +323,6 @@ module.exports = {
             json_pretty: process.env.LOGS_JSON_PRETTY === 'true',
             colors: process.env.LOGS_JSON === 'true' ? false : true,
         },
-
-        /**
-         * External Services Configuration
-         * -------------------------------
-         * - ip: Services to detect public IP address
-         */
-        services: {
-            ip: ['http://api.ipify.org', 'http://ipinfo.io/ip', 'http://ifconfig.me/ip'],
-        },
     },
 
     // ==============================================
@@ -125,7 +338,7 @@ module.exports = {
          */
         hostUrl: process.env.SERVER_HOST_URL || 'https://localhost:3010',
         listen: {
-            ip: process.env.SERVER_LISTEN_IP || '0.0.0.0',
+            ip: WEB_LISTEN_IP,
             port: process.env.SERVER_LISTEN_PORT || 3010,
         },
 
@@ -186,7 +399,7 @@ module.exports = {
          * Core Settings:
          * ------------------------
          * - enabled        : Enable recording functionality
-         * - uploadToS3     : Upload recording to AWS S3 bucket [true/false]
+         * - uploadToS3     : Fixed to false in HARDENED; cloud uploads are disabled.
          * - endpoint       : Leave empty ('') to store recordings locally OR
          *   - Set to a valid URL (e.g., 'http://localhost:8080/') to:
          *      - Push recordings to a remote server
@@ -213,7 +426,7 @@ module.exports = {
          */
         recording: {
             enabled: process.env.RECORDING_ENABLED === 'true',
-            uploadToS3: process.env.RECORDING_UPLOAD_TO_S3 === 'true',
+            uploadToS3: false,
             endpoint: process.env.RECORDING_ENDPOINT || '',
             dir: process.env.RECORDING_DIR || '../rec',
             maxFileSize: process.env.RECORDING_MAX_FILE_SIZE || 1 * 1024 * 1024 * 1024, // 1GB
@@ -224,137 +437,11 @@ module.exports = {
             },
         },
 
-        /**
-         * RTMP Configuration
-         * =================
-         * Configures Real-Time Messaging Protocol (RTMP) for audio/video/data streaming.
-         *
-         * Core Settings
-         * ------------
-         * - enabled            : Enable/disable RTMP streaming (default: false)
-         * - fromFile           : Enable local file streaming (default: true)
-         * - fromUrl            : Enable URL streaming (default: true)
-         * - fromStream         : Enable live stream input (default: true)
-         * - maxStreams         : Maximum simultaneous streams (default: 1)
-         * - allowCustomUrl     : Allow presenters to set a custom RTMP destination (default: false)
-         * - useNodeMediaServer : Use NodeMediaServer instead of nginx-rtmp (default: true)
-         * - server             : RTMP server URL (default: 'rtmp://localhost:1935')
-         * - appName            : Application name (default: 'live')
-         * - streamKey          : Optional authentication key (auto-generated UUID if empty)
-         * - secret             : Must match NodeMediaServer's config.js (default: 'mirotalkRtmpSecret')
-         * - apiSecret          : WebRTC→RTMP API secret. NO DEFAULT: set RTMP_API_SECRET to a strong,
-         *                        random value. When empty, /activeStreams, /initRTMP, /streamRTMP and
-         *                        /stopRTMP reject every request.
-         * - expirationHours    : Stream URL expiry in hours (default: 4)
-         * - dir                : Video storage directory (Relative to app/src/ default: app/rtmp)
-         * - ffmpegPath         : FFmpeg binary path (auto-detected)
-         * - platform           : Current OS platform (auto-detected)
-         *
-         * Output Quality (applies to live, file and URL streams)
-         * ------------------------------------------------------
-         * - videoQuality          : Default output profile: 480p | 720p | 1080p | 1440p (default: 720p)
-         * - maxVideoQuality       : Highest profile presenters may pick from the RTMP tab (default: 1080p)
-         * - allowQualitySelection : Let presenters pick the quality from the RTMP tab (default: true)
-         * - videoBitrate          : Video bitrate in kbps for the default profile, 0 = profile default
-         *                           (480p: 1500, 720p: 3000, 1080p: 4500, 1440p: 9000)
-         * - videoFps              : Output frame rate (default: 30, max: 60)
-         * - videoPreset           : x264 preset, ultrafast..veryslow (default: veryfast, slower = better quality, more CPU)
-         * - audioBitrate          : AAC audio bitrate in kbps (default: 128)
-         * YouTube recommends 1080p30 at 4500-9000 kbps; raise RTMP_VIDEO_QUALITY / RTMP_VIDEO_BITRATE for sharper
-         * streams (1080p needs roughly twice the CPU of 720p).
-         *
-         * Server Management
-         * ----------------
-         * NodeMediaServer (mirotalk/nms:latest):
-         *   - Start: npm run nms-start
-         *   - Stop:  npm run nms-stop
-         *   - Logs:  npm run nms-logs
-         *
-         * NGINX-RTMP (mirotalk/rtmp:latest):
-         *   - Start: npm run rtmp-start
-         *   - Stop:  npm run rtmp-stop
-         *   - Logs:  npm run rtmp-logs
-         *
-         * Implementation Notes:
-         * --------------------
-         * 1. For NodeMediaServer:
-         *    - Mandatory values: appName (falls back to 'live'), streamKey (auto-generated)
-         *    - URL format: rtmp://host:port/appName/streamKey?sign=expiration-token
-         *
-         * 2. Default Behavior:
-         *    - If server URL is empty, uses localhost:1935
-         *    - If no streamKey provided, generates UUIDv4
-         *    - When useNodeMediaServer=true, generates signed URLs with expiration
-         *
-         * Custom RTMP Destinations (YouTube, Facebook, Twitch)
-         * ---------------------------------------------------
-         * When allowCustomUrl=true, presenters can stream directly to external platforms
-         * from the meeting room UI. They select a preset or enter a custom RTMP URL,
-         * paste their stream key, and start streaming. Only rtmp:// and rtmps:// schemes
-         * are accepted by the server for security.
-         *
-         * YouTube Live:
-         *   - Go to https://studio.youtube.com → Go Live → Stream
-         *   - Copy your "Stream key" from the stream settings
-         *   - RTMP URL: rtmp://a.rtmp.youtube.com/live2
-         *   - Full URL: rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY
-         *   - Env setup (server-wide default):
-         *       RTMP_SERVER=rtmp://a.rtmp.youtube.com
-         *       RTMP_APP_NAME=live2
-         *       RTMP_STREAM_KEY=xxxx-xxxx-xxxx-xxxx
-         *       RTMP_USE_NODE_MEDIA_SERVER=false
-         *
-         * Facebook Live:
-         *   - Go to https://www.facebook.com/live/producer → Use Stream Key
-         *   - Copy the "Stream key" shown
-         *   - RTMP URL: rtmps://live-api-s.facebook.com:443/rtmp
-         *   - Full URL: rtmps://live-api-s.facebook.com:443/rtmp/YOUR_STREAM_KEY
-         *   - Note: Facebook requires rtmps:// (TLS encrypted)
-         *   - Env setup (server-wide default):
-         *       RTMP_SERVER=rtmps://live-api-s.facebook.com:443
-         *       RTMP_APP_NAME=rtmp
-         *       RTMP_STREAM_KEY=your-facebook-stream-key
-         *       RTMP_USE_NODE_MEDIA_SERVER=false
-         *
-         * Twitch:
-         *   - Go to https://dashboard.twitch.tv/settings/stream
-         *   - Copy your "Primary Stream key"
-         *   - RTMP URL: rtmp://live.twitch.tv/app
-         *   - Full URL: rtmp://live.twitch.tv/app/YOUR_STREAM_KEY
-         *   - Env setup (server-wide default):
-         *       RTMP_SERVER=rtmp://live.twitch.tv
-         *       RTMP_APP_NAME=app
-         *       RTMP_STREAM_KEY=live_xxxxxxxxxxxx
-         *       RTMP_USE_NODE_MEDIA_SERVER=false
-         *
-         * Custom RTMP Server:
-         *   - Use any RTMP/RTMPS ingest endpoint
-         *   - Full URL: rtmp://your-server:1935/app/stream-key
-         *   - Env setup (server-wide default):
-         *       RTMP_SERVER=rtmp://your-server:1935
-         *       RTMP_APP_NAME=app
-         *       RTMP_STREAM_KEY=your-stream-key
-         *       RTMP_USE_NODE_MEDIA_SERVER=false
-         *
-         * Per-room custom destination (no env changes needed):
-         *   - Set RTMP_ALLOW_CUSTOM_URL=true in .env
-         *   - Presenters will see preset buttons (YouTube/Facebook/Twitch/Custom)
-         *     in the RTMP tab of the meeting room
-         *   - They select a platform, paste their stream key, and start streaming
-         *   - The custom URL overrides the server default for that specific stream only
-         *
-         * Requirements:
-         * -------------
-         * - RTMP server must be running (or streaming to external platform)
-         * - Port 1935 must be accessible (or 443 for rtmps)
-         * - FFmpeg must be installed
-         *
-         * Documentation:
-         * --------------
-         * - https://docs.mirotalk.com/mirotalk-sfu/rtmp/
-         */
+        // RTMP streaming is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         rtmp: {
-            enabled: process.env.RTMP_ENABLED === 'true',
+            enabled: false,
             fromFile: process.env.RTMP_FROM_FILE !== 'false',
             fromUrl: process.env.RTMP_FROM_URL !== 'false',
             fromStream: process.env.RTMP_FROM_STREAM !== 'false',
@@ -410,8 +497,31 @@ module.exports = {
          * - exp: Token expiration time
          */
         jwt: {
-            key: process.env.JWT_SECRET,
-            exp: process.env.JWT_EXPIRATION || '1h',
+            key: (() => {
+                const secret = process.env.JWT_SECRET;
+
+                delete process.env.JWT_SECRET;
+
+                return secret;
+            })(),
+            exp:
+                process.env.JWT_EXPIRATION ||
+                (authSessionMaxAge > 0 ? `${authSessionMaxAge}s` : false),
+        },
+
+        /**
+         * Local authenticated-session lifetime.
+         *
+         * idleTimeout is refreshed by meaningful browser activity.  While a
+         * participant is connected to an active meeting, the authenticated
+         * browser sends a heartbeat so quiet participation counts as activity.
+         * maxAge is absolute and is never extended by activity.  Zero disables
+         * the corresponding limit.
+         */
+        ldap: ldapSettings,
+        authSession: {
+            idleTimeout: authIdleTimeout,
+            maxAge: authSessionMaxAge,
         },
 
         /**
@@ -531,10 +641,9 @@ module.exports = {
          * ------------------------
          * - users: Array of authorized users (used if users_from_db=false)
          *   - Define via HOST_USERS env variable:
-         *     HOST_USERS=username:password:displayname:room1,room2|username2:password2:displayname2:*
+         *     HOST_USERS is supplied by the rc script from the root-only users file.
          *     (Each user separated by '|', fields by ':', allowed_rooms comma-separated or '*' for all)
-         *   - Empty by default. Required when protected or user_auth is enabled (unless OIDC or users_from_db is used).
-         *   - The server refuses to start with publicly known credentials (admin/admin, guest/guest, username/password...).
+         *   - Each line contains username | password | display name | JSON meeting-key array or *.
          *   - Fields:
          *     - username      : Login username
          *     - password      : Login password
@@ -571,30 +680,30 @@ module.exports = {
                 process.env.USERS_ROOMS_ALLOWED_ENDPOINT || 'http://localhost:9000/api/v1/user/roomsAllowed', // 'https://webrtc.mirotalk.com/api/v1/user/roomsAllowed'
             api_room_exists: process.env.ROOM_EXISTS_ENDPOINT || 'http://localhost:9000/api/v1/room/exists', // 'https://webrtc.mirotalk.com//api/v1/room/exists'
 
-            users: process.env.HOST_USERS
-                ? process.env.HOST_USERS.split('|').map((userStr) => {
-                      const [username, password, displayname, allowedRoomsStr] = userStr.split(':');
+            users: process.env.HOST_USERS !== undefined
+                ? ((hostUsers) => { delete process.env.HOST_USERS; return hostUsers; })(process.env.HOST_USERS)
+                      .split('\n')
+                      .filter((userStr) => userStr.trim() !== '' && !userStr.trimStart().startsWith('#'))
+                      .map((userStr) => {
+                      const fields = userStr.split('|');
+                      const [username, password, displayname] = fields.slice(0, 3).map(field => field.trim());
+                      const allowedRoomsStr = fields.slice(3).join('|').trim();
+                      const allowedRooms = allowedRoomsStr === '*' ? ['*'] : JSON.parse(allowedRoomsStr);
+                      if (!Array.isArray(allowedRooms) || !allowedRooms.every(key => key === '*' || require('./MeetingSettings').isMeetingKey(key))) throw new Error(`Invalid meeting grants for local user ${JSON.stringify(username)}; use a JSON array of printable Unicode keys.`);
                       return {
                           username: username || '',
                           password: password || '',
                           displayname: displayname || '',
-                          allowed_rooms: allowedRoomsStr
-                              ? allowedRoomsStr
-                                    .split(',')
-                                    .map((room) => room.trim())
-                                    .filter((room) => room !== '')
-                              : ['*'],
+                          allowed_rooms: allowedRooms,
                       };
                   })
-                : [], // Empty by default: a shipped username/password is a public credential, set your own.
+                : [],
 
+            // HARDENED: authorized attendees have equal standing. No automatic or
+            // configured presenter role is issued to meeting participants.
             presenters: {
-                list: process.env.PRESENTERS
-                    ? process.env.PRESENTERS.split(splitChar)
-                          .map((presenter) => presenter.trim())
-                          .filter((presenter) => presenter !== '')
-                    : [], // Empty by default: a shipped name is a public credential. Set PRESENTERS to unique, non-guessable values.
-                join_first: process.env.PRESENTER_JOIN_FIRST !== 'false',
+                list: [],
+                join_first: false,
             },
         },
     },
@@ -632,7 +741,7 @@ module.exports = {
         keySecret: process.env.API_KEY_SECRET,
         allowed: {
             stats: process.env.API_ALLOW_STATS !== 'false',
-            meetings: process.env.API_ALLOW_MEETINGS === 'true',
+            meetings: false,
             meeting: process.env.API_ALLOW_MEETING !== 'false',
             meetingEnd: process.env.API_ALLOW_MEETING_END === 'true',
             join: process.env.API_ALLOW_JOIN !== 'false',
@@ -647,44 +756,11 @@ module.exports = {
     // ==============================================
 
     integrations: {
-        /**
-         * ChatGPT Integration Configuration
-         * ================================
-         * OpenAI API integration for AI-powered chat functionality
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Go to https://platform.openai.com/
-         * 2. Create your OpenAI account
-         * 3. Generate your API key at https://platform.openai.com/account/api-keys
-         *
-         * Core Settings:
-         * -------------
-         * - enabled    : Enable/disable ChatGPT integration [true/false] (default: false)
-         * - basePath   : OpenAI API endpoint (default: 'https://api.openai.com/v1/')
-         * - apiKey     : OpenAI ProjectAPI secret key (ALWAYS store in .env)
-         * - model      : GPT model version (default: 'gpt-3.5-turbo')
-         *
-         * Advanced Settings:
-         * -----------------
-         * - max_tokens: Maximum response length (default: 1024 tokens)
-         * - temperature: Creativity control (0=strict, 1=creative) (default: 0)
-         *
-         * Usage Example:
-         * -------------
-         * 1. Supported Models:
-         *    - gpt-3.5-turbo (recommended)
-         *    - gpt-4
-         *    - gpt-4-turbo
-         *    - ...
-         *
-         * 2. Temperature Guide:
-         *    - 0.0: Factual responses
-         *    - 0.7: Balanced
-         *    - 1.0: Maximum creativity
-         */
+        // Hosted OpenAI chat is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         chatGPT: {
-            enabled: process.env.CHATGPT_ENABLED === 'true',
+            enabled: false,
             basePath: process.env.CHATGPT_BASE_PATH || 'https://api.openai.com/v1/',
             apiKey: process.env.CHATGPT_API_KEY || '',
             model: process.env.CHATGPT_MODEL || 'gpt-3.5-turbo',
@@ -692,44 +768,11 @@ module.exports = {
             temperature: parseInt(process.env.CHATGPT_TEMPERATURE) || 0.7,
         },
 
-        /**
-         * DeepSeek Integration Configuration
-         * ================================
-         * DeepSeek API integration for AI-powered chat functionality
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Go to https://deepseek.com/
-         * 2. Create your DeepSeek account
-         * 3. Generate your API key at https://deepseek.com/account/api-keys
-         *
-         * Core Settings:
-         * -------------
-         * - enabled    : Enable/disable DeepSeek integration [true/false] (default: false)
-         * - basePath   : DeepSeek API endpoint (default: 'https://api.deepseek.com/v1/')
-         * - apiKey     : DeepSeek API secret key (ALWAYS store in .env)
-         * - model      : DeepSeek model version (default: 'deepseek-v4-flash')
-         *
-         * Advanced Settings:
-         * -----------------
-         * - max_tokens: Maximum response length (default: 1024 tokens)
-         * - temperature: Creativity control (0=strict, 1=creative) (default: 0)
-         *
-         * Usage Example:
-         * -------------
-         * 1. Supported Models:
-         *  - deepseek-v4-flash (recommended)
-         *  - deepseek-v4-pro
-         *  - ...
-         *
-         * 2. Temperature Guide:
-         *  - 0.0: Factual responses
-         *  - 0.7: Balanced
-         *  - 1.0: Maximum creativity
-         *
-         */
+        // Hosted DeepSeek chat is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         deepSeek: {
-            enabled: process.env.DEEP_SEEK_ENABLED === 'true',
+            enabled: false,
             basePath: process.env.DEEP_SEEK_BASE_PATH || 'https://api.deepseek.com/v1/',
             apiKey: process.env.DEEP_SEEK_API_KEY || '',
             model: process.env.DEEP_SEEK_MODEL || 'deepseek-v4-flash',
@@ -737,37 +780,11 @@ module.exports = {
             temperature: parseInt(process.env.DEEP_SEEK_TEMPERATURE) || 0.7,
         },
 
-        /**
-         * Whisper Speech-to-Text Configuration
-         * ====================================
-         * Server-side audio transcription using an OpenAI-compatible
-         * Whisper endpoint. Works with the official OpenAI API or any
-         * self-hosted, OpenAI-compatible server (whisper.cpp server,
-         * faster-whisper / whisper-asr-webservice, etc.).
-         *
-         * When enabled, the room Transcription panel shows a "Whisper mode"
-         * switch. In that mode the browser records short audio segments and
-         * sends them here for transcription instead of using the browser's
-         * built-in Web Speech API.
-         *
-         * Core Settings:
-         * -------------
-         * - enabled    : Enable/disable Whisper transcription [true/false] (default: false)
-         * - basePath   : OpenAI-compatible API endpoint (default: 'https://api.openai.com/v1/')
-         *                For a self-hosted server use e.g. 'http://localhost:8000/v1/'
-         * - apiKey     : API secret key (ALWAYS store in .env). May be empty for
-         *                self-hosted servers that don't require authentication.
-         * - model      : Whisper model name (default: 'whisper-1')
-         * - language   : Optional ISO-639-1 language hint (e.g. 'en'). Empty = auto-detect.
-         *
-         * Advanced Settings:
-         * -----------------
-         * - segmentSeconds : Length of each recorded audio segment sent for
-         *                    transcription (default: 5 seconds)
-         * - maxAudioBytes  : Reject audio segments larger than this (default: 25MB)
-         */
+        // Whisper transcription is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         whisper: {
-            enabled: process.env.WHISPER_ENABLED === 'true',
+            enabled: false,
             basePath: process.env.WHISPER_BASE_PATH || 'https://api.openai.com/v1/',
             apiKey: process.env.WHISPER_API_KEY || '',
             model: process.env.WHISPER_MODEL || 'whisper-1',
@@ -776,63 +793,8 @@ module.exports = {
             maxAudioBytes: parseInt(process.env.WHISPER_MAX_AUDIO_BYTES) || 25 * 1024 * 1024,
         },
 
-        /**
-         * LiveAvatar Video AI Configuration
-         * =================================
-         * AI-powered avatar streaming integrations.
-         * Supported providers: liveavatar, anam
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Go to https://app.liveavatar.com
-         * 2. Create your LiveAvatar account
-         * 3. Generate your API key from settings
-         * 4. (Optional) Configure Anam provider:
-         *    - https://lab.anam.ai
-         *    - create API key and copy LLM id
-         *
-         * Core Settings:
-         * -------------
-         * - enabled    : Enable/disable Video AI [true/false] (default: false)
-         * - defaultProvider: Default provider shown in UI (liveavatar|anam)
-         * - liveavatar     : LiveAvatar provider config
-         * - anam           : Anam provider config
-         *
-         * AI Behavior:
-         * -----------
-         * - systemLimit: Personality/behavior instructions for the AI avatar
-         *                (default: Streaming avatar instructions for MiroTalk SFU)
-         */
-        videoAI: {
-            enabled: process.env.VIDEOAI_ENABLED === 'true',
-            defaultProvider: process.env.VIDEOAI_DEFAULT_PROVIDER || process.env.VIDEOAI_PROVIDER || 'liveavatar',
-            systemLimit: process.env.VIDEOAI_SYSTEM_LIMIT || 'You are a streaming avatar from MiroTalk SFU...',
-            sessionTimeLimit: process.env.VIDEOAI_SESSION_TIME_LIMIT
-                ? parseInt(process.env.VIDEOAI_SESSION_TIME_LIMIT, 10)
-                : 0, // Session time limit in seconds (0 = unlimited)
-            liveavatar: {
-                enabled: process.env.VIDEOAI_LIVEAVATAR_ENABLED
-                    ? process.env.VIDEOAI_LIVEAVATAR_ENABLED === 'true'
-                    : true,
-                basePath:
-                    process.env.VIDEOAI_LIVEAVATAR_BASE_PATH ||
-                    process.env.VIDEOAI_BASE_PATH ||
-                    'https://api.liveavatar.com',
-                apiKey: process.env.VIDEOAI_LIVEAVATAR_API_KEY || process.env.VIDEOAI_API_KEY || '',
-                mode: process.env.VIDEOAI_LIVEAVATAR_MODE || process.env.VIDEOAI_MODE || 'FULL',
-                contextId: process.env.VIDEOAI_LIVEAVATAR_CONTEXT_ID || process.env.VIDEOAI_CONTEXT_ID || '',
-            },
-            anam: {
-                enabled: process.env.VIDEOAI_ANAM_ENABLED
-                    ? process.env.VIDEOAI_ANAM_ENABLED === 'true'
-                    : !!(process.env.VIDEOAI_ANAM_API_KEY || ''),
-                basePath: process.env.VIDEOAI_ANAM_BASE_PATH || 'https://api.anam.ai',
-                apiKey: process.env.VIDEOAI_ANAM_API_KEY || '',
-                llmId: process.env.VIDEOAI_ANAM_LLM_ID || '',
-                avatarModel: process.env.VIDEOAI_ANAM_AVATAR_MODEL || 'cara-4',
-                systemLimit: process.env.VIDEOAI_ANAM_SYSTEM_LIMIT || '',
-            },
-        },
+        // HARDENED excludes external VideoAI providers.
+        videoAI: { enabled: false },
 
         /**
          * Email Notification Configuration
@@ -904,40 +866,11 @@ module.exports = {
             signingSecret: process.env.SLACK_SIGNING_SECRET || '',
         },
 
-        /**
-         * Mattermost Integration Configuration
-         * ===================================
-         * Settings for Mattermost slash commands and bot integration
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Go to Mattermost System Console → Integrations → Bot Accounts
-         * 2. Create a new bot account and copy:
-         *    - Server URL (e.g., 'https://chat.yourdomain.com')
-         *    - Access Token
-         * 3. For slash commands:
-         *    - Navigate to Integrations → Slash Commands
-         *    - Set Command: '/sfu'
-         *    - Set Request URL: 'https://your-sfu-server.com/mattermost/commands'
-         *
-         * Core Settings:
-         * -------------
-         * - enabled      : Enable/disable integration [true/false] (default: false)
-         * - serverUrl    : Mattermost server URL (include protocol)
-         * - token        : Bot account access token (most secure option)
-         * - OR
-         * - username     : Legacy auth username (less secure)
-         * - password     : Legacy auth password (deprecated)
-         *
-         * Command Configuration:
-         * ---------------------
-         * - commands     : Slash command definitions:
-         *   - name       : Command trigger (e.g., '/sfu')
-         *   - message    : Default response template
-         *
-         */
+        // Mattermost integration is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         mattermost: {
-            enabled: process.env.MATTERMOST_ENABLED === 'true',
+            enabled: false,
             serverUrl: process.env.MATTERMOST_SERVER_URL || '',
             username: process.env.MATTERMOST_USERNAME || '',
             password: process.env.MATTERMOST_PASSWORD || '',
@@ -956,37 +889,11 @@ module.exports = {
             ],
         },
 
-        /**
-         * Discord Integration Configuration
-         * ================================
-         * Settings for Discord bot and slash commands integration
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Create a Discord application at https://discord.com/developers/applications
-         * 2. Navigate to "Bot" section and:
-         *    - Click "Add Bot"
-         *    - Copy the bot token (DISCORD_TOKEN)
-         * 3. Under "OAuth2 → URL Generator":
-         *    - Select "bot" and "applications.commands" scopes
-         *    - Select required permissions (see below)
-         * 4. Invite bot to your server using generated URL
-         *
-         * Core Settings:
-         * -------------
-         * - enabled        : Enable/disable Discord bot [true/false] (default: false)
-         * - token          : Bot token from Discord Developer Portal (store in .env)
-         *
-         * Command Configuration:
-         * ---------------------
-         * - commands       : Slash command definitions:
-         *   - name         : Command trigger (e.g., '/sfu')
-         *   - message      : Response template
-         *   - baseUrl      : Meeting room base URL
-         *
-         */
+        // Discord integration is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         discord: {
-            enabled: process.env.DISCORD_ENABLED === 'true',
+            enabled: false,
             token: process.env.DISCORD_TOKEN || '',
             commands: [
                 {
@@ -997,58 +904,19 @@ module.exports = {
             ],
         },
 
-        /**
-         * Ngrok Tunnel Configuration
-         * =========================
-         * Secure tunneling for local development and testing
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Sign up at https://dashboard.ngrok.com/signup
-         * 2. Get your auth token from:
-         *    https://dashboard.ngrok.com/get-started/your-authtoken
-         * 3. For reserved domains/subdomains:
-         *    - Upgrade to paid plan if needed
-         *    - Reserve at https://dashboard.ngrok.com/cloud-edge/domains
-         *
-         * Core Settings:
-         * -------------
-         * - enabled      : Enable/disable Ngrok tunneling [true/false] (default: false)
-         * - authToken    : Your Ngrok authentication token (from dashboard)
-         */
+        // ngrok tunnelling is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         ngrok: {
-            enabled: process.env.NGROK_ENABLED === 'true',
+            enabled: false,
             authToken: process.env.NGROK_AUTH_TOKEN || '',
         },
 
-        /**
-         * Sentry Error Tracking Configuration
-         * ==================================
-         * Real-time error monitoring and performance tracking
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Create a project at https://sentry.io/signup/
-         * 2. Get your DSN from:
-         *    Project Settings → Client Keys (DSN)
-         * 3. Configure alert rules and integrations as needed
-         *
-         * Core Settings:
-         * -------------
-         * enabled              : Enable/disable Sentry [true/false] (default: false)
-         * logLevels            : Array of log levels to capture (default: ['error'])
-         * DSN                  : Data Source Name (from Sentry dashboard)
-         * tracesSampleRate     : Percentage of transactions to capture (0.0-1.0)
-         *
-         * Performance Tuning:
-         * ------------------
-         * - Production         : 0.1-0.2 (10-20% of transactions)
-         * - Staging            : 0.5-1.0
-         * - Development        : 0.0 (disable performance tracking)
-         *
-         */
+        // Sentry reporting is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         sentry: {
-            enabled: process.env.SENTRY_ENABLED === 'true',
+            enabled: false,
             logLevels: process.env.SENTRY_LOG_LEVELS
                 ? process.env.SENTRY_LOG_LEVELS.split(splitChar).map((level) => level.trim())
                 : ['error'],
@@ -1076,85 +944,11 @@ module.exports = {
             url: process.env.WEBHOOK_URL || 'https://your-site.com/webhook-endpoint',
         },
 
-        /**
-         * IP Geolocation Service Configuration
-         * ===================================
-         * Enables lookup of geographical information based on IP addresses using the GeoJS.io API.
-         *
-         * Core Settings:
-         * ---------------------
-         * - enabled: Enable/disable the IP lookup functionality [true/false] default false
-         *
-         * Service Details:
-         * --------------
-         * - Uses GeoJS.io free API service (https://www.geojs.io/)
-         * - Returns JSON data containing:
-         *   - Country, region, city
-         *   - Latitude/longitude
-         *   - Timezone and organization
-         * - Rate limits: 60 requests/minute (free tier)
-         */
-        IPLookup: {
-            enabled: process.env.IP_LOOKUP_ENABLED === 'true',
-            getEndpoint(ip) {
-                return `https://get.geojs.io/v1/ip/geo/${ip}.json`;
-            },
-        },
+        // Amazon S3 storage is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
 
-        /**
-         * Example for AWS S3 Storage Configuration
-         * ===========================
-         * Enables cloud file storage using Amazon Simple Storage Service (S3).
-         *
-         * Core Settings:
-         * --------------
-         * - enabled: Enable/disable AWS S3 integration [true/false]
-         * - accessKeyId: AWS access key ID (store in .env)
-         * - secretAccessKey: AWS secret access key (store in .env)
-         * - region: AWS region where the S3 bucket is located
-         * - bucket: Name of the S3 bucket to use for storage
-         *
-         * Advanced Settings:
-         * --------------
-         * - endpoint: Custom S3 endpoint URL (if empty to auto-resolve from region). Useful for S3-compatible services like MinIO, Wasabi, DigitalOcean Spaces, etc.
-         * - forcePathStyle: Set to true for S3-compatible services like MinIO, Wasabi, etc.
-         *
-         * Service Setup:
-         * -------------
-         * 1. Create an S3 Bucket:
-         *    - Sign in to AWS Management Console
-         *    - Navigate to S3 service
-         *    - Click "Create bucket"
-         *    - Choose unique name (e.g., 'mirotalk')
-         *    - Select region (must match AWS_REGION in config)
-         *    - Enable desired settings (versioning, logging, etc.)
-         *
-         * 2. Get Security Credentials:
-         *    - Create IAM user with programmatic access
-         *    - Attach 'AmazonS3FullAccess' policy (or custom minimal policy)
-         *    - Save Access Key ID and Secret Access Key
-         *
-         * 3. Configure CORS (for direct uploads):
-         *    [
-         *      {
-         *        "AllowedHeaders": ["*"],
-         *        "AllowedMethods": ["PUT", "POST"],
-         *        "AllowedOrigins": ["*"],
-         *        "ExposeHeaders": []
-         *      }
-         *    ]
-         *
-         * Technical Details:
-         * -----------------
-         * - Default region: us-east-2 (Ohio)
-         * - Direct upload uses presigned URLs (expire after 1 hour by default)
-         * - Recommended permissions for direct upload:
-         *   - s3:PutObject
-         *   - s3:GetObject
-         *   - s3:DeleteObject
-         */
         s3: {
-            enabled: process.env.S3_ENABLED === 'true',
+            enabled: false,
             accessKeyId: process.env.S3_ACCESS_KEY_ID || 'your-access-key-id',
             secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'your-secret-access-key',
             bucket: process.env.S3_BUCKET || 'mirotalk',
@@ -1190,7 +984,7 @@ module.exports = {
              *   endpoint per IP to prevent enumeration/scraping abuse without
              *   breaking the public "event zone" UX.
              */
-            showActive: process.env.SHOW_ACTIVE_ROOMS === 'true',
+            showActive: false,
             activeRoomsRateLimit: {
                 windowMs:
                     Math.max(parseInt(process.env.ACTIVE_ROOMS_RATE_LIMIT_WINDOW_MINUTES, 10) || 1, 1) * 60 * 1000,
@@ -1208,10 +1002,14 @@ module.exports = {
              * This allows for static branding in the public/views folder, without dynamic content injection.
              */
             htmlInjection: process.env.BRAND_HTML_INJECTION !== 'false',
+            siteTranslations,
 
             app: {
                 language: process.env.UI_LANGUAGE || 'en',
-                translationMode: process.env.UI_TRANSLATION_MODE || 'google', // auto (native else Google) | native (no Google) | google (default, always Google)
+                languages: process.env.UI_LANGUAGES
+                    ? process.env.UI_LANGUAGES.split(',').map((code) => code.trim()).filter(Boolean)
+                    : null,
+                translationMode: 'native', // HARDENED uses only local language files
                 name: process.env.APP_NAME || 'MiroTalk SFU',
                 title:
                     process.env.APP_TITLE ||
@@ -1220,7 +1018,7 @@ module.exports = {
                     process.env.APP_DESCRIPTION ||
                     'Start your next video call with a single click. No download, plug-in, or login is required.',
                 joinDescription: process.env.JOIN_DESCRIPTION || 'Pick a room name.<br />How about this one?',
-                joinButtonLabel: process.env.JOIN_BUTTON_LABEL || 'JOIN ROOM',
+                joinButtonLabel: process.env.JOIN_BUTTON_LABEL || 'Join meeting',
                 customizeButtonLabel: process.env.CUSTOMIZE_BUTTON_LABEL || 'CUSTOMIZE ROOM',
                 joinLastLabel: process.env.JOIN_LAST_LABEL || 'Your recent room:',
             },
@@ -1231,9 +1029,20 @@ module.exports = {
              * Site-wide settings including icons and page-specific content.
              */
             site: {
+                name: process.env.SITE_NAME || '',
+                url: process.env.SITE_URL || '',
+                contactEmail: process.env.SITE_CONTACT_EMAIL || '',
+                description: process.env.SITE_DESCRIPTION || '',
+                copyright: process.env.SITE_COPYRIGHT || '',
+                logo: siteAssetUrl(process.env.SITE_LOGO_NAME) || '../images/logo.svg',
+                logoUrl: process.env.SITE_LOGO_URL || process.env.SITE_URL || '/',
                 title: process.env.SITE_TITLE || 'MiroTalk SFU - Open Source WebRTC Video Conferencing',
-                icon: process.env.SITE_ICON_PATH || '../images/logo.svg',
-                appleTouchIcon: process.env.APPLE_TOUCH_ICON_PATH || '../images/logo.svg',
+                icon: process.env.SITE_ICON_PATH || siteAssetUrl(process.env.SITE_LOGO_NAME) || '../images/logo.svg',
+                appleTouchIcon:
+                    process.env.APPLE_TOUCH_ICON_PATH || siteAssetUrl(process.env.SITE_LOGO_NAME) || '../images/logo.svg',
+                sourceCodeUrl: sourceCodeUrl,
+                privacyPolicyUrl:
+                    process.env.PRIVACY_POLICY_URL || siteAssetUrl(process.env.PRIVACY_POLICY_NAME) || '',
                 newRoomTitle: process.env.NEW_ROOM_TITLE || 'Pick name. <br />Share URL. <br />Start conference.',
                 newRoomDescription:
                     process.env.NEW_ROOM_DESC || 'Each room has its disposable URL. Just pick a name and share.',
@@ -1263,8 +1072,8 @@ module.exports = {
                 description:
                     process.env.OG_DESCRIPTION ||
                     'Build your own Zoom alternative with MiroTalk SFU, an open-source self-hosted WebRTC video conferencing platform powered by Mediasoup. Host scalable meetings, webinars, classrooms, screen sharing and real-time collaboration.',
-                image: process.env.OG_IMAGE_URL || 'https://sfu.mirotalk.com/images/mirotalksfu.png',
-                url: process.env.OG_URL || 'https://sfu.mirotalk.com',
+                image: process.env.OG_IMAGE_URL || new URL('/images/logo.svg', process.env.WEB_URL || process.env.SERVER_HOST_URL || 'https://localhost:3010').toString(),
+                url: process.env.OG_URL || process.env.WEB_URL || process.env.SERVER_HOST_URL || 'https://localhost:3010',
             },
 
             /**
@@ -1282,7 +1091,7 @@ module.exports = {
                 sponsors: process.env.SHOW_SPONSORS !== 'false',
                 pastSponsors: process.env.SHOW_PAST_SPONSORS !== 'false',
                 advertisers: process.env.SHOW_ADVERTISERS !== 'false',
-                supportUs: process.env.SHOW_SUPPORT_US !== 'false',
+                supportUs: false,
                 footer: process.env.SHOW_FOOTER !== 'false',
             },
 
@@ -1317,7 +1126,7 @@ module.exports = {
              */
             login: {
                 heading: process.env.LOGIN_HEADING || 'Welcome back',
-                description: process.env.LOGIN_DESCRIPTION || 'Enter your credentials to continue.',
+                description: process.env.LOGIN_INSTRUCTIONS ?? 'Enter your credentials to continue.',
                 buttonLabel: process.env.LOGIN_BUTTON_LABEL || 'Login',
             },
 
@@ -1328,7 +1137,7 @@ module.exports = {
              * Supports HTML content for flexible formatting.
              */
             about: {
-                imageUrl: process.env.ABOUT_IMAGE_URL || '../images/mirotalk-logo.gif',
+                imageUrl: process.env.ABOUT_IMAGE_URL || siteAssetUrl(process.env.SITE_LOGO_NAME) || '../images/mirotalk-logo.gif',
                 title: `WebRTC SFU v${packageJson.version}`,
                 html: `
                     <div class="about-content">
@@ -1370,20 +1179,26 @@ module.exports = {
                             </div>
                         </dl>
                         <footer class="about-footer">
-                            &copy; ${new Date().getFullYear()} ${process.env.COPYRIGHT_TEXT || 'MiroTalk SFU. All rights reserved.'}
+                            &copy; ${new Date().getFullYear()} ${process.env.COPYRIGHT_TEXT || 'MiroTalk SFU · GNU AGPLv3'}
                         </footer>
+                        <section class="about-build-info">
+                        <p>This FreeBSD HARDENED build is part of the
+                            <a href="https://www.freegateway.org/" target="_blank" rel="noopener noreferrer">FreeGateway Digital Sovereignty Project</a>.
+                        </p>
+                        <p>Modified for FreeBSD HARDENED in 2026. Distributed under the GNU Affero General Public License version 3; no warranty is provided.</p>
+                        <p><a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU AGPLv3 license</a></p>
+                        <p>The complete Corresponding Source for this FreeBSD build, including its modifications and build files, is available below.</p>
+                        <p><strong><a href="${sourceCodeUrl}" target="_blank" rel="noopener noreferrer">Download Corresponding Source for this FreeBSD build</a></strong></p>
+                        </section>
                     </div>
                 `,
             },
 
-            /**
-             * Widget Configuration
-             * --------------------
-             * Controls the appearance and behavior of the support widget.
-             * Supports dynamic configuration via environment variables.
-             */
+            // Support widget is disabled in HARDENED.
+            // Retained fields describe the upstream data shape; they do not enable this feature.
+
             widget: {
-                enabled: process.env.WIDGET_ENABLED === 'true',
+                enabled: false,
                 roomId: process.env.WIDGET_ROOM_ID || 'support-room',
                 theme: process.env.WIDGET_THEME || 'dark',
                 widgetState: process.env.WIDGET_STATE || 'minimized',
@@ -1479,11 +1294,11 @@ module.exports = {
                 chatButton: process.env.SHOW_CHAT_BUTTON !== 'false',
                 participantsButton: process.env.SHOW_PARTICIPANTS_BUTTON !== 'false',
                 pollButton: process.env.SHOW_POLL_BUTTON !== 'false',
-                speechRecButton: process.env.SHOW_SPEECH_REC_BUTTON !== 'false',
+                speechRecButton: false,
                 breakoutRoomButton: process.env.SHOW_BREAKOUT_ROOM_BUTTON !== 'false',
                 editorButton: process.env.SHOW_EDITOR_BUTTON !== 'false',
                 raiseHandButton: process.env.SHOW_RAISE_HAND !== 'false',
-                transcriptionButton: process.env.SHOW_TRANSCRIPTION !== 'false',
+                transcriptionButton: false,
                 whiteboardButton: process.env.SHOW_WHITEBOARD !== 'false',
                 documentPiPButton: process.env.SHOW_DOCUMENT_PIP !== 'false',
                 snapshotRoomButton: process.env.SHOW_SNAPSHOT !== 'false',
@@ -1495,17 +1310,16 @@ module.exports = {
             },
             // Settings panel buttons and options
             settings: {
-                activeRooms: process.env.SHOW_ROOMS !== 'false',
+                activeRooms: false,
                 fileSharing: process.env.ENABLE_FILE_SHARING !== 'false',
-                lockRoomButton: process.env.SHOW_LOCK_ROOM !== 'false',
-                unlockRoomButton: process.env.SHOW_UNLOCK_ROOM !== 'false',
-                broadcastingButton: process.env.SHOW_BROADCASTING !== 'false',
-                lobbyButton: process.env.SHOW_LOBBY !== 'false',
-                joinLockButton: process.env.SHOW_JOIN_LOCK !== 'false',
-                sendEmailInvitation: process.env.SHOW_EMAIL_INVITE !== 'false',
+                lockRoomButton: false,
+                unlockRoomButton: false,
+                broadcastingButton: false,
+                lobbyButton: false,
+                joinLockButton: false,
+                sendEmailInvitation: false,
                 micOptionsButton: process.env.SHOW_MIC_OPTIONS !== 'false',
-                tabRTMPStreamingBtn: process.env.SHOW_RTMP_TAB !== 'false',
-                tabSipPhoneBtn: process.env.SHOW_SIP_TAB !== 'false',
+                tabRTMPStreamingBtn: false,
                 tabNotificationsBtn: process.env.SHOW_NOTIFICATIONS_TAB !== 'false',
                 tabNetworkBtn: process.env.SHOW_NETWORK_TAB !== 'false',
                 tabModerator: process.env.SHOW_MODERATOR_TAB !== 'false',
@@ -1516,7 +1330,7 @@ module.exports = {
                 keyboardShortcuts: process.env.SHOW_KEYBOARD_SHORTCUTS !== 'false',
                 virtualBackground: process.env.SHOW_VIRTUAL_BACKGROUND !== 'false',
                 customNoiseSuppression: process.env.CUSTOM_NOISE_SUPPRESSION_ENABLED !== 'false',
-                customNoiseSuppressionDefault: process.env.CUSTOM_NOISE_SUPPRESSION_DEFAULT !== 'false', // initial state, users can still toggle it
+                customNoiseSuppressionDefault: process.env.CUSTOM_NOISE_SUPPRESSION_DEFAULT === 'true', // initial state, users can still toggle it
             },
 
             // Video controls for producer (local user)
@@ -1548,7 +1362,6 @@ module.exports = {
                 muteVideoButton: process.env.SHOW_MUTE_VIDEO !== 'false',
                 muteAudioButton: process.env.SHOW_MUTE_AUDIO !== 'false',
                 audioVolumeInput: process.env.SHOW_VOLUME_CONTROL !== 'false',
-                geolocationButton: process.env.SHOW_GEO_LOCATION !== 'false',
                 banButton: process.env.SHOW_BAN_BUTTON !== 'false',
                 ejectButton: process.env.SHOW_EJECT_BUTTON !== 'false',
                 presenterRoleButton: process.env.SHOW_PRESENTER_ROLE_BUTTON !== 'false',
@@ -1564,7 +1377,6 @@ module.exports = {
                 sendVideoButton: process.env.SHOW_SEND_VIDEO !== 'false',
                 muteAudioButton: process.env.SHOW_MUTE_AUDIO !== 'false',
                 audioVolumeInput: process.env.SHOW_VOLUME_CONTROL !== 'false',
-                geolocationButton: process.env.SHOW_GEO_LOCATION !== 'false',
                 banButton: process.env.SHOW_BAN_BUTTON !== 'false',
                 ejectButton: process.env.SHOW_EJECT_BUTTON !== 'false',
                 presenterRoleButton: process.env.SHOW_PRESENTER_ROLE_BUTTON !== 'false',
@@ -1583,10 +1395,10 @@ module.exports = {
                 chatSaveButton: process.env.SHOW_CHAT_SAVE !== 'false',
                 chatEmojiButton: process.env.SHOW_CHAT_EMOJI !== 'false',
                 chatMarkdownButton: process.env.SHOW_CHAT_MARKDOWN !== 'false',
-                chatSpeechStartButton: process.env.SHOW_CHAT_SPEECH !== 'false',
-                chatGPT: process.env.ENABLE_CHAT_GPT !== 'false',
-                deepSeek: process.env.ENABLE_DEEP_SEEK !== 'false',
-                chatTyping: process.env.ENABLE_CHAT_TYPING !== 'false',
+                chatSpeechStartButton: false,
+                chatTyping: process.env.ENABLE_CHAT_TYPING === 'true',
+                chatGPT: false,
+                deepSeek: false,
             },
 
             // Poll interface controls
@@ -1602,7 +1414,6 @@ module.exports = {
                 sendFileAllButton: process.env.SHOW_SEND_FILE_ALL !== 'false',
                 ejectAllButton: process.env.SHOW_EJECT_ALL !== 'false',
                 sendFileButton: process.env.SHOW_SEND_FILE !== 'false',
-                geoLocationButton: process.env.SHOW_GEO_LOCATION !== 'false',
                 banButton: process.env.SHOW_BAN_BUTTON !== 'false',
                 ejectButton: process.env.SHOW_EJECT_BUTTON !== 'false',
                 presenterRoleButton: process.env.SHOW_PRESENTER_ROLE_BUTTON !== 'false',
@@ -1651,19 +1462,11 @@ module.exports = {
             url: process.env.REDIRECT_URL || '',
         },
 
-        /**
-         * Meeting Scheduler
-         * ---------------------
-         * - enabled: Show "Schedule Meeting" button on landing/newroom pages
-         * - Requires email configuration (integrations.email) to send invitations
-         * - Sends .ics calendar attachments with meeting details
-         * - requireAuth: Require authenticated requester before sending invitations
-         * - maxRecipients: Maximum recipients accepted per request
-         * - allowedDomains: Optional recipient domain allow-list (empty = all domains)
-         * - rateLimit: Throttle requests to prevent abuse
-         */
+        // Scheduling and email invitations is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         scheduleMeeting: {
-            enabled: process.env.SCHEDULE_MEETING_ENABLED === 'true',
+            enabled: false,
             requireAuth: process.env.SCHEDULE_MEETING_REQUIRE_AUTH !== 'false',
             maxRecipients: Math.max(parseInt(process.env.SCHEDULE_MEETING_MAX_RECIPIENTS, 10) || 20, 1),
             allowedDomains: (process.env.SCHEDULE_MEETING_ALLOWED_DOMAINS || '')
@@ -1678,37 +1481,8 @@ module.exports = {
         },
 
         /**
-         * Remote Control (RustDesk)
-         * -------------------------
-         * Optional, disabled by default. Browsers cannot inject OS-level mouse/keyboard input,
-         * so MiroTalk only brokers the consent handshake: a presenter confirms before sending a request, the
-         * participant accepts and shares their RustDesk ID + one-time password, and the presenter
-         * opens the RustDesk client (https://rustdesk.com). No input data goes through this server.
-         * - enabled: Show "Remote control" in the presenter's participants menu
-         * - downloadUrl: Where participants can get the RustDesk client. Defaults to the built-in
-         *   setup page (/remote-control/setup) when server.idServer is set, else rustdesk.com
-         * - downloadUrlPublic: false = /remote-control/setup needs the short-lived token sent with a request;
-         *   true = open to anyone with the URL
-         * - server: Your self-hosted RustDesk server, shown on the public setup page
-         *   (key = contents of id_ed25519.pub, never the private key)
-         */
-        remoteControl: {
-            enabled: process.env.REMOTE_CONTROL_ENABLED === 'true',
-            downloadUrl:
-                process.env.REMOTE_CONTROL_DOWNLOAD_URL ||
-                (process.env.REMOTE_CONTROL_SERVER_HOST ? '/remote-control/setup' : 'https://rustdesk.com/'),
-            downloadUrlPublic: process.env.REMOTE_CONTROL_DOWNLOAD_URL_PUBLIC === 'true',
-            server: {
-                idServer: process.env.REMOTE_CONTROL_SERVER_HOST || '',
-                relayServer: process.env.REMOTE_CONTROL_SERVER_RELAY || '',
-                apiServer: process.env.REMOTE_CONTROL_SERVER_API || '',
-                key: process.env.REMOTE_CONTROL_SERVER_KEY || '',
-            },
-        },
-
-        /**
-         * Socket.IO createRoom and HTTP /createRoomToken rate limit (per IP)
-         * -------------------------------------------------------------------
+         * Socket.IO createRoom rate limit (per IP)
+         * ----------------------------------------
          * Prevents unauthenticated sockets from spamming arbitrary entries
          * into the in-memory roomList (which feeds /api/v1/activeRooms),
          * and throttles room creation token requests.
@@ -1718,36 +1492,13 @@ module.exports = {
             max: Math.max(parseInt(process.env.CREATE_ROOM_RATE_LIMIT_MAX, 10) || 10, 1),
         },
 
-        /**
-         * Usage Statistics Configuration (Umami)
-         * =====================================
-         * Privacy-focused analytics tracking for service improvement
-         *
-         * Setup Instructions:
-         * ------------------
-         * 1. Self-host Umami or use cloud version:
-         *    - GitHub: https://github.com/umami-software/umami
-         *    - Official Docs: https://umami.is/docs
-         * 2. Create website entry in Umami dashboard
-         * 3. Obtain tracking script URL and website ID
-         *
-         * Privacy & Security:
-         * ------------------
-         * - No cookies used (GDPR compliant)
-         * - No persistent user tracking
-         * - All data aggregated and anonymized
-         * - Self-hosted option keeps data in your infrastructure
-         *
-         * Core Settings:
-         * -------------
-         * - enabled      : Enable/disable analytics [true/false] (default: true)
-         * - src          : Umami tracking script URL
-         * - id           : Your website ID from Umami
-         */
+        // External analytics is disabled in HARDENED.
+        // Retained fields describe the upstream data shape; they do not enable this feature.
+
         stats: {
-            enabled: process.env.STATS_ENABLED !== 'false',
-            src: process.env.STATS_SRC || 'https://stats.mirotalk.com/script.js',
-            id: process.env.STATS_ID || '41d26670-f275-45bb-af82-3ce91fe57756',
+            enabled: false,
+            src: '',
+            id: '',
         },
     },
 
@@ -1765,7 +1516,7 @@ module.exports = {
     moderation: {
         room: {
             maxParticipants: parseInt(process.env.ROOM_MAX_PARTICIPANTS) || 1000, // Maximum participants per room
-            lobby: process.env.ROOM_LOBBY === 'true', // Enable lobby feature
+            lobby: false, // HARDENED: no presenter is required to admit authorized attendees
         },
     },
 

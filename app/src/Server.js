@@ -69,8 +69,6 @@ const express = require('express');
 const { auth, requiresAuth } = require('express-openid-connect');
 const { withFileLock } = require('./MutexManager');
 const { PassThrough } = require('stream');
-const { S3Client } = require('@aws-sdk/client-s3');
-const { Upload } = require('@aws-sdk/lib-storage');
 const { fixDurationOrRemux } = require('./FixDurationOrRemux');
 const cors = require('cors');
 const compression = require('compression');
@@ -79,16 +77,28 @@ const httpolyglot = require('httpolyglot');
 const mediasoup = require('mediasoup');
 const mediasoupClient = require('mediasoup-client');
 const http = require('http');
+const dns = require('dns').promises;
+const os = require('os');
 const path = require('path');
 const axios = require('axios');
-const ngrok = require('@ngrok/ngrok');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
 const sanitizeFilename = require('sanitize-filename');
 const helmet = require('helmet');
 const config = require('./config');
+
+// Optional integrations are loaded only when enabled.  This allows package
+// builders to omit integration-specific dependencies from a core install.
+const sentryEnabled = config.integrations?.sentry?.enabled || false;
+const Sentry = sentryEnabled ? require('@sentry/node') : null;
+const Discord = config.integrations?.discord?.enabled ? require('./Discord') : null;
+const Mattermost = config.integrations?.mattermost?.enabled ? require('./Mattermost') : null;
+const ngrok = config.integrations?.ngrok?.enabled ? require('@ngrok/ngrok') : null;
+const s3Enabled = config.integrations?.s3?.enabled || false;
+const { S3Client } = s3Enabled ? require('@aws-sdk/client-s3') : { S3Client: null };
+const { Upload } = s3Enabled ? require('@aws-sdk/lib-storage') : { Upload: null };
 const checkXSS = require('./XSS');
-const { createSetupToken, isSetupTokenValid, resolveSetupConfig, renderSetupPage } = require('./RemoteControlSetup');
 const mime = require('mime-types');
 const Host = require('./Host');
 const Room = require('./Room');
@@ -104,12 +114,8 @@ const log = new Logger('Server');
 const yaml = require('js-yaml');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = yaml.load(fs.readFileSync(path.join(__dirname, '/../api/swagger.yaml'), 'utf8'));
-const Sentry = require('@sentry/node');
-const Discord = require('./Discord');
-const Mattermost = require('./Mattermost');
 const restrictAccessByIP = require('./middleware/IpWhitelist');
 const { applyEmbedHeaders, embedAllowedOrigins, embedCsp } = require('./middleware/EmbedHeaders');
-const { createVideoAIService } = require('./videoai/service');
 const packageJson = require('../../package.json');
 
 // Rate limiters
@@ -135,15 +141,7 @@ const getRequesterKey = (req) => {
     return ipKeyGenerator(req);
 };
 
-const {
-    loginLimiter,
-    scheduleMeetingLimiter,
-    activeRoomsLimiter,
-    recSyncLimiter,
-    createRoomTokenLimiter,
-    checkCreateRoomLimit,
-    createRoomLimiterMinutes,
-} = createRateLimiters({ getRequesterKey });
+const { loginLimiter, scheduleMeetingLimiter, activeRoomsLimiter, recSyncLimiter, createRoomTokenLimiter, checkCreateRoomLimit, createRoomLimiterMinutes } = createRateLimiters({ getRequesterKey });
 
 // Room scheduler configuration
 const scheduleMeetingCfg = config.features?.scheduleMeeting || {};
@@ -161,7 +159,7 @@ const RtmpStreamer = require('./RtmpStreamer.js'); // Import the RtmpStreamer cl
 const rtmpCfg = config?.media?.rtmp;
 const rtmpDir = rtmpCfg?.dir || 'rtmp';
 
-// Secrets previously shipped as defaults: treated as unset so they can never authorize a request.
+// Reject known public default secrets so they cannot authorize a request.
 const RTMP_LEGACY_DEFAULT_API_SECRETS = ['mirotalkRtmpApiSecret'];
 
 function safeCompareSecret(provided, expected) {
@@ -186,7 +184,7 @@ const nodemailer = require('./lib/nodemailer');
 const { SCHEDULE_MEETING_LIMITS } = nodemailer;
 
 // Whisper transcription helpers (pure, unit-testable)
-const { resolveAudioExtension, decodeAudioPayload, filterTranscript } = require('./lib/whisper');
+// HARDENED does not load transcription helpers.
 
 // Slack API
 const CryptoJS = require('crypto-js');
@@ -197,8 +195,8 @@ const slackSigningSecret = config?.integrations?.slack?.signingSecret || '';
 const app = express();
 
 const options = {
-    cert: fs.readFileSync(path.join(__dirname, config?.server?.ssl.cert || '../ssl/cert.pem'), 'utf-8'),
-    key: fs.readFileSync(path.join(__dirname, config?.server?.ssl.key || '../ssl/key.pem'), 'utf-8'),
+    cert: fs.readFileSync(path.resolve(__dirname, config?.server?.ssl.cert || '../ssl/cert.pem'), 'utf-8'),
+    key: fs.readFileSync(path.resolve(__dirname, config?.server?.ssl.key || '../ssl/key.pem'), 'utf-8'),
 };
 
 const corsOptions = {
@@ -206,6 +204,7 @@ const corsOptions = {
     methods: config.server?.cors?.methods || ['GET', 'POST'],
 };
 
+options.handshakeTimeout = 15000;
 const server = httpolyglot.createServer(options, app);
 
 const io = socketIo(server, {
@@ -213,6 +212,9 @@ const io = socketIo(server, {
     transports: ['websocket'],
     cors: corsOptions,
 });
+
+const { securityEvent, peerAddress } = require('./SecurityEvents');
+require('./ConnectionSecurity').installConnectionSecurity(server, io);
 
 const host = config?.server?.hostUrl || `http://localhost:${config?.server?.listen?.port || 3010}`;
 const trustProxy = Boolean(config?.server?.trustProxy);
@@ -227,27 +229,15 @@ try {
 }
 
 const jwtCfg = {
-    JWT_EXP: config?.security?.jwt?.exp || '1h',
+    JWT_EXP: config?.security?.jwt?.exp ?? '1h',
+};
+
+const authSessionCfg = {
+    idleTimeoutMs: Math.max(0, Number(config?.security?.authSession?.idleTimeout || 0)) * 1000,
+    maxAgeMs: Math.max(0, Number(config?.security?.authSession?.maxAge || 0)) * 1000,
 };
 
 const JWT_VERIFY_OPTIONS = { algorithms: ['HS256'] };
-
-// Verify an auth JWT and return its decrypted payload (module scope, also used by getRequesterKey)
-function decodeToken(jwtToken) {
-    if (!jwtToken) return null;
-
-    // Verify and decode the JWT token
-    const decodedToken = jwt.verify(jwtToken, jwtKeys.auth, JWT_VERIFY_OPTIONS);
-    if (!decodedToken || !decodedToken.data) {
-        throw new Error('Invalid token');
-    }
-
-    // Decrypt the payload using AES decryption
-    const decryptedPayload = CryptoJS.AES.decrypt(decodedToken.data, jwtKeys.auth).toString(CryptoJS.enc.Utf8);
-
-    // Parse the decrypted payload as JSON
-    return JSON.parse(decryptedPayload);
-}
 
 // Lifetime of the per-session server recording upload token (must outlive long recordings)
 const recUploadTokenExp = config?.media?.recording?.uploadTokenExp || '24h';
@@ -255,8 +245,8 @@ const recUploadTokenExp = config?.media?.recording?.uploadTokenExp || '24h';
 // Create a signed upload token bound to a specific room. It proves the requester
 // actually passed the Socket.IO `join` auth for that room before allowing writes
 // to the recording directory via the /recSync* endpoints.
-function createRecUploadToken(roomId) {
-    return jwt.sign({ scope: 'rec-upload', roomId: String(roomId) }, jwtKeys.recUpload, {
+function createRecUploadToken(roomId, recordingKey) {
+    return jwt.sign({ scope: 'rec-upload', roomId: String(roomId), recordingKey: String(recordingKey) }, jwtKeys.recUpload, {
         expiresIn: recUploadTokenExp,
     });
 }
@@ -270,30 +260,10 @@ function createRtmpStreamToken(roomId) {
     });
 }
 
-// Short-lived token bound to a room, issued by GET /createRoomToken only to requesters the HTTP
-// policy allows to create rooms. The Socket.IO `createRoom` event requires it when OIDC or host
-// protection is enabled, because the socket carries no session of its own.
-const CREATE_ROOM_TOKEN_EXP = '2m';
+// OpenID Connect
+const OIDC = config?.security?.oidc || { enabled: false };
 
-function isRoomCreationRestricted() {
-    return Boolean(OIDC.enabled || hostCfg.protected);
-}
-
-function createCreateRoomToken(roomId) {
-    return jwt.sign({ scope: 'create-room', roomId: String(roomId) }, jwtKeys.createRoom, {
-        expiresIn: CREATE_ROOM_TOKEN_EXP,
-    });
-}
-
-function isCreateRoomTokenValid(token, roomId) {
-    if (!token || typeof token !== 'string') return false;
-    try {
-        const decoded = jwt.verify(token, jwtKeys.createRoom, JWT_VERIFY_OPTIONS);
-        return decoded?.scope === 'create-room' && decoded.roomId === String(roomId);
-    } catch {
-        return false;
-    }
-}
+const ldapBackend = config?.security?.ldap?.enabled ? require('./LdapAuth.cjs').createLdapBackend(config.security.ldap, { onEvent: (level, message, details) => log[level](message, details) }) : null;
 
 const hostCfg = {
     protected: config?.security?.host?.protected,
@@ -308,6 +278,10 @@ const hostCfg = {
     api_room_exists: config?.security?.host?.api_room_exists,
     presenters: config?.security?.host?.presenters,
 };
+
+if (ldapBackend && (!hostCfg.protected || !hostCfg.user_auth || OIDC.enabled || hostCfg.users_from_db)) {
+    throw new Error('LDAP requires HOST_PROTECTED=true, HOST_USER_AUTH=true, HOST_USERS_FROM_DB=false and OIDC disabled');
+}
 
 // Validate host user passwords if host protection or user authentication is enabled
 if (
@@ -333,7 +307,7 @@ if (
     )
 ) {
     log.error(
-        'HOST_USERS contains publicly known default credentials (admin/admin, guest/guest, username/password...). Set your own in .env'
+        'HOST_USERS contains publicly known default credentials (admin/admin, guest/guest, username/password...). Set your own in the users file'
     );
     process.exit(1);
 }
@@ -354,7 +328,6 @@ const restApi = {
 };
 
 // Sentry monitoring
-const sentryEnabled = config.integrations?.sentry?.enabled || false;
 const sentryDSN = config.integrations.sentry.DSN;
 const sentryTracesSampleRate = config.integrations.sentry.tracesSampleRate;
 if (sentryEnabled && typeof sentryDSN === 'string' && sentryDSN.trim()) {
@@ -413,13 +386,6 @@ if (enabled && commands.length > 0 && token) {
     log.info('Discord bot is enabled and starting');
 }
 
-// Stats
-const defaultStats = {
-    enabled: true,
-    src: 'https://stats.mirotalk.com/script.js',
-    id: '41d26670-f275-45bb-af82-3ce91fe57756',
-};
-
 // OpenAI/ChatGPT
 let chatGPT;
 if (config?.integrations?.chatGPT?.enabled) {
@@ -435,9 +401,6 @@ if (config?.integrations?.chatGPT?.enabled) {
     }
 }
 
-// OpenID Connect
-const OIDC = config?.security?.oidc || { enabled: false };
-
 // directory
 const dir = {
     public: path.join(__dirname, '../../public'),
@@ -448,6 +411,7 @@ const dir = {
 // Rec directory create and set max file size
 const recMaxFileSize = config?.media?.recording?.maxFileSize || 1 * 1024 * 1024 * 1024; // 1GB default
 const serverRecordingEnabled = config?.media?.recording?.enabled || false;
+const recordingAllowedIn = (roomId) => !(Object.hasOwn(config.meetingRestrictions || {}, roomId) && config.meetingRestrictions[roomId].includes('RP'));
 if (serverRecordingEnabled) {
     log.debug('Server Recording enabled creating dir', dir.rtmp);
     if (!fs.existsSync(dir.rec)) {
@@ -468,7 +432,7 @@ if (rtmpEnabled) {
 // AWS S3 SETUP
 // ####################################################
 
-const s3Client = new S3Client({
+const s3Client = s3Enabled ? new S3Client({
     region: config?.integrations?.s3?.region, // Set your AWS region
     credentials: {
         accessKeyId: config?.integrations?.s3?.accessKeyId,
@@ -476,7 +440,7 @@ const s3Client = new S3Client({
     },
     endpoint: config?.integrations?.s3?.endpoint || undefined,
     forcePathStyle: config?.integrations?.s3?.forcePathStyle === true,
-});
+}) : null;
 
 // html views
 const views = {
@@ -489,6 +453,7 @@ const views = {
     notFound: path.join(__dirname, '../../', 'public/views/404.html'),
     permission: path.join(__dirname, '../../', 'public/views/permission.html'),
     privacy: path.join(__dirname, '../../', 'public/views/privacy.html'),
+    about: path.join(__dirname, '../../', 'public/views/about.html'),
     room: path.join(__dirname, '../../', 'public/views/Room.html'),
     rtmpStreamer: path.join(__dirname, '../../', 'public/views/RtmpStreamer.html'),
     whoAreYou: path.join(__dirname, '../../', 'public/views/whoAreYou.html'),
@@ -507,10 +472,142 @@ const filesPath = [
 const htmlInjector = new HtmlInjector(filesPath, config.ui.brand);
 
 const authHost = new Host(); // Authenticated IP by Login
+const authSessions = new Map();
+
+function authSessionIsExpired(session, now = Date.now()) {
+    if (!session) return true;
+    const maxAge = session.maxAgeMs || authSessionCfg.maxAgeMs;
+    if (maxAge > 0 && now - session.createdAt >= maxAge) return true;
+    const activeMeeting = [...io.sockets.sockets.values()].some((socket) => socket.authSessionId === session.id && socket.authenticatedMeeting && roomList.get(socket.room_id)?.getPeer(socket.id));
+    if (activeMeeting) session.lastActivity = now;
+    if (!activeMeeting && authSessionCfg.idleTimeoutMs > 0 && now - session.lastActivity >= authSessionCfg.idleTimeoutMs) return true;
+    return false;
+}
+
+function hasActiveAuthSessionForIP(ip) {
+    const now = Date.now();
+    for (const session of authSessions.values()) {
+        if (session.ip === ip && !authSessionIsExpired(session, now)) return true;
+    }
+    return false;
+}
+
+function revokeAuthSession(sessionId) {
+    const session = authSessions.get(sessionId);
+    if (!session) return false;
+
+    authSessions.delete(sessionId);
+    for (const socket of io.sockets.sockets.values()) {
+        if (socket.authSessionId === sessionId) socket.disconnect(true);
+    }
+    if (hostCfg.protected && !hasActiveAuthSessionForIP(session.ip)) {
+        authHost.deleteIP(session.ip);
+        hostCfg.authenticated = authHost.getAuthorizedIPs().length > 0;
+    }
+    return true;
+}
+
+function revokeAuthSessionsForIP(ip) {
+    for (const [sessionId, session] of authSessions) {
+        if (session.ip === ip) revokeAuthSession(sessionId);
+    }
+    if (hostCfg.protected) {
+        authHost.deleteIP(ip);
+        hostCfg.authenticated = authHost.getAuthorizedIPs().length > 0;
+    }
+}
+
+function pruneAuthSessions() {
+    const now = Date.now();
+    for (const [sessionId, session] of authSessions) {
+        if (authSessionIsExpired(session, now)) revokeAuthSession(sessionId);
+    }
+}
+
+function createAuthSession(ip, identity) {
+    pruneAuthSessions();
+    const now = Date.now();
+    const session = {
+        id: randomUUID(),
+        ip,
+        username: identity.username,
+        displayName: identity.displayName,
+        source: identity.source,
+        rooms: Object.freeze([...identity.rooms]),
+        maxAgeMs: identity.maxAgeMs || authSessionCfg.maxAgeMs,
+        createdAt: now,
+        lastActivity: now,
+    };
+    authSessions.set(session.id, session);
+    return session;
+}
+
+function requireAuthSession(sessionId) {
+    const session = authSessions.get(sessionId);
+    if (!session || authSessionIsExpired(session)) {
+        if (session) revokeAuthSession(sessionId);
+        throw new Error('Authentication session expired');
+    }
+    return session;
+}
+
+function touchAuthSession(sessionId) {
+    const session = requireAuthSession(sessionId);
+    session.lastActivity = Date.now();
+    return session;
+}
+
+function authSessionClientState(session) {
+    return {
+        idleTimeout: Math.floor(authSessionCfg.idleTimeoutMs / 1000),
+        maxAge: Math.floor(session.maxAgeMs / 1000),
+        startedAt: session.createdAt,
+    };
+}
 
 const roomList = new Map(); // All Rooms
+setInterval(pruneAuthSessions, 10000).unref();
 
 const presenters = {}; // Collect presenters grp by roomId
+const pendingWhiteboardSnapshots = new Map();
+const whiteboardSnapshotRequested = new Set();
+
+function releaseWhiteboardSnapshotSocket(socketId) {
+    whiteboardSnapshotRequested.delete(socketId);
+    const pending = pendingWhiteboardSnapshots.get(socketId);
+    if (pending) clearTimeout(pending.timer);
+    pendingWhiteboardSnapshots.delete(socketId);
+    for (const [requesterId, request] of pendingWhiteboardSnapshots) {
+        if (request.sourceId === socketId) {
+            clearTimeout(request.timer);
+            requestWhiteboardSnapshotFromPeer(requesterId, request.roomId);
+        }
+    }
+}
+
+function requestWhiteboardSnapshotFromPeer(requesterId, roomId) {
+    const pending = pendingWhiteboardSnapshots.get(requesterId);
+    const room = roomList.get(roomId);
+    if (!pending || !room || !room.getPeer(requesterId)) {
+        if (pending) clearTimeout(pending.timer);
+        pendingWhiteboardSnapshots.delete(requesterId);
+        return;
+    }
+    const candidates = [...room.getPeers().keys()].filter((id) => id !== requesterId && !pending.tried.has(id));
+    const sourceId = candidates.find((id) => room.getPeer(id).whiteboardOpen === true) || candidates[0];
+    if (!sourceId) {
+        clearTimeout(pending.timer);
+        pendingWhiteboardSnapshots.delete(requesterId);
+        room.sendTo(requesterId, 'whiteboardSnapshotUnavailable', {});
+        return;
+    }
+    pending.tried.add(sourceId);
+    pending.sourceId = sourceId;
+    pending.nonce = randomUUID();
+    io.to(sourceId).emit('whiteboardSnapshotRequest', { requesterId, nonce: pending.nonce });
+    clearTimeout(pending.timer);
+    pending.timer = setTimeout(() => requestWhiteboardSnapshotFromPeer(requesterId, roomId), 2500);
+}
 
 const streams = {}; // Collect all rtmp streams
 const STREAM_TIMEOUT_MS = 60 * 1000; // Cleanup orphaned streams after 60s of inactivity
@@ -531,61 +628,87 @@ let announcedAddress = webRtcServerActive
 const workers = [];
 let nextMediasoupWorkerIdx = 0;
 
-// Autodetect announcedAddress with multiple fallback services
-if (!announcedAddress && IP === '0.0.0.0') {
-    const detectPublicIp = async () => {
-        const services = config.system?.services?.ip || [
-            'http://api.ipify.org',
-            'http://ipinfo.io/ip',
-            'http://ifconfig.me/ip',
-        ];
+// Resolve FreeBSD network defaults without contacting third-party IP services.
+// WEB_LISTEN_HOST is the public service hostname.  When WEB_LISTEN_IP is not
+// explicitly configured, it must resolve to exactly one IPv4 address assigned
+// to this host.  The media announced address is resolved from
+// MEDIA_ANNOUNCED_HOST, or WEB_LISTEN_HOST when no explicit media address is
+// configured.
+async function configureFreeBSDNetwork() {
+    const webListenHost = process.env.WEB_LISTEN_HOST;
+    const explicitWebListenIp = process.env.SERVER_LISTEN_IP;
+    const explicitMediaListenIp = process.env.SFU_LISTEN_IP;
+    const mediaAnnouncedHost = process.env.MEDIA_ANNOUNCED_HOST;
+    const explicitMediaAnnouncedIp = process.env.SFU_ANNOUNCED_IP;
 
-        for (const service of services) {
-            try {
-                const ip = await fetchPublicIp(service);
-                if (ip) {
-                    announcedAddress = ip;
-                    updateAnnouncedAddress(ip);
-                    startServer();
-                    return;
-                }
-            } catch (err) {
-                log.warn(`Failed to detect IP from ${service}`, err.message);
-            }
-        }
-        throw new Error('All public IP detection services failed! Please check your network connection');
+    const resolveIPv4 = async (hostname) => {
+        const addresses = await dns.lookup(hostname, { family: 4, all: true });
+        return [...new Set(addresses.map(({ address }) => address))];
     };
 
-    detectPublicIp().catch((err) => {
-        log.error('Public IP detection failed', err.message);
-        process.exit(1);
-    });
-} else {
-    startServer();
+    if (!explicitWebListenIp && webListenHost) {
+        const resolved = await resolveIPv4(webListenHost);
+        const local = new Set();
+        for (const entries of Object.values(os.networkInterfaces())) {
+            for (const entry of entries || []) {
+                if (entry.family === 'IPv4') local.add(entry.address);
+            }
+        }
+        const matches = resolved.filter((address) => local.has(address));
+        if (matches.length !== 1) {
+            throw new Error(
+                `WEB_LISTEN_HOST "${webListenHost}" resolves to ${resolved.join(', ') || 'no IPv4 addresses'}, ` +
+                    `but ${matches.length === 0 ? 'none is' : 'more than one is'} assigned to this host; ` +
+                    'set WEB_LISTEN_IP explicitly'
+            );
+        }
+        config.server.listen.ip = matches[0];
+        if (!explicitMediaListenIp) updateListenAddress(matches[0]);
+    }
+
+    if (!explicitMediaAnnouncedIp) {
+        const announcedHost = mediaAnnouncedHost || webListenHost;
+        if (announcedHost) {
+            const resolved = await resolveIPv4(announcedHost);
+            if (resolved.length !== 1) {
+                throw new Error(
+                    `Media announced host "${announcedHost}" resolves to ${resolved.length} IPv4 addresses; ` +
+                        'set MEDIA_ANNOUNCED_IP explicitly'
+                );
+            }
+            announcedAddress = resolved[0];
+            updateAnnouncedAddress(announcedAddress);
+        }
+    }
+
+    if (!announcedAddress && IP === '0.0.0.0') {
+        throw new Error(
+            'No media announced address is configured. Set MEDIA_ANNOUNCED_IP, ' +
+                'MEDIA_ANNOUNCED_HOST, or WEB_LISTEN_HOST.'
+        );
+    }
 }
 
-function fetchPublicIp(serviceUrl) {
-    return new Promise((resolve, reject) => {
-        http.get(serviceUrl, (resp) => {
-            if (resp.statusCode !== 200) {
-                return reject(new Error(`HTTP ${resp.statusCode}`));
-            }
-            let data = '';
-            resp.on('data', (chunk) => (data += chunk));
-            resp.on('end', () => resolve(data.toString().trim()));
-        }).on('error', reject);
-    });
+function updateListenAddress(ip) {
+    const targets = [config.mediasoup.webRtcServerOptions.listenInfos, config.mediasoup.webRtcTransport.listenInfos];
+    for (const infos of targets) {
+        for (const info of infos) info.ip = ip;
+    }
 }
 
 function updateAnnouncedAddress(ip) {
-    const target = webRtcServerActive
-        ? config.mediasoup.webRtcServerOptions.listenInfos
-        : config.mediasoup.webRtcTransport.listenInfos;
-
-    target.forEach((info) => {
-        info.announcedAddress = ip;
-    });
+    const targets = [config.mediasoup.webRtcServerOptions.listenInfos, config.mediasoup.webRtcTransport.listenInfos];
+    for (const infos of targets) {
+        for (const info of infos) info.announcedAddress = ip;
+    }
 }
+
+configureFreeBSDNetwork()
+    .then(startServer)
+    .catch((err) => {
+        log.error('Network configuration failed', err.message);
+        process.exit(1);
+    });
 
 // Custom middleware function for OIDC authentication
 function OIDCAuth(req, res, next) {
@@ -630,11 +753,20 @@ function OIDCAuth(req, res, next) {
 function startServer() {
     // Start the app
     app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
+    app.use(require('./middleware/ResourcePolicy')(config.server.hostUrl));
     app.use(helmet.noSniff()); // Enable content type sniffing prevention
     app.use(applyEmbedHeaders); // Apply iframe embedding restrictions (CSP frame-ancestors / X-Frame-Options)
-    // Compress all HTTP responses (including static files) using GZip; must be registered before express.static
+    // Compress local assets as well as application responses.
     app.use(compression());
-    // Use all static files from the public folder
+    // HTML views are served only by their guarded application routes.
+    app.use((req, res, next) => {
+        let pathname;
+        try { pathname = decodeURIComponent(req.path).replace(/\\/g, '/').toLowerCase(); }
+        catch { return res.status(400).end(); }
+        if (path.posix.normalize(pathname).startsWith('/views/')) return res.status(403).end();
+        next();
+    });
+    // Serve public assets; block direct access to HTML view templates.
     app.use(
         express.static(dir.public, {
             setHeaders: (res, filePath) => {
@@ -653,6 +785,14 @@ function startServer() {
     // IP Whitelist check ...
     app.use(restrictAccessByIP);
 
+    // Expire local authenticated sessions server-side before protected routes
+    // evaluate IP authorization.  Active meetings keep their sessions alive
+    // through the authenticated browser heartbeat.
+    app.use((req, res, next) => {
+        if (!OIDC.enabled && hostCfg.protected) pruneAuthSessions();
+        next();
+    });
+
     // Logs requests
     /*
     app.use((req, res, next) => {
@@ -667,7 +807,7 @@ function startServer() {
     */
 
     // Mattermost
-    const mattermost = new Mattermost(app);
+    if (Mattermost) new Mattermost(app);
 
     // Remove trailing slashes in url handle bad requests
     app.use((err, req, res, next) => {
@@ -705,8 +845,7 @@ function startServer() {
             return mw(req, res, next);
         };
 
-        // Support both `baseURLDynamic` (template key) and legacy `baseUrlDynamic`
-        const oidcDynamicBaseUrl = OIDC.baseURLDynamic === true || OIDC.baseUrlDynamic === true;
+        const oidcDynamicBaseUrl = OIDC.baseURLDynamic === true;
 
         if (oidcDynamicBaseUrl) {
             // Build an allowlist of origins permitted to be used as the OIDC baseURL.
@@ -793,9 +932,8 @@ function startServer() {
             const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
             if (token) {
                 try {
-                    const { username } = decodeToken(token);
-                    const user = hostCfg.users.find((u) => u.username === username || u.displayname === username);
-                    const displayname = user?.displayname || username;
+                    const session = authenticatedSession(token);
+                    const { username, displayName: displayname } = session;
                     log.debug('Host protected get Profile', { username, displayname });
                     return res.json({
                         name: displayname,
@@ -824,6 +962,35 @@ function startServer() {
         next(); // Let express-openid-connect handle this route
     });
 
+    // Local authenticated-session activity and logout.
+    app.post('/auth/session/touch', (req, res) => {
+        const token = getBearerToken(req);
+        if (!token) return res.status(401).json({ message: 'Unauthorized' });
+
+        try {
+            const { sessionId } = checkXSS(decodeToken(token));
+            if (!sessionId) return res.status(401).json({ message: 'Unauthorized' });
+            const session = touchAuthSession(sessionId);
+            return res.status(200).json({ authSession: authSessionClientState(session) });
+        } catch (error) {
+            return res.status(401).json({ message: 'Authentication session expired' });
+        }
+    });
+
+    app.post('/auth/session/logout', (req, res) => {
+        res.clearCookie('__Host-mirotalk_session', { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
+        const token = getBearerToken(req);
+        if (token) {
+            try {
+                const { sessionId } = checkXSS(decodeToken(token));
+                if (sessionId) revokeAuthSession(sessionId);
+            } catch (error) {
+                // decodeToken revokes an expired session before throwing.
+            }
+        }
+        return res.status(204).end();
+    });
+
     // Logout Route
     app.get('/logout', (req, res) => {
         if (OIDC.enabled) {
@@ -831,17 +998,13 @@ function startServer() {
         }
         if (hostCfg.protected) {
             const ip = authHost.getIP(req);
-            if (authHost.isAuthorizedIP(ip)) {
-                authHost.deleteIP(ip);
-            }
-            hostCfg.authenticated = false;
-            //
+            revokeAuthSessionsForIP(ip);
             log.debug('[OIDC] ------> Logout', {
                 authenticated: hostCfg.authenticated,
                 authorizedIPs: authHost.getAuthorizedIPs(),
             });
         }
-        res.redirect('/'); // Redirect to the home page after logout
+        res.redirect('/login?logged_out=1'); // Clear browser auth state and return to login
     });
 
     // Favicon
@@ -876,6 +1039,7 @@ function startServer() {
 
     // Route to display rtmp streamer
     app.get('/rtmp', OIDCAuth, (req, res) => {
+        if (!rtmpEnabled) return res.sendStatus(404);
         if (!rtmpCfg || !rtmpCfg.fromStream) {
             return res.json({ message: 'The RTMP Streamer is currently disabled.' });
         }
@@ -897,7 +1061,7 @@ function startServer() {
 
     // Get Active rooms
     app.get('/activeRooms', OIDCAuth, (req, res) => {
-        htmlInjector.injectHtml(views.activeRooms, res);
+        res.sendStatus(404);
     });
 
     // Get Customize room
@@ -907,23 +1071,12 @@ function startServer() {
 
     // Check if room active (exists)
     app.post('/isRoomActive', (req, res) => {
-        const { roomId } = checkXSS(req.body);
-
-        if (roomId && (hostCfg.protected || hostCfg.user_auth || OIDC.enabled)) {
-            const roomActive = roomList.has(roomId);
-            if (roomActive) log.debug('isRoomActive', { roomId, roomActive });
-            res.status(200).json({ message: roomActive });
-        } else {
-            res.status(400).json({ message: 'Unauthorized' });
-        }
+        res.sendStatus(404);
     });
 
     // Check if Widget room active (exists)
     app.post('/isWidgetRoomActive', (req, res) => {
-        const { roomId } = checkXSS(req.body);
-        const roomWidgetActive = roomId && roomId === widget.roomId && roomList.has(roomId);
-        log.debug('isWidgetRoomActive', { roomId, roomWidgetActive });
-        res.status(200).json({ message: roomWidgetActive });
+        res.sendStatus(404);
     });
 
     // Schedule Meeting feature flag
@@ -1041,191 +1194,82 @@ function startServer() {
         }
     });
 
-    // Issue a short-lived token that authorizes the Socket.IO `createRoom` event for this room.
-    // It applies the same room creation policy as the HTTP join routes (OIDC session, host login,
-    // valid join token or an allowed user name).
-    app.get('/createRoomToken', createRoomTokenLimiter, async (req, res) => {
-        const { room, name } = checkXSS(req.query);
-
-        if (!room || !Validator.isValidRoomName(room)) {
-            return res.status(400).json({ message: 'Invalid room' });
-        }
-
-        if (!isRoomCreationRestricted()) {
-            return res.json({ required: false, token: null });
-        }
-
-        // Creation policy only: ignore whether the room currently exists
-        const creationRoomList = { has: () => false, size: roomList.size };
-        let allowed = isAllowedRoomAccess('/createRoomToken', req, hostCfg, creationRoomList, room);
-
-        if (!allowed) {
-            const authHeader = req.headers.authorization || '';
-            const joinToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-            allowed = await isJoinTokenAuthorized(joinToken, room);
-        }
-
-        // Host protection only: same as the HTTP direct join by user name (never trusted with OIDC)
-        if (!allowed && !OIDC.enabled && hostCfg.authenticated) {
-            allowed = await isRoomAllowedForUser('Create room by name', name, room);
-        }
-
-        if (!allowed) {
-            log.warn('Room creation token denied', { room });
-            return res.status(403).json({ required: true, token: null });
-        }
-
+    // Meeting names are submitted in an authenticated body, never navigation URLs.
+    const navigationCookie = '__Host-mirotalk_session';
+    const navigationCookieOptions = { httpOnly: true, secure: true, sameSite: 'lax', path: '/' };
+    function navigationSession(req) {
+        const cookies = String(req.headers.cookie || '').split(';').map(value => value.trim()).filter(value => value.startsWith(navigationCookie + '='));
+        if (cookies.length !== 1) throw new Error('Navigation session missing or ambiguous');
+        const id = cookies[0].slice(navigationCookie.length + 1);
+        if (!/^[a-f0-9-]{36}$/.test(id)) throw new Error('Invalid navigation session');
+        const session = requireAuthSession(id);
+        if (session.source === 'local' && !hostCfg.users.some(user => user.username === session.username)) throw new Error('Local account removed');
+        return session;
+    }
+    app.post('/auth/meeting/create-token', createRoomTokenLimiter, async (req, res) => {
         res.set('Cache-Control', 'no-store');
-        return res.json({ required: true, token: createCreateRoomToken(room) });
-    });
-
-    // Handle Direct join room with params
-    app.get('/join/', async (req, res) => {
-        if (Object.keys(req.query).length > 0) {
-            //log.debug('/join/params - hostCfg ----->', hostCfg);
-
-            log.debug('Direct Join', req.query);
-
-            // http://localhost:3010/join?room=test&name=mirotalksfu&audio=0&video=0&screen=0&notify=0&chat=1
-            // http://localhost:3010/join?room=test&roomPassword=0&name=mirotalksfu&audio=1&video=1&screen=0&hide=0&notify=1&duration=00:00:30
-            // http://localhost:3010/join?room=test&roomPassword=0&name=mirotalksfu&audio=1&video=1&screen=0&hide=0&notify=0&token=token
-
-            const { room, roomPassword, name, audio, video, screen, hide, notify, chat, duration, token, isPresenter } =
-                checkXSS(req.query);
-
-            if (!room) {
-                log.warn('/join/params room empty', room);
-                return res.redirect('/');
+        try {
+            const session = authenticatedSession(getBearerToken(req));
+            const meeting = req.body?.meeting;
+            if (!Validator.isValidRoomName(meeting) || !await sessionAllowsRoom(session, meeting)) {
+                securityEvent('meeting_creation_denied', req, 'not_authorized');
+                return res.status(403).json({ code: 'MEETING_NOT_AUTHORIZED' });
             }
-
-            if (!Validator.isValidRoomName(room)) {
-                return res.redirect('/');
-            }
-
-            let peerUsername = '';
-            let peerPassword = '';
-            let isPeerValid = false;
-            let isPeerPresenter = false;
-
-            if (token) {
-                try {
-                    const validToken = await isValidToken(token);
-
-                    if (!validToken) {
-                        return res.status(401).json({ message: 'Invalid Token' });
-                    }
-
-                    const { username, password, presenter } = checkXSS(decodeToken(token));
-
-                    peerUsername = username;
-                    peerPassword = password;
-                    isPeerValid = await isAuthPeer(username, password);
-                    isPeerPresenter = presenter === '1' || presenter === 'true';
-
-                    if (isPeerPresenter && !hostCfg.users_from_db) {
-                        const roomAllowedForUser = await isRoomAllowedForUser('Direct Join with token', username, room);
-                        if (!roomAllowedForUser) {
-                            log.warn('Direct Room Join for this User is Unauthorized', {
-                                username: username,
-                                room: room,
-                            });
-                            return res.redirect('/whoAreYou/' + room);
-                        }
-                    }
-                } catch (err) {
-                    log.error('Direct Join JWT error', { error: err.message, token: token });
-                    return hostCfg.protected || hostCfg.user_auth
-                        ? htmlInjector.injectHtml(views.login, res)
-                        : htmlInjector.injectHtml(views.landing, res);
-                }
-            } else {
-                const allowRoomAccess = isAllowedRoomAccess('/join/params', req, hostCfg, roomList, room);
-                const roomAllowedForUser = await isRoomAllowedForUser('Direct Join without token', name, room);
-
-                log.debug('Direct Room Join no JWT --------------->', {
-                    allowRoomAccess: allowRoomAccess,
-                    roomAllowedForUser: roomAllowedForUser,
-                });
-
-                if (!isDirectJoinAllowed(allowRoomAccess, roomAllowedForUser)) {
-                    log.warn('Direct Room Join Unauthorized', room);
-                    return res.redirect('/whoAreYou/' + room);
-                }
-            }
-
-            const OIDCUserAuthenticated = OIDC.enabled && req.oidc.isAuthenticated();
-
-            if (
-                (hostCfg.protected && isPeerValid && isPeerPresenter && !hostCfg.authenticated) ||
-                OIDCUserAuthenticated
-            ) {
-                const ip = getIP(req);
-                hostCfg.authenticated = true;
-                authHost.setAuthorizedIP(ip, true);
-                log.debug('Direct Join user auth as host done', {
-                    ip: ip,
-                    username: peerUsername,
-                    password: peerPassword,
-                });
-            }
-
-            if (room && (hostCfg.authenticated || isPeerValid)) {
-                return htmlInjector.injectHtml(views.room, res);
-            } else {
-                return htmlInjector.injectHtml(views.login, res);
-            }
-        }
-
-        return res.redirect('/');
-    });
-
-    // join room by id
-    app.get('/join/:roomId', async (req, res) => {
-        //
-        const { roomId } = checkXSS(req.params);
-
-        if (!roomId) {
-            log.warn('/join/:roomId empty', roomId);
-            return res.redirect('/');
-        }
-
-        if (!Validator.isValidRoomName(roomId)) {
-            log.warn('/join/:roomId invalid', roomId);
-            return res.redirect('/');
-        }
-
-        const allowRoomAccess = isAllowedRoomAccess('/join/:roomId', req, hostCfg, roomList, roomId);
-
-        if (allowRoomAccess) {
-            // 1. Protect room access with database check
-            if (!OIDC.enabled && hostCfg.protected && hostCfg.users_from_db) {
-                const roomExists = await roomExistsForUser(roomId);
-                log.debug('/join/:roomId exists from API endpoint', roomExists);
-                return roomExists ? htmlInjector.injectHtml(views.room, res) : res.redirect('/login?room=' + roomId);
-            }
-            // 2. Protect room access with configuration check
-            if (!OIDC.enabled && hostCfg.protected && !hostCfg.users_from_db) {
-                const roomExists = hostCfg.users.some(
-                    (user) => user.allowed_rooms && (user.allowed_rooms.includes(roomId) || roomList.has(roomId))
-                );
-                log.debug('/join/:roomId exists from config allowed rooms', roomExists);
-                return roomExists ? htmlInjector.injectHtml(views.room, res) : res.redirect('/whoAreYou/' + roomId);
-            }
-            htmlInjector.injectHtml(views.room, res);
-        } else {
-            // Who are you? (waiting room)
-            OIDC.enabled || hostCfg.protected ? res.redirect('/whoAreYou/' + roomId) : res.redirect('/');
+            return res.json({ token: jwt.sign({ scope: 'create-room', roomId: meeting, sessionId: session.id }, jwtKeys.createRoom, { algorithm: 'HS256', expiresIn: '2m' }) });
+        } catch {
+            securityEvent('meeting_creation_denied', req, 'invalid_session');
+            return res.status(401).json({ code: 'AUTH_REQUIRED' });
         }
     });
-
-    // not specified correctly the room id
-    app.get('/join/\\*', (req, res) => {
-        res.redirect('/');
+    app.post('/auth/meeting/select', async (req, res) => {
+        res.set('Cache-Control', 'no-store');
+        let session;
+        try { session = authenticatedSession(getBearerToken(req)); }
+        catch { return res.status(401).json({ code: 'AUTH_REQUIRED' }); }
+        const meeting = req.body?.meeting;
+        if (typeof meeting !== 'string' || !Validator.isValidRoomName(meeting)) return res.status(400).json({ code: 'INVALID_MEETING' });
+        try {
+            if (!await sessionAllowsRoom(session, meeting)) {
+                log.warn('Meeting selection denied', { loginName: session.username, ip: getIP(req), meeting });
+                return res.status(403).json({ code: 'MEETING_NOT_AUTHORIZED' });
+            }
+            // Each browser tab keeps its own opaque reference. It grants no access alone.
+            session.meetingSelections ||= new Map();
+            const selection = randomUUID();
+            session.meetingSelections.set(selection, meeting);
+            while (session.meetingSelections.size > 32) session.meetingSelections.delete(session.meetingSelections.keys().next().value);
+            res.cookie(navigationCookie, session.id, navigationCookieOptions);
+            log.info('Meeting selection authorized', { loginName: session.username, ip: getIP(req), meeting });
+            return res.json({ navigation: '/meeting?selection=' + selection });
+        } catch (error) {
+            log.warn('Meeting selection failed', { loginName: session.username, ip: getIP(req), meeting, message: error.message });
+            return res.status(403).json({ code: 'MEETING_NOT_AUTHORIZED' });
+        }
     });
-
-    // if not allow video/audio
-    app.get('/permission', (req, res) => {
-        res.sendFile(views.permission);
+    app.get('/meeting', async (req, res) => {
+        res.set('Cache-Control', 'no-store');
+        res.set('Referrer-Policy', 'no-referrer');
+        let session;
+        try { session = navigationSession(req); }
+        catch { res.clearCookie(navigationCookie, navigationCookieOptions); return res.redirect('/login'); }
+        if (Object.keys(req.query).length !== 1) return res.status(403).send('Meeting access denied.');
+        const selection = req.query.selection;
+        const meeting = typeof selection === 'string' && /^[a-f0-9-]{36}$/.test(selection) ? session.meetingSelections?.get(selection) : null;
+        try {
+            if (!meeting || !await sessionAllowsRoom(session, meeting)) {
+                log.warn('Pre-meeting page denied', { loginName: session.username, ip: getIP(req), meeting: meeting || '<invalid selection>' });
+                return res.status(403).send('Meeting access denied. Return to the login page to select an authorized meeting.');
+            }
+            return htmlInjector.injectHtml(views.room, res, { meeting });
+        } catch (error) {
+            log.warn('Pre-meeting page authorization failed', { loginName: session.username, ip: getIP(req), message: error.message });
+            return res.status(403).send('Meeting access denied.');
+        }
+    });
+    // Direct meeting-name URLs never serve a meeting page; require authenticated selection.
+    app.get(['/join', '/join/:roomId', '/join/\\*'], (req, res) => {
+        res.set('Cache-Control', 'no-store');
+        return res.status(403).send('Meeting links are disabled. Open the site, sign in, and select an authorized meeting.');
     });
 
     // privacy policy
@@ -1233,26 +1277,14 @@ function startServer() {
         res.sendFile(views.privacy);
     });
 
-    // RustDesk client setup page: needs remote control + a RustDesk server, and a room token unless downloadUrlPublic
-    app.get('/remote-control/setup', (req, res) => {
-        const remoteControl = config?.features?.remoteControl;
-        const setup = remoteControl?.enabled ? resolveSetupConfig(remoteControl.server) : null;
-        const allowed = setup && (remoteControl.downloadUrlPublic || isSetupTokenValid(jwtKeys.rcSetup, req.query.t));
-        if (!allowed) return res.status(404).sendFile(views.notFound);
-        res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
-        res.type('html').send(renderSetupPage(setup, { appName: config?.app?.name }));
+    // local site and open-source information
+    app.get('/about', (req, res) => {
+        res.sendFile(views.about);
     });
 
-    // Get stats endpoint
-    app.get('/stats', (req, res) => {
-        const stats = config?.features?.stats || defaultStats;
-        // log.debug('Send stats', stats);
-        res.send(stats);
-    });
-
-    // handle who are you: Presenter or Guest
+    // Reject the upstream host-wait flow; users must sign in and select an authorized meeting.
     app.get('/whoAreYou/:roomId', (req, res) => {
-        htmlInjector.injectHtml(views.whoAreYou, res);
+        return res.redirect('/login');
     });
 
     // handle login if user_auth enabled
@@ -1264,21 +1296,7 @@ function startServer() {
     });
 
     // handle logged on host protected
-    app.get('/logged', (req, res) => {
-        const { room } = checkXSS(req.query);
-        if (!OIDC.enabled && hostCfg.protected) {
-            const ip = getIP(req);
-            if (allowedIP(ip)) {
-                hostCfg.authenticated = true;
-                res.redirect(room ? '/join/' + room : '/');
-            } else {
-                hostCfg.authenticated = false;
-                res.redirect(room ? '/login?room=' + room : '/login');
-            }
-        } else {
-            res.redirect('/');
-        }
-    });
+    app.get('/logged', (req, res) => res.redirect('/login'));
 
     // ####################################################
     // AXIOS
@@ -1287,55 +1305,40 @@ function startServer() {
     // handle login on host protected
     app.post('/login', loginLimiter, async (req, res) => {
         const ip = getIP(req);
-        log.debug(`Request login to host from: ${ip}`, req.body);
-
-        const safeBody = checkXSS(req.body) || {};
-        const { username, password } = safeBody;
-
-        if (!username || !password) {
-            log.warn('Login failed: missing username or password', req.body);
-            return res.status(400).json({ message: 'Missing username or password' });
+        const { username, password } = req.body || {};
+        const attemptId = randomUUID();
+        log.info('Login request received', { loginName: typeof username === 'string' ? username.slice(0, 256) : '<invalid>', ip, attemptId });
+        if (typeof username !== 'string' || !username || username.length > 256 || username.includes('\0') || typeof password !== 'string' || !password || password.length > 4096 || password.includes('\0')) {
+            securityEvent('login_rejected', req, 'invalid_format');
+            log.warn('Login rejected: invalid credential format', { ip, attemptId });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
-
-        if (!Validator.isValidPassword(password)) {
-            log.warn('Login failed: invalid password length', { ip });
-            return res.status(400).json({ message: 'Invalid password' });
-        }
-
-        const isPeerValid = await isAuthPeer(username, password);
-
-        if (hostCfg.protected && isPeerValid && !hostCfg.authenticated) {
-            const ip = getIP(req);
-            hostCfg.authenticated = true;
-            authHost.setAuthorizedIP(ip, true);
-            log.debug('HOST LOGIN OK', {
-                ip: ip,
-                authorized: authHost.isAuthorizedIP(ip),
-                authorizedIps: authHost.getAuthorizedIPs(),
+        try {
+            const identity = await authenticateIdentity(username, password, { ip, attemptId });
+            if (!identity) { securityEvent('authentication_failed', req, 'invalid_credentials'); log.warn('Login rejected', { loginName: username, ip, attemptId }); return res.status(401).json({ message: 'unauthorized' }); }
+            securityEvent('authentication_succeeded', req);
+            const session = createAuthSession(ip, identity);
+            if (hostCfg.protected) {
+                authHost.setAuthorizedIP(ip, true);
+                hostCfg.authenticated = true;
+            }
+            const token = encodeToken({ username: identity.username, presenter: false, sessionId: session.id });
+            res.cookie('__Host-mirotalk_session', session.id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
+            res.set('Cache-Control', 'no-store');
+            log.info('Login succeeded', { loginName: identity.username, submittedLoginName: username, ip, attemptId, source: identity.source, meetings: [...identity.rooms], ...(identity.source === 'ldap' ? { ldapAttributes: identity.ldapAttributes } : {}) });
+            return res.status(200).json({
+                message: token,
+                username: identity.username,
+                displayname: identity.displayName,
+                allowedRooms: [...identity.rooms],
+                allowAnyMeeting: identity.source === 'local' && identity.rooms.includes('*'),
+                meetingTranslations: Object.fromEntries(Object.entries(config.meetingTranslations || {}).filter(([key]) => identity.rooms.includes(key) || (identity.source === 'local' && identity.rooms.includes('*')))),
+                authSession: authSessionClientState(session),
             });
-
-            const isPresenter = Boolean(
-                hostCfg?.presenters?.join_first || hostCfg?.presenters?.list?.includes(username)
-            );
-
-            const user = hostCfg.users.find((user) => user.displayname === username || user.username === username);
-            const token = encodeToken({ username: username, password: password, presenter: isPresenter });
-            const allowedRooms = await getUserAllowedRooms(username, password);
-
-            log.debug('login -------------->', { displayName: user?.displayname || username });
-
-            return res
-                .status(200)
-                .json({ message: token, displayname: user?.displayname || username, allowedRooms: allowedRooms });
-        }
-
-        if (isPeerValid) {
-            log.debug('PEER LOGIN OK', { ip: ip, authorized: true });
-            const isPresenter = hostCfg?.presenters?.list?.includes(username) || false;
-            const token = encodeToken({ username: username, password: password, presenter: isPresenter });
-            const allowedRooms = await getUserAllowedRooms(username, password);
-            return res.status(200).json({ message: token, allowedRooms: allowedRooms });
-        } else {
+        } catch (error) {
+            log.warn('Authentication failed', { loginName: username, ip, attemptId, code: error.code || 'AUTH_FAILED', message: error.message });
+            if (error.code === 'NO_MEETING_GRANTS') { securityEvent('login_rejected', req, 'no_meeting_grants'); return res.status(403).json({ code: 'NO_MEETING_GRANTS', message: 'No meetings are assigned to your account.' }); }
+            securityEvent(error.code === 'INVALID_CREDENTIALS' ? 'authentication_failed' : 'authentication_error', req, error.code === 'INVALID_CREDENTIALS' ? 'invalid_credentials' : 'backend_error');
             return res.status(401).json({ message: 'unauthorized' });
         }
     });
@@ -1367,25 +1370,22 @@ function startServer() {
         }
     }
 
-    function getRoomIdFromFilename(fileName) {
-        const parts = fileName.split('_');
-        if (parts.length >= 2) {
-            return parts[1];
-        }
-        throw new Error('Invalid file name format');
+    function getRoomIdFromFilename(fileName, req) {
+        if (typeof fileName !== 'string' || !req.recUploadKey || fileName.split('_')[1] !== req.recUploadKey) throw new Error('Invalid recording reference');
+        return req.recUploadRoomId;
     }
 
-    // Extract the recording upload token from an Authorization: Bearer header or query param
+    // Accept recording upload tokens only from the Authorization: Bearer header.
     function getRecUploadToken(req) {
         const auth = req.headers['authorization'] || '';
         if (auth.startsWith('Bearer ')) return auth.slice(7).trim();
-        if (typeof req.query.uploadToken === 'string') return req.query.uploadToken;
+
         return null;
     }
 
     // Authorize /recSync* requests: recording must be enabled and the caller must
     // present a valid, unexpired upload token issued on join. The room the token was
-    // issued for is stored on req and later matched against the target file's room.
+    // issued for is stored on req; the filename must match its opaque conference reference.
     function checkRecUploadToken(req, res, next) {
         if (!serverRecordingEnabled) {
             return res.status(403).json({ error: 'Recording disabled' });
@@ -1396,10 +1396,15 @@ function startServer() {
                 return res.status(401).json({ error: 'Missing upload token' });
             }
             const decoded = jwt.verify(token, jwtKeys.recUpload, JWT_VERIFY_OPTIONS);
-            if (!decoded || decoded.scope !== 'rec-upload' || !decoded.roomId) {
+            if (!decoded || decoded.scope !== 'rec-upload' || !decoded.roomId || !decoded.recordingKey) {
                 return res.status(401).json({ error: 'Invalid upload token' });
             }
             req.recUploadRoomId = String(decoded.roomId);
+            req.recUploadKey = String(decoded.recordingKey);
+            if (roomList.get(req.recUploadRoomId)?.sessionId !== req.recUploadKey) return res.status(401).json({ error: 'Recording session expired' });
+            if (!recordingAllowedIn(req.recUploadRoomId)) {
+                return res.status(403).json({ error: 'Recording disabled for this meeting' });
+            }
             next();
         } catch (err) {
             log.warn('[recSync] Rejected upload with invalid token', { error: err.message });
@@ -1489,7 +1494,7 @@ function startServer() {
             const start = Date.now();
 
             const { fileName } = checkXSS(req.query);
-            const roomId = getRoomIdFromFilename(fileName);
+            const roomId = getRoomIdFromFilename(fileName, req);
 
             isValidRequest(req, fileName, roomId);
 
@@ -1537,7 +1542,7 @@ function startServer() {
     app.post('/recSyncFixWebm', recSyncLimiter, checkRecUploadToken, async (req, res) => {
         try {
             const { fileName, durationMs } = checkXSS(req.query);
-            const roomId = getRoomIdFromFilename(fileName);
+            const roomId = getRoomIdFromFilename(fileName, req);
 
             isValidRequest(req, fileName, roomId, durationMs, false);
 
@@ -1576,7 +1581,7 @@ function startServer() {
             const start = Date.now();
 
             const { fileName, durationMs } = checkXSS(req.query);
-            const roomId = getRoomIdFromFilename(fileName);
+            const roomId = getRoomIdFromFilename(fileName, req);
 
             isValidRequest(req, fileName, roomId, durationMs, false);
 
@@ -1620,6 +1625,7 @@ function startServer() {
     // ###############################################################
 
     function checkRTMPApiSecret(req, res, next) {
+        if (!rtmpEnabled) return res.status(403).send('RTMP disabled');
         const authHeader = req.headers.authorization || '';
 
         // Preferred path: per-session token issued on join to the peer that opened /rtmp.
@@ -1815,18 +1821,7 @@ function startServer() {
         }
     }, STREAM_TIMEOUT_MS);
 
-    // Join roomId redirect to /join?room=roomId
-    app.get('/:roomId', (req, res) => {
-        const { roomId } = checkXSS(req.params);
-
-        if (!Validator.isValidRoomName(roomId)) {
-            log.warn('/:roomId not valid', roomId);
-            return res.redirect('/');
-        }
-
-        log.debug(`Detected roomId --> redirect to /join?room=${roomId}`);
-        res.redirect(`/join/${roomId}`);
-    });
+    app.get('/:roomId', (req, res) => res.status(404).end());
 
     // ####################################################
     // REST API
@@ -2151,7 +2146,6 @@ function startServer() {
                 },
                 jwtCfg: jwtCfg,
                 host: hostCfg?.protected || hostCfg?.user_auth ? hostCfg : { presenters: hostCfg.presenters },
-                ip_lookup: config.integrations?.IPLookup?.enabled ? config.integrations.IPLookup : false,
                 oidc: OIDC?.enabled ? OIDC : false,
                 middleware: {
                     IpWhitelist: config?.security?.middleware?.IpWhitelist?.enabled
@@ -2174,17 +2168,7 @@ function startServer() {
                     worker_bin: mediasoup?.workerBin,
                 },
                 rtmp: rtmpCfg?.enabled ? rtmpCfg : false,
-                videoAI: config.integrations?.videoAI?.enabled
-                    ? {
-                          enabled: true,
-                          defaultProvider: config.integrations.videoAI.defaultProvider || 'liveavatar',
-                          sessionTimeLimit: config.integrations.videoAI.sessionTimeLimit || 0,
-                          providers: {
-                              liveavatar: !!config.integrations.videoAI.liveavatar?.enabled,
-                              anam: !!config.integrations.videoAI.anam?.enabled,
-                          },
-                      }
-                    : false,
+                videoAI: false,
                 server_recording: config?.media?.recording?.enabled ? config.media.recording : false,
             },
 
@@ -2271,7 +2255,7 @@ function startServer() {
     // ####################################################
 
     function startServer() {
-        server.listen(config?.server?.listen?.port || 3010, () => {
+        server.listen(config?.server?.listen?.port || 3010, config?.server?.listen?.ip || '0.0.0.0', () => {
             log.log(
                 `%c
     
@@ -2388,33 +2372,47 @@ function startServer() {
     // SOCKET IO
     // ####################################################
 
-    const PRE_JOIN_EVENTS = new Set(['createRoom', 'join', 'clientError', 'error']);
+    async function authenticatedRoomUser(token, roomId) {
+        if (!token) return null;
+        try {
+            if (!(await isValidToken(token))) return null;
+            const session = authenticatedSession(token);
+            return (await sessionAllowsRoom(session, roomId)) ? session.username : null;
+        } catch (error) {
+            log.warn('[createRoom] - Authentication failed', { room_id: roomId, error: error.message });
+            return null;
+        }
+    }
+
+    io.use((socket, next) => {
+        try {
+            const session = authenticatedSession(socket.handshake.auth?.token);
+            socket.authSessionId = session.id;
+            socket.conn.markAuthenticated?.();
+            next();
+        } catch {
+            securityEvent('socket_auth_rejected', socket, 'invalid_session');
+            next(new Error('Authentication required'));
+            socket.conn.close();
+        }
+    });
 
     io.on('connection', (socket) => {
-        // Security: only sockets that were admitted to the room (join accepted, lobby included) may use
-        // room events. Rejected/unjoined sockets can still be bound to a room id by 'createRoom'.
         socket.use((packet, next) => {
-            const [event, payload] = packet;
-            if (PRE_JOIN_EVENTS.has(event)) return next();
-            if (event === 'roomAction' && payload?.action === 'checkPassword') return next();
-            if (roomExists(socket) && getPeer(socket)) return next();
-
-            // Only a socket bound to a live room (via createRoom) but never admitted is a bypass attempt.
-            // A socket with no room is a harmless leftover: events buffered during a reconnect (new socket
-            // id, sent before the page reloads) or sent after exitRoom (teardown, in-flight ICE restarts).
-            if (roomExists(socket)) {
-                log.warn('Blocked event from a socket that is not a room member', {
-                    event,
-                    peer_id: socket.id,
-                    room_id: socket.room_id,
-                });
-            } else {
-                log.debug('Blocked event from a socket that is not in a room', { event, peer_id: socket.id });
-            }
+            const event = packet[0];
+            const preJoin = ['createRoom', 'join', 'getMeetingRecordingPolicy'];
+            const peer = roomList.get(socket.room_id)?.getPeer(socket.id);
+            if (preJoin.includes(event) || (socket.authenticatedMeeting && peer)) return next();
+            securityEvent('socket_event_rejected', socket, 'not_admitted');
             const ack = packet[packet.length - 1];
-            if (typeof ack === 'function') ack({ error: 'Not in room' });
+            if (typeof ack === 'function') ack({ error: 'Not in meeting' });
+            next(new Error('Not in meeting'));
         });
-
+        socket.use((_packet, next) => {
+            if (!socket.authSessionId) { socket.disconnect(true); return next(new Error('Authentication required')); }
+            try { requireAuthSession(socket.authSessionId); next(); }
+            catch { socket.disconnect(true); next(new Error('Authentication session expired')); }
+        });
         socket.on('clientError', (error) => {
             try {
                 log.error('Client error', error.message);
@@ -2433,11 +2431,27 @@ function startServer() {
             }
         });
 
-        socket.on('createRoom', async ({ room_id, token }, callback) => {
-            // Security: reject invalid room ids (XSS / path traversal / empty).
+        socket.on('getMeetingRecordingPolicy', async ({ room_id, peer_token }, callback) => {
+            if (typeof callback !== 'function') return;
+            if (!Validator.isValidRoomName(room_id)) return callback({ error: 'invalid room name' });
+            const username = await authenticatedRoomUser(peer_token, room_id);
+            if (!username || authenticatedSession(peer_token).id !== socket.authSessionId) return callback({ error: 'unauthorized' });
+            callback({ recordingAllowed: recordingAllowedIn(room_id) });
+        });
+
+        socket.on('createRoom', async ({ room_id, peer_token, token }, callback) => {
+            // Reject invalid Unicode meeting keys; render labels as text, never as paths or HTML.
             if (!Validator.isValidRoomName(room_id)) {
                 log.warn('[createRoom] - Invalid room name', { room_id });
                 return callback({ error: 'invalid room name' });
+            }
+
+            const username = await authenticatedRoomUser(peer_token, room_id);
+            let capability;
+            try { capability = jwt.verify(token, jwtKeys.createRoom, JWT_VERIFY_OPTIONS); } catch {}
+            if (!username || capability?.scope !== 'create-room' || capability.roomId !== room_id || capability.sessionId !== socket.authSessionId || authenticatedSession(peer_token).id !== socket.authSessionId) {
+                securityEvent('meeting_creation_denied', socket, 'unauthorized');
+                return callback({ error: 'unauthorized' });
             }
 
             // Security: per-IP rate limit to prevent roomList spam/enumeration.
@@ -2452,12 +2466,6 @@ function startServer() {
             if (roomList.has(room_id)) {
                 socket.room_id = room_id;
                 return callback({ error: 'already exists' });
-            }
-
-            // Security: enforce the room creation policy (OIDC / host protection) that the HTTP routes apply.
-            if (isRoomCreationRestricted() && !isCreateRoomTokenValid(token, room_id)) {
-                log.warn('[createRoom] - Room creation not authorized', { ip, room_id });
-                return callback({ error: 'Room creation not authorized' });
             }
 
             socket.room_id = room_id;
@@ -2490,14 +2498,9 @@ function startServer() {
             // Get peer IPv4 (::1 Its the loopback address in ipv6, equal to 127.0.0.1 in ipv4)
             const peer_ip = getIpSocket(socket);
 
-            // Get peer Geo Location
-            if (config?.integrations?.IPLookup?.enabled && peer_ip != '::1') {
-                dataObject.peer_geo = await getPeerGeoLocation(peer_ip);
-            }
-
             const data = checkXSS(dataObject);
 
-            log.debug('User joined', data);
+            log.debug('Join request received', { peer_id: socket.id });
 
             if (!Validator.isValidRoomName(socket.room_id)) {
                 log.warn('[Join] - Invalid room name', socket.room_id);
@@ -2529,59 +2532,31 @@ function startServer() {
                         const validToken = await isValidToken(peer_token);
 
                         if (!validToken) {
-                            log.warn('[Join] - Invalid token', peer_token);
+                            log.warn('[Join] - Invalid token');
                             return cb('unauthorized');
                         }
 
-                        const { username, password, presenter } = checkXSS(decodeToken(peer_token));
+                        const session = authenticatedSession(peer_token);
+                        authenticatedUsername = session.username;
+                        if (socket.authSessionId !== session.id) return cb('unauthorized');
+                        is_presenter = false;
 
-                        const isPeerValid = await isAuthPeer(username, password);
-
-                        if (!isPeerValid) {
-                            // redirect peer to login page
-                            log.warn('[Join] - Invalid peer not authenticated', isPeerValid);
-                            return cb('unauthorized');
-                        }
-
-                        authenticatedUsername = username;
-
-                        const tokenPresenter = presenter === '1' || presenter === 'true';
-
-                        /*
-                            In breakout rooms: only presenters.list members get presenter role
-                            join_first and token-based presenter flags are ignored
-                        */
-                        if (socket.room_id.includes('_breakout_')) {
-                            is_presenter = isConfiguredPresenter(authenticatedUsername, hostCfg?.presenters?.list);
-                        } else {
-                            is_presenter =
-                                tokenPresenter || (hostCfg?.presenters?.join_first && room?.getPeersCount() === 0);
-                        }
-
-                        log.debug('[Join] - HOST PROTECTED - USER AUTH check peer', {
-                            ip: peer_ip,
-                            peer_username: username,
-                            peer_password: password,
-                            peer_valid: isPeerValid,
-                            peer_presenter: is_presenter,
-                        });
                     } catch (err) {
                         log.error('[Join] - JWT error', {
                             error: err.message,
-                            token: peer_token,
                         });
                         return cb('unauthorized');
                     }
-                } else {
-                    if (!hostCfg.users_from_db) return cb('unauthorized');
-                }
+                } else return cb('unauthorized');
 
-                if (!hostCfg.users_from_db) {
-                    const roomAllowedForUser = await isRoomAllowedForUser('[Join]', authenticatedUsername, room.id);
-                    if (!roomAllowedForUser) {
-                        log.warn('[Join] - Room not allowed for this peer', { peer_name, room_id: room.id });
-                        return cb('notAllowed');
-                    }
+                const session = authenticatedSession(peer_token);
+                if (!(await sessionAllowsRoom(session, room.id))) {
+                    log.warn('[Join] - Room not allowed for authenticated user', { room_id: room.id });
+                    return cb('notAllowed');
+                }
+                if (peer_name !== session.displayName) {
+                    log.warn('[Join] - Attendee name differs from authenticated identity', { room_id: room.id });
+                    return cb('unauthorized');
                 }
             }
 
@@ -2606,25 +2581,13 @@ function startServer() {
             );
             if (usernameExists) return cb('isNameInUse');
 
-            const configuredPresenter = isConfiguredPresenter(authenticatedUsername, hostCfg?.presenters?.list);
-            const isBreakoutRoom = socket.room_id.includes('_breakout_');
-            const shouldRegisterPresenter =
-                configuredPresenter ||
-                (!isBreakoutRoom &&
-                    hostCfg?.presenters?.join_first &&
-                    Object.keys(presenters[socket.room_id] || {}).length === 0) ||
-                (peer_token && is_presenter);
-            const isPresenter = peer_token
-                ? is_presenter
-                : shouldRegisterPresenter || isPeerPresenter(socket.room_id, socket.id, peer_name, peer_uuid);
+            // HARDENED has no participant presenter role, even for a caller with
+            // a signed token carrying a presenter claim.
+            is_presenter = false;
+            const configuredPresenter = false;
 
-            if ((hostCfg.protected || hostCfg.user_auth) && isPresenter && !hostCfg.users_from_db) {
-                const roomAllowedForUser = await isRoomAllowedForUser('[Join]', authenticatedUsername, room.id);
-                if (!roomAllowedForUser) {
-                    log.warn('[Join] - Room not allowed for this peer', { peer_name, room_id: room.id });
-                    return cb('notAllowed');
-                }
-            }
+            const shouldRegisterPresenter = false;
+            const isPresenter = false;
 
             // Security: admission checks must run BEFORE the peer is added to the room, otherwise a
             // rejected peer would keep access to the media plane and room broadcasts.
@@ -2656,7 +2619,7 @@ function startServer() {
 
             if (!(socket.room_id in presenters)) presenters[socket.room_id] = {};
 
-            // Set the presenters
+            // Retain the upstream peer metadata shape without assigning presenter privileges.
             const presenter = {
                 peer_ip: peer_ip,
                 peer_name: peer_name,
@@ -2665,10 +2628,7 @@ function startServer() {
                 is_configured_presenter: configuredPresenter,
             };
 
-            /**
-             * first we check if the username match the presenters username else if join_first enabled
-             * For breakout rooms, skip join_first rule - only presenters.list or token-based presenters are valid
-             */
+            // HARDENED never registers a participant as a presenter.
             if (shouldRegisterPresenter) {
                 presenter.is_presenter = true;
                 presenters[socket.room_id][socket.id] = presenter;
@@ -2751,11 +2711,15 @@ function startServer() {
             }
 
             const roomJson = room.toJson();
+            roomJson.recordingAllowed = recordingAllowedIn(room.id);
+            if (!roomJson.recordingAllowed) {
+                roomJson.recording = { ...roomJson.recording, recSyncServerRecording: false };
+            }
 
             // Issue a per-session, room-bound token authorizing this peer to upload
             // its own server recording chunks via the /recSync* endpoints.
-            if (serverRecordingEnabled) {
-                roomJson.recUploadToken = createRecUploadToken(room.id);
+            if (serverRecordingEnabled && roomJson.recordingAllowed) {
+                roomJson.recUploadToken = createRecUploadToken(room.id, room.sessionId);
             }
 
             // Same for the /rtmp streamer page (camera/screen -> RTMP).
@@ -2763,6 +2727,7 @@ function startServer() {
                 roomJson.rtmpStreamToken = createRtmpStreamToken(room.id);
             }
 
+            socket.authenticatedMeeting = true;
             cb(roomJson);
         });
 
@@ -3304,12 +3269,13 @@ function startServer() {
         });
 
         socket.on('cmd', async (dataObject) => {
+            // HARDENED: never relay transcription or remote transcription-start commands.
+            if (['transcript', 'transcriptionAll', 'geoLocation', 'geoLocationOK', 'geoLocationKO', 'remoteControl', 'remoteControlOK', 'remoteControlKO'].includes(dataObject?.type)) return;
             if (!roomExists(socket)) return;
 
             const data = checkXSS(dataObject);
 
-            // Never log the RustDesk credentials
-            log.debug('cmd', data.type === 'remoteControlOK' ? { ...data, data: '[redacted]' } : data);
+            log.debug('cmd', data);
 
             if (!Validator.isValidData(data)) return;
 
@@ -3324,44 +3290,14 @@ function startServer() {
                     peer.updatePeerInfo({ type: data.type, status: data.active });
                     break;
                 case 'ejectAll':
-                    const { peer_name, peer_uuid } = data;
-                    const isPresenter = isPeerPresenter(socket.room_id, socket.id, peer_name, peer_uuid);
-                    if (!isPresenter) return;
-                    // Only the server API (endMeeting) may force a redirect, never a peer
-                    delete data.redirect;
-                    const ejectMessage = ServerApi.normalizeEjectMessage(data.message);
-                    if (ejectMessage) data.message = ejectMessage;
-                    else delete data.message;
-                    break;
+                    // HARDENED: no participant can terminate another's meeting.
+                    return;
                 case 'peerAudio':
                     // Keep producer volume to update consumer on join room...
                     if (data.audioProducerId) {
                         peer.updatePeerInfo({ type: data.type, volume: data.volume * 100 });
                     }
                     break;
-                case 'remoteControl':
-                case 'remoteControlOK':
-                case 'remoteControlKO': {
-                    // Optional RustDesk handshake: consent relay only, no input is ever proxied by the server
-                    if (!config?.features?.remoteControl?.enabled) return;
-                    data.from_peer_id = socket.id;
-                    data.broadcast = false;
-                    delete data.setup_token; // never trust a client supplied token
-                    if (data.type === 'remoteControl') {
-                        // Only presenters can request remote control
-                        if (!isPeerPresenter(socket.room_id, socket.id, data.from_peer_name, data.from_peer_uuid))
-                            return;
-                        // Lets the participant open the setup page (see /remote-control/setup)
-                        if (resolveSetupConfig(config.features.remoteControl.server)) {
-                            data.setup_token = createSetupToken(jwtKeys.rcSetup, socket.room_id);
-                        }
-                    } else if (data.type === 'remoteControlOK') {
-                        const { id, password } = data.data || {};
-                        if (typeof id !== 'string' || !/^[\w.@:-]{6,64}$/.test(id)) return;
-                        if (typeof password !== 'string' || !/^[^\s<>&"'`]{1,64}$/.test(password)) return;
-                    }
-                    break;
-                }
                 default:
                     break;
                 //...
@@ -3692,6 +3628,8 @@ function startServer() {
         // ####################################################
 
         socket.on('peerAction', async (dataObject) => {
+            if (['noiseOn', 'noiseOff', 'noiseToggle'].includes(dataObject?.action)) return;
+            if (dataObject?.action === 'geoLocation') return;
             if (!roomExists(socket)) return;
 
             const data = checkXSS(dataObject);
@@ -3712,7 +3650,6 @@ function startServer() {
                 'noiseToggle',
                 'eject',
                 'ban',
-                'geoLocation',
             ];
 
             if (presenterActions.some((v) => data.action === v)) {
@@ -3734,63 +3671,8 @@ function startServer() {
                 : room.sendTo(data.peer_id, 'peerAction', data);
         });
 
-        socket.on('setPresenterRole', async (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            const data = checkXSS(dataObject);
-
-            if (!Validator.isValidData(data)) return;
-
-            // Only an existing presenter can grant or revoke the presenter role
-            const isPresenter = isPeerPresenter(socket.room_id, socket.id, data.from_peer_name, data.from_peer_uuid);
-            if (!isPresenter) return;
-
-            const room = getRoom(socket);
-            if (!room) return;
-
-            const targetPeer = room.getPeer(data.peer_id);
-            if (!targetPeer) return;
-
-            const grant = data.action === 'grant';
-
-            // A presenter authenticated from the host configuration cannot be demoted at runtime.
-            const targetPresenter = presenters[socket.room_id]?.[data.peer_id];
-            if (!grant && targetPresenter?.is_configured_presenter === true) {
-                log.debug('setPresenterRole - cannot revoke a configured presenter', {
-                    peer_name: targetPeer.peer_name,
-                });
-                return;
-            }
-
-            if (!(socket.room_id in presenters)) presenters[socket.room_id] = {};
-
-            if (grant) {
-                presenters[socket.room_id][data.peer_id] = {
-                    peer_ip: targetPeer.peer_info?.peer_ip || '',
-                    peer_name: targetPeer.peer_name,
-                    peer_uuid: targetPeer.peer_uuid,
-                    is_presenter: true,
-                };
-            } else if (presenters[socket.room_id]) {
-                delete presenters[socket.room_id][data.peer_id];
-            }
-
-            targetPeer.updatePeerInfo({ type: 'presenter', status: grant });
-
-            log.debug('setPresenterRole', {
-                room_id: socket.room_id,
-                from: data.from_peer_name,
-                target: targetPeer.peer_name,
-                grant: grant,
-            });
-
-            // Notify everyone (including the target and the sender) to refresh roles/UI
-            room.sendToAll('setPresenterRole', {
-                peer_id: data.peer_id,
-                peer_name: targetPeer.peer_name,
-                is_presenter: grant,
-                from_peer_name: data.from_peer_name,
-            });
+        socket.on('setPresenterRole', () => {
+            // HARDENED has no presenter role to delegate.
         });
 
         socket.on('updatePeerInfo', (dataObject) => {
@@ -3804,6 +3686,7 @@ function startServer() {
 
             if (!Validator.isValidData(data)) return;
 
+            if (data.type === 'recording' && !recordingAllowedIn(socket.room_id)) return;
             peer.updatePeerInfo(data);
 
             if (data.broadcast) {
@@ -4030,6 +3913,52 @@ function startServer() {
                 : room.sendTo(data.peer_id, 'shareVideoAction', data);
         });
 
+        socket.on('whiteboardPanelState', (state) => {
+            if (!roomExists(socket)) return;
+            const peer = getRoom(socket).getPeer(socket.id);
+            if (peer && typeof state?.open === 'boolean') peer.whiteboardOpen = state.open;
+        });
+
+        socket.on('requestWhiteboardSnapshot', () => {
+            if (!roomExists(socket)) return;
+            const room = getRoom(socket);
+            if (!room.getPeer(socket.id) || pendingWhiteboardSnapshots.has(socket.id)) return;
+            if (whiteboardSnapshotRequested.has(socket.id)) return;
+            whiteboardSnapshotRequested.add(socket.id);
+            pendingWhiteboardSnapshots.set(socket.id, {
+                tried: new Set(), timer: null, sourceId: null, nonce: null, roomId: socket.room_id,
+            });
+            requestWhiteboardSnapshotFromPeer(socket.id, socket.room_id);
+        });
+
+        socket.on('whiteboardSnapshotResponse', (response) => {
+            if (!roomExists(socket) || !response || typeof response !== 'object') return;
+            const room = getRoom(socket);
+            if (!room.getPeer(socket.id)) return;
+            const { requesterId, nonce, canvas, panelOpen } = response;
+            const pending = pendingWhiteboardSnapshots.get(requesterId);
+            if (!pending || pending.sourceId !== socket.id || pending.nonce !== nonce) return;
+            if (typeof panelOpen === 'boolean') room.getPeer(socket.id).whiteboardOpen = panelOpen;
+            if (canvas === null) {
+                clearTimeout(pending.timer);
+                requestWhiteboardSnapshotFromPeer(requesterId, pending.roomId);
+                return;
+            }
+            if (!room.getPeer(requesterId) || typeof canvas !== 'string' || canvas.length > 2_000_000) return;
+            let parsed;
+            try {
+                parsed = JSON.parse(canvas);
+            } catch (_) {
+                return;
+            }
+            if (!parsed || !Array.isArray(parsed.objects)) return;
+            const safeCanvas = Validator.sanitizeWbCanvasJson(checkXSS(parsed));
+            clearTimeout(pending.timer);
+            pendingWhiteboardSnapshots.delete(requesterId);
+            const openPanel = [...room.getPeers()].some(([id, peer]) => id !== requesterId && peer.whiteboardOpen === true);
+            room.sendTo(requesterId, 'whiteboardSnapshot', { canvas: JSON.stringify(safeCanvas), openPanel });
+        });
+
         socket.on('wbCanvasToJson', (dataObject) => {
             if (!roomExists(socket)) return;
 
@@ -4076,13 +4005,11 @@ function startServer() {
 
             const data = checkXSS(dataObject);
 
-            // Security: strip fabric `image` objects whose `src` is not a safe http(s) URL
-            // or `data:image/*` URI. This prevents SSRF probes (http://127.0.0.1, AWS IMDS,
-            // 192.168/10/172.16/8 ranges…) and dangerous schemes (javascript:, file:, blob:)
-            // from being rendered by every other peer's browser.
+            // Accept embedded raster images only; remote image URLs are never relayed.
             const sanitized = Validator.sanitizeWbCanvasJson(data, ({ src }) => {
                 log.debug('wbCanvasToJson dropped unsafe image src', { src });
             });
+            if (!sanitized) return;
 
             // const objLength = bytesToSize(Object.keys(data).length);
 
@@ -4475,31 +4402,6 @@ function startServer() {
                     annotations.set(annotationId, newAnnotation);
                     room.broadCast(socket.id, 'videoDrawing', newAnnotation);
                     return;
-                } else if (action === 'draft') {
-                    // Live typing preview: relayed only, never stored
-                    const textStyle = getTextStyle();
-                    if (
-                        !validAnnotationId ||
-                        typeof data.text !== 'string' ||
-                        data.text.length > 1000 ||
-                        !textStyle ||
-                        !validPosition
-                    ) {
-                        return;
-                    }
-                    room.broadCast(socket.id, 'videoDrawing', {
-                        type: 'text',
-                        action,
-                        producerId,
-                        annotationId,
-                        drawerId: socket.id,
-                        peer_name: data.peer_name,
-                        text: data.text,
-                        x: data.x,
-                        y: data.y,
-                        ...textStyle,
-                    });
-                    return;
                 } else if (action === 'clear') {
                     if (socket.id !== producerOwnerId) return;
                     room.clearVideoTextAnnotations(producerId);
@@ -4559,6 +4461,7 @@ function startServer() {
 
         socket.on('recordingAction', async (dataObject) => {
             if (!roomExists(socket)) return;
+            if (!recordingAllowedIn(socket.room_id)) return;
 
             const data = checkXSS(dataObject);
 
@@ -4884,154 +4787,10 @@ function startServer() {
         });
 
         // https://platform.openai.com/docs/api-reference/audio/createTranscription
-        // Whisper speech-to-text (OpenAI API or any OpenAI-compatible self-hosted server)
-        socket.on('getWhisperTranscription', async ({ audio, mimeType, language }, cb) => {
-            if (!roomExists(socket)) {
-                return cb({ error: 'Room not found' });
-            }
-
-            const whisper = config?.integrations?.whisper;
-            if (!whisper?.enabled) {
-                return cb({ error: 'Whisper transcription is disabled. Please try again later!' });
-            }
-
-            try {
-                const maxBytes = whisper.maxAudioBytes || 25 * 1024 * 1024;
-
-                let buffer;
-                try {
-                    buffer = decodeAudioPayload(audio, maxBytes);
-                } catch (err) {
-                    if (err.message === 'Empty audio payload') return cb({ text: '' });
-                    if (err.message === 'Audio segment too large') return cb({ error: err.message });
-                    throw err;
-                }
-
-                const type = typeof mimeType === 'string' && mimeType.startsWith('audio/') ? mimeType : 'audio/webm';
-                const ext = resolveAudioExtension(type);
-
-                const FormData = require('form-data');
-                const form = new FormData();
-                form.append('file', buffer, { filename: `audio.${ext}`, contentType: type });
-                form.append('model', whisper.model || 'whisper-1');
-                form.append('response_format', 'verbose_json');
-
-                const lang = typeof language === 'string' && language ? language : whisper.language;
-                if (lang) form.append('language', lang);
-
-                const headers = { ...form.getHeaders() };
-                if (whisper.apiKey) headers['Authorization'] = `Bearer ${whisper.apiKey}`;
-
-                const base = (whisper.basePath || 'https://api.openai.com/v1/').replace(/\/?$/, '/');
-                const url = `${base}audio/transcriptions`;
-
-                const response = await axios.post(url, form, {
-                    headers,
-                    timeout: 30000,
-                    maxBodyLength: Infinity,
-                    maxContentLength: Infinity,
-                });
-
-                const raw = response.data && (response.data.text || response.data.transcript);
-                const rawText = typeof raw === 'string' ? raw.trim() : '';
-
-                // Filter out Whisper hallucinations that occur on silent/near-silent audio
-                const segments = Array.isArray(response.data?.segments) ? response.data.segments : [];
-                const text = filterTranscript(rawText, segments);
-
-                log.debug('Whisper transcription', { language: lang || 'auto', bytes: buffer.length, text });
-
-                cb({ text });
-            } catch (error) {
-                log.error('Whisper transcription error', error?.response?.data || error.message);
-                cb({ error: `Whisper error: ${error?.response?.data?.error?.message || error.message}` });
-            }
-        });
-
-        const videoAIService = createVideoAIService(config?.integrations?.videoAI, axios, log);
-
-        // https://docs.liveavatar.com/reference/list_public_avatars_v1_avatars_public_get
-        // https://docs.liveavatar.com/reference/list_user_avatars_v1_avatars_get
-        // https://anam.ai/docs/api-reference/avatars/list-avatars
-        socket.on('getAvatarList', async ({ provider }, cb) => {
-            try {
-                const data = await videoAIService.getAvatarList(provider);
-                cb({ response: { avatars: data.avatars }, provider: data.provider });
-            } catch (error) {
-                cb({
-                    error:
-                        error.response?.status === 500
-                            ? 'Internal server error'
-                            : error.normalizedMessage || error.message,
-                });
-            }
-        });
-
-        // https://docs.liveavatar.com/reference/list_voices_v1_voices_get
-        // https://anam.ai/docs/api-reference/voices/list-voices
-        socket.on('getVoiceList', async ({ provider }, cb) => {
-            try {
-                const data = await videoAIService.getVoiceList(provider);
-                cb({ response: { voices: data.voices }, provider: data.provider });
-            } catch (error) {
-                cb({
-                    error:
-                        error.response?.status === 500
-                            ? 'Internal server error'
-                            : error.normalizedMessage || error.message,
-                });
-            }
-        });
-
-        // https://docs.liveavatar.com/reference/get_voice_preview_by_id_v1_voices__voice_id__preview_get
-        // https://anam.ai/docs/api-reference/voices/list-voices
-        socket.on('previewVoice', async ({ voice_id, provider }, cb) => {
-            try {
-                const data = await videoAIService.previewVoice(provider, voice_id);
-                if (data.audio) return cb({ audio: data.audio });
-                cb({ error: 'No audio preview available for this voice' });
-            } catch (error) {
-                cb({ error: error.normalizedMessage || 'Voice preview not available' });
-            }
-        });
-
-        // https://docs.liveavatar.com/reference/create_session_token_v1_sessions_token_post
-        // https://anam.ai/docs/api-reference/sessions/create-session-token
-        socket.on('createSessionToken', async ({ quality, avatar_id, voice_id, avatar_model, provider }, cb) => {
-            if (!roomExists(socket)) return;
-            try {
-                const data = await videoAIService.createSessionToken(provider, {
-                    quality,
-                    avatarId: avatar_id,
-                    voiceId: voice_id,
-                    avatarModel: avatar_model,
-                });
-                cb(data);
-            } catch (error) {
-                cb({
-                    error:
-                        error.response?.status === 500
-                            ? 'Internal server error'
-                            : error.normalizedMessage || error.message,
-                });
-            }
-        });
-
-        // https://docs.liveavatar.com/reference/start_session_v1_sessions_start_post
-        // https://anam.ai/docs/javascript-sdk/reference/basic-usage
-        socket.on('startSession', async ({ session_token, provider }, cb) => {
-            if (!roomExists(socket)) return;
-            try {
-                const data = await videoAIService.startSession(provider, session_token);
-                return cb(data);
-            } catch (error) {
-                return cb({
-                    error:
-                        error.response?.status === 500
-                            ? 'Internal server error'
-                            : error.normalizedMessage || error.message,
-                });
-            }
+        // Reject Whisper transcription without contacting a backend.
+        socket.on('getWhisperTranscription', (_data, cb) => {
+            // HARDENED: reject before decoding audio or contacting a backend.
+            if (typeof cb === 'function') cb({ error: 'Transcription is disabled in HARDENED' });
         });
 
         socket.on('talkToOpenAI', async ({ text, context }, cb) => {
@@ -5083,23 +4842,6 @@ function startServer() {
                     error:
                         error.response?.data?.message ||
                         (error.response?.status === 500 ? 'Internal server error' : error.message),
-                });
-            }
-        });
-
-        // https://docs.liveavatar.com/reference/stop_session_v1_sessions_stop_post
-        // https://anam.ai/docs/api-reference/sessions/stop-session
-        socket.on('stopSession', async ({ session_id, provider }, cb) => {
-            if (!roomExists(socket)) return;
-            try {
-                const data = await videoAIService.stopSession(provider, session_id);
-                return cb(data);
-            } catch (error) {
-                return cb({
-                    error:
-                        error.response?.status === 500
-                            ? 'Internal server error'
-                            : error.normalizedMessage || error.message,
                 });
             }
         });
@@ -5407,6 +5149,7 @@ function startServer() {
         });
 
         socket.on('disconnect', (reason) => {
+            releaseWhiteboardSnapshotSocket(socket.id);
             if (!roomExists(socket)) {
                 // Clean up socket listeners even if room doesn't exist
                 socket.removeAllListeners();
@@ -5493,6 +5236,7 @@ function startServer() {
         });
 
         socket.on('exitRoom', (_, callback) => {
+            releaseWhiteboardSnapshotSocket(socket.id);
             if (!roomExists(socket)) {
                 return callback({
                     error: 'Not currently in a room',
@@ -5605,7 +5349,7 @@ function startServer() {
         function getPeer(socket) {
             const room = getRoom(socket); // Reusing getRoom to retrieve the room
 
-            return room.getPeer ? room.getPeer(socket.id) || null : null;
+            return room?.getPeer ? room.getPeer(socket.id) || null : null;
         }
 
         function roomExists(socket) {
@@ -5744,42 +5488,51 @@ function startServer() {
         return JSON.parse(JSON.stringify(value));
     }
 
-    function isPeerPresenter(room_id, peer_id, peer_name, peer_uuid) {
-        try {
-            // 1. Direct lookup by peer_id (server-assigned socket.id — not user-controlled)
-            const storedPresenter = presenters[room_id]?.[peer_id];
-            if (storedPresenter) {
-                const isPresenter =
-                    storedPresenter.peer_name === peer_name &&
-                    storedPresenter.peer_uuid === peer_uuid &&
-                    storedPresenter.is_presenter === true;
+    function isPeerPresenter() {
+        // Kaigi has no participant with authority over another participant.
+        return false;
+    }
 
-                log.debug('isPeerPresenter Check (stored)', {
-                    room_id: room_id,
-                    peer_id: peer_id,
-                    peer_name: peer_name,
-                    peer_uuid: peer_uuid,
-                    isPresenter: isPresenter,
-                });
-
-                return isPresenter;
-            }
-
-            // 2. Not a presenter. Configured presenter names are only trusted during
-            // join after authentication and are stored in the socket-bound map above.
-            log.debug('isPeerPresenter Check (denied)', {
-                room_id: room_id,
-                peer_id: peer_id,
-                peer_name: peer_name,
-                peer_uuid: peer_uuid,
-                isPresenter: false,
-            });
-
-            return false;
-        } catch (err) {
-            log.error('isPeerPresenter Check error', err);
-            return false;
+    async function authenticateIdentity(username, password, context = {}) {
+        const matches = hostCfg.users.filter((user) => user.username === username);
+        if (matches.length) {
+            if (matches.length !== 1 || !Validator.isValidPassword(password) || matches[0].password !== password) return null;
+            const user = matches[0];
+            return { username: user.username, displayName: user.displayname || user.username, source: 'local', rooms: user.allowed_rooms || ['*'] };
         }
+        if (ldapBackend) {
+            const identity = await ldapBackend.authenticate(username, password, context);
+            if (!Array.isArray(identity.rooms) || !identity.rooms.length) {
+                const error = new Error('LDAP credentials were verified, but login is denied because no meetings are authorized.');
+                error.code = 'NO_MEETING_GRANTS';
+                throw error;
+            }
+            // An LDAP alias must not impersonate a canonical local username.
+            if (hostCfg.users.some((user) => user.username === identity.username)) return null;
+            const localMaxAge = authSessionCfg.maxAgeMs;
+            return { ...identity, source: 'ldap', maxAgeMs: localMaxAge > 0 ? Math.min(localMaxAge, ldapBackend.maxAgeMs) : ldapBackend.maxAgeMs };
+        }
+        if (!(await isAuthPeer(username, password))) return null;
+        const rooms = await getUserAllowedRooms(username, password);
+        if (!Array.isArray(rooms) || !rooms.every((room) => typeof room === 'string')) return null;
+        return { username, displayName: username, source: 'http', rooms };
+    }
+
+    function authenticatedSession(token) {
+        const { username, sessionId } = decodeToken(token);
+        const session = requireAuthSession(sessionId);
+        if (session.username !== username) throw new Error('Session identity mismatch');
+        if (session.source === 'local' && !hostCfg.users.some((user) => user.username === username)) throw new Error('Local account removed');
+        return session;
+    }
+
+    async function sessionAllowsRoom(session, roomId) {
+        if (session.source === 'http') return isRoomAllowedForUser('[session]', session.username, roomId);
+        const user = session.source === 'local' ? hostCfg.users.find((user) => user.username === session.username) : null;
+        const rooms = user ? (user.allowed_rooms || ['*']) : session.rooms;
+        const allowed = Array.isArray(rooms) && ((session.source === 'local' && rooms.includes('*')) || rooms.includes(roomId));
+        if (session.source === 'ldap') log[allowed ? 'info' : 'warn']('LDAP meeting access decision', { loginName: session.username, ip: session.ip, meeting: roomId, allowed, meetings: rooms });
+        return allowed;
     }
 
     async function isAuthPeer(username, password) {
@@ -5812,61 +5565,6 @@ function startServer() {
                 hostCfg.users && hostCfg.users.some((user) => user.username === username && user.password === password)
             );
         }
-    }
-
-    // A valid API/login join token carrying valid peer credentials may create the room it opens.
-    // Presenter tokens must also be allowed for that room, as in the HTTP direct join.
-    async function isJoinTokenAuthorized(token, room) {
-        try {
-            if (!token || !(await isValidToken(token))) return false;
-            const { username, password, presenter } = checkXSS(decodeToken(token));
-            if (!(await isAuthPeer(username, password))) return false;
-            const isPeerPresenter = presenter === '1' || presenter === 'true';
-            if (isPeerPresenter && !hostCfg.users_from_db) {
-                return await isRoomAllowedForUser('Create room with token', username, room);
-            }
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    async function isValidToken(token) {
-        return new Promise((resolve, reject) => {
-            jwt.verify(token, jwtKeys.auth, JWT_VERIFY_OPTIONS, (err, decoded) => {
-                if (err) {
-                    // Token is invalid
-                    resolve(false);
-                } else {
-                    // Token is valid
-                    resolve(true);
-                }
-            });
-        });
-    }
-
-    function encodeToken(token) {
-        if (!token) return '';
-
-        const { username = 'username', password = 'password', presenter = false, expire } = token;
-
-        const expireValue = expire || jwtCfg.JWT_EXP;
-
-        // Constructing payload
-        const payload = {
-            username: String(username),
-            password: String(password),
-            presenter: String(presenter),
-        };
-
-        // Encrypt payload using AES encryption
-        const payloadString = JSON.stringify(payload);
-        const encryptedPayload = CryptoJS.AES.encrypt(payloadString, jwtKeys.auth).toString();
-
-        // Constructing JWT token
-        const jwtToken = jwt.sign({ data: encryptedPayload }, jwtKeys.auth, { expiresIn: expireValue });
-
-        return jwtToken;
     }
 
     function getActiveRooms() {
@@ -6072,34 +5770,9 @@ function startServer() {
         }
     }
 
-    async function getPeerGeoLocation(ip) {
-        const endpoint = config?.integrations?.IPLookup?.getEndpoint(ip);
-        log.debug('Get peer geo', { ip: ip, endpoint: endpoint });
-        return axios
-            .get(endpoint)
-            .then((response) => response.data)
-            .catch((error) => log.error(error));
-    }
+    function getIP(req) { return peerAddress(req); }
 
-    function getIP(req) {
-        // Security: only trust X-Forwarded-For when behind a trusted reverse proxy.
-        const forwarded = trustProxy ? req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'] : null;
-        if (forwarded) {
-            return forwarded.split(',')[0].trim();
-        }
-        return req.socket.remoteAddress || req.ip;
-    }
-
-    function getIpSocket(socket) {
-        // Security: only trust X-Forwarded-For when behind a trusted reverse proxy.
-        const forwarded = trustProxy
-            ? socket.handshake.headers['x-forwarded-for'] || socket.handshake.headers['X-Forwarded-For']
-            : null;
-        if (forwarded) {
-            return forwarded.split(',')[0].trim();
-        }
-        return socket.handshake.address;
-    }
+    function getIpSocket(socket) { return peerAddress(socket); }
 
     function updateHostAuthenticatedFlag() {
         hostCfg.authenticated = !hostCfg.protected || authHost.getAuthorizedIPs().length > 0;
@@ -6135,6 +5808,67 @@ function startServer() {
 // AUTHENTICATION HELPERS
 // ####################################################
 
+async function isValidToken(token) {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, jwtKeys.auth, JWT_VERIFY_OPTIONS, (err, decoded) => {
+            if (err) {
+                // Token is invalid
+                resolve(false);
+            } else {
+                // Token is valid
+                resolve(true);
+            }
+        });
+    });
+}
+
+function encodeToken(token) {
+    if (!token) return '';
+
+    const { username, presenter = false, sessionId, expire } = token;
+    if (!username || !sessionId) throw new Error('Authenticated session required');
+
+    const expireValue = expire || jwtCfg.JWT_EXP;
+
+    // Constructing payload
+    const payload = {
+        username: String(username),
+        presenter: String(presenter),
+        sessionId: String(sessionId),
+    };
+
+    // Encrypt payload using AES encryption
+    const payloadString = JSON.stringify(payload);
+    const encryptedPayload = CryptoJS.AES.encrypt(payloadString, jwtKeys.auth).toString();
+
+    // Constructing JWT token
+    const signOptions = expireValue ? { expiresIn: expireValue } : {};
+    const jwtToken = jwt.sign({ data: encryptedPayload }, jwtKeys.auth, signOptions);
+
+    return jwtToken;
+}
+
+function decodeToken(jwtToken) {
+    if (!jwtToken) return null;
+
+    // Verify and decode the JWT token
+    const decodedToken = jwt.verify(jwtToken, jwtKeys.auth, JWT_VERIFY_OPTIONS);
+    if (!decodedToken || !decodedToken.data) {
+        throw new Error('Invalid token');
+    }
+
+    // Decrypt the payload using AES decryption
+    const decryptedPayload = CryptoJS.AES.decrypt(decodedToken.data, jwtKeys.auth).toString(CryptoJS.enc.Utf8);
+
+    // Parse the decrypted payload as JSON
+    const payload = JSON.parse(decryptedPayload);
+
+    if (payload.sessionId) requireAuthSession(payload.sessionId);
+
+    return payload;
+}
+
+
 function getBearerToken(req) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -6153,26 +5887,14 @@ async function getScheduleMeetingAuthState(req) {
         };
     }
 
-    if (hostCfg.protected && allowedIP(getIP(req))) {
-        return { authorized: true, requester: 'host-ip-auth' };
-    }
-
-    if (hostCfg.user_auth) {
+    if (hostCfg.protected || hostCfg.user_auth) {
         const token = getBearerToken(req);
         if (!token) return denied;
-
         try {
-            if (!(await isValidToken(token))) return denied;
-
-            const { username, password } = checkXSS(decodeToken(token));
-            const isPeerValid = await isAuthPeer(username, password);
-
-            return isPeerValid ? { authorized: true, requester: username } : denied;
-        } catch (error) {
-            log.warn('scheduleMeeting auth token validation failed', {
-                error: error.message,
-                ip: authHost.getIP(req),
-            });
+            const { username, sessionId } = decodeToken(token);
+            const session = requireAuthSession(sessionId);
+            return session.username === username ? { authorized: true, requester: username } : denied;
+        } catch {
             return denied;
         }
     }

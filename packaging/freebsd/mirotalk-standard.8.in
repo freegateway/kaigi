@@ -1,0 +1,38 @@
+.Dd September 27, 2026
+.Dt MIROTALK 8
+.Os
+.Sh NAME
+.Nm mirotalk
+.Nd MiroTalk SFU video conferencing service
+.Sh DESCRIPTION
+This installation of MiroTalk SFU was built using the STANDARD build option.
+It uses the standard MiroTalk configuration and build except for changes required to package and operate MiroTalk on FreeBSD.
+To build the customizable and privacy-hardened version, select the HARDENED build option when configuring the port, then rebuild and reinstall it.
+.Pp
+The STANDARD build uses the upstream MiroTalk configuration files
+.Pa %%WWWDIR%%/.env
+and
+.Pa %%WWWDIR%%/app/src/config.js .
+.Sh SERVICE
+Enable the service in
+.Pa /etc/rc.conf
+or
+.Pa /etc/rc.conf.local :
+.Bd -literal -offset indent
+mirotalk_enable="YES"
+.Ed
+.Pp
+Control the service with
+.Xr service 8 .
+.Sh FILES
+.Bl -tag -width "%%WWWDIR%%/app/src/config.js" -compact
+.It Pa %%WWWDIR%%/.env
+Upstream environment configuration.
+.It Pa %%WWWDIR%%/app/src/config.js
+Upstream application configuration.
+.It Pa %%PREFIX%%/etc/rc.d/mirotalk
+FreeBSD service script.
+.El
+.Sh SEE ALSO
+.Xr rc.conf 5 ,
+.Xr service 8

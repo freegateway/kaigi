@@ -28,8 +28,8 @@ class HtmlInjector {
             OG_DESCRIPTION:
                 this.config?.og?.description ||
                 'Build your own Zoom alternative with MiroTalk SFU, an open-source self-hosted WebRTC video conferencing platform powered by Mediasoup. Host scalable meetings, webinars, classrooms, screen sharing and real-time collaboration.',
-            OG_IMAGE: this.config?.og?.image || 'https://sfu.mirotalk.com/images/mirotalksfu.png',
-            OG_URL: this.config?.og?.url || 'https://sfu.mirotalk.com',
+            OG_IMAGE: this.config?.og?.image || '/images/logo.svg',
+            OG_URL: this.config?.og?.url || '/',
             // Add more data here as needed with fallbacks
         };
     }
@@ -72,8 +72,12 @@ class HtmlInjector {
     }
 
     // Function to inject dynamic data (e.g., OG, TITLE, etc.) into a given file
-    injectHtml(filePath, res) {
-        const html = this.cache[filePath];
+    injectHtml(filePath, res, context = {}) {
+        let html = this.cache[filePath];
+        if (context.meeting && html) {
+            const data = JSON.stringify({ meeting: context.meeting }).replace(/</g, '\\u003c');
+            html = html.replace('</head>', `<script type="application/json" id="authorizedMeeting">${data}</script></head>`);
+        }
 
         // Check if HTML injection is enabled in the config
         if (!this.config?.htmlInjection) {

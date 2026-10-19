@@ -4,8 +4,8 @@
         <!-- Title and Icon -->
 
         <title id="title">MiroTalk SFU - Who are you.</title>
-        <link id="icon" rel="shortcut icon" href="../images/logo.svg" />
-        <link id="appleTouchIcon" rel="apple-touch-icon" href="../images/logo.svg" />
+        <link id="icon" rel="shortcut icon" href="data:," />
+        <link id="appleTouchIcon" rel="apple-touch-icon" href="data:," />
 
         <!-- Meta Information -->
 
@@ -30,32 +30,28 @@
 
         <!-- StyleSheet -->
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:400,600" />
+        <link rel="stylesheet" href="/vendor/@fortawesome/fontawesome-free/css/all.min.css" />
+        <link rel="stylesheet" href="/vendor/animate.css/animate.min.css" />
         <link rel="stylesheet" type="text/css" href="../css/landing.css" />
         <link rel="stylesheet" type="text/css" href="../css/waitingRoom.css" />
-        <link rel="stylesheet" type="text/css" href="../css/Translate.css" />
 
         <!-- Js scripts -->
 
-        <script async src="../js/Stats.js"></script>
         <script defer src="../js/Brand.js"></script>
-        <script async src="../js/Translate.js"></script>
+        <script defer src="../js/I18n.js"></script>
 
         <!-- xss -->
 
-        <script src="https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js"></script>
+        <script src="/vendor/xss/dist/xss.min.js"></script>
 
         <!-- axios -->
 
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script type="text/javascript" src="/vendor/axios/dist/axios.min.js"></script>
 
-        <script src="https://unpkg.com/animejs@3.0.1/lib/anime.min.js"></script>
-        <script src="https://unpkg.com/scrollreveal@4.0.0/dist/scrollreveal.min.js"></script>
+        <script src="/vendor/animejs/lib/anime.min.js"></script>
+        <script src="/vendor/scrollreveal/dist/scrollreveal.min.js"></script>
     </head>
     <body class="is-boxed has-animations">
-        <div id="google_translate_element"></div>
 
         <div class="body-wrap">
             <header class="site-header reveal-from-top">
@@ -63,10 +59,10 @@
                     <div class="site-header-inner">
                         <div class="brand header-brand">
                             <h1 class="m-0">
-                                <a href="/">
+                                <a id="headerLogoLink" href="/">
                                     <img
                                         id="headerLogo"
-                                        src="../images/logo.svg"
+                                        data-brand-logo
                                         alt="MiroTalk SFU"
                                         width="32"
                                         height="32"
@@ -193,17 +189,6 @@
                                 </a>
                             </li>
                             <li class="footer-social-icon">
-                                <a target="_blank" href="mailto:miroslav.pejic.85@gmail.com">
-                                    <span class="screen-reader-text">Email</span>
-                                    <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M7.9 7v2.4H12c-.2 1-1.2 3-4 3-2.4 0-4.3-2-4.3-4.4 0-2.4 2-4.4 4.3-4.4 1.4 0 2.3.6 2.8 1.1l1.9-1.8C11.5 1.7 9.9 1 8 1 4.1 1 1 4.1 1 8s3.1 7 7 7c4 0 6.7-2.8 6.7-6.8 0-.5 0-.8-.1-1.2H7.9z"
-                                            fill="#0270D7"
-                                        />
-                                    </svg>
-                                </a>
-                            </li>
-                            <li class="footer-social-icon">
                                 <a target="_blank" href="https://www.linkedin.com/company/mirotalk">
                                     <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                                         <title>LinkedIn</title>
@@ -239,7 +224,7 @@
                         </ul>
                         <ul class="footer-links list-reset">
                             <li>
-                                <a href="https://docs.mirotalk.com/sites/sfu">About</a>
+                                <a href="/about">About, Credits &amp; Open Source</a>
                             </li>
                             <li>
                                 <a href="/privacy">Privacy</a>
@@ -260,6 +245,5 @@
         </div>
         <script async src="../js/WhoAreYou.js"></script>
         <script defer src="../js/Landing.js"></script>
-        <script async defer src="https://buttons.github.io/buttons.js"></script>
     </body>
 </html>

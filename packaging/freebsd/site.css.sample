@@ -1,0 +1,39 @@
+/*
+ * Site-specific MiroTalk presentation overrides.
+ *
+ * This stylesheet is loaded after MiroTalk's own stylesheets.  Keep local
+ * presentation changes here so package upgrades do not overwrite them.
+ *
+ * Example for a wide (approximately 4:1) header logo:
+ *
+ * #headerLogo {
+ *     width: auto;
+ *     height: 52px;
+ *     max-width: 260px;
+ *     object-fit: contain;
+ * }
+ */
+
+
+/*
+ * Custom landing/login background example.  MiroTalk paints the visible
+ * full-page background on .body-wrap rather than body.
+ *
+ * .body-wrap {
+ *     background-color: #11151b !important;
+ *     background-image: url("/site-assets/background.webp") !important;
+ *     background-position: center center !important;
+ *     background-repeat: no-repeat !important;
+ *     background-size: cover !important;
+ *     background-attachment: fixed !important;
+ * }
+ */
+
+/*
+ * Optional: suppress MiroTalk's animated hero illustration while retaining
+ * the rest of the landing/login page.
+ *
+ * .hero-figure {
+ *     display: none !important;
+ * }
+ */

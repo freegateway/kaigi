@@ -40,7 +40,7 @@ describe('native translation catalogs', () => {
                     );
                 }
             }
-            for (const label of screenshotLabels) {
+            for (const label of (file.startsWith('en-') ? [] : screenshotLabels)) {
                 assert.notEqual(locale.buttons[label], label, `${file}: ${label}`);
             }
             for (const [namespace, keys] of Object.entries({
@@ -66,7 +66,7 @@ describe('native translation catalogs', () => {
                 tooltips: ['Prevent sleep while the meeting is visible, even with the camera on'],
             })) {
                 for (const key of keys) {
-                    assert.notEqual(locale[namespace][key], key, `${file}: ${namespace}.${key}`);
+                    if (!file.startsWith('en-')) assert.notEqual(locale[namespace][key], key, `${file}: ${namespace}.${key}`);
                 }
             }
         }

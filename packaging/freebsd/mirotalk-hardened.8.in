@@ -1,0 +1,175 @@
+.Dd September 22, 2026
+.Dt MIROTALK 8
+.Os
+.Sh NAME
+.Nm mirotalk
+.Nd administer the MiroTalk SFU service on FreeBSD
+.Sh SYNOPSIS
+.Nm service
+.Cm mirotalk
+.Ar start | stop | restart | status
+.Sh DESCRIPTION
+This installation of MiroTalk SFU was built using the HARDENED build option.
+It provides the customizable and privacy-hardened FreeBSD configuration layer.
+To build the standard MiroTalk version instead, select the STANDARD build option when configuring the port, then rebuild and reinstall it.
+.Pp
+The HARDENED build only supports self-hosted, open-source, administrator-controlled infrastructure.
+Upstream integrations that depend on third-party-controlled services are disabled in this build and are not exposed as supported configuration.
+.Pp
+The
+.Nm
+port installs MiroTalk SFU under
+.Pa %%WWWDIR%%
+and integrates it with the FreeBSD rc system.
+Enable it with:
+.Bd -literal -offset indent
+mirotalk_enable="YES"
+.Ed
+.Pp
+The rc.conf interface is intentionally limited to service
+execution:
+.Bl -tag -width "mirotalk_daemon_group"
+.It Va mirotalk_enable
+Enable the service.  Default:
+.Dq NO .
+.It Va mirotalk_daemon_user
+Service user passed to
+.Xr daemon 8 .  Default:
+.Dq www .
+.It Va mirotalk_daemon_group
+Group used for the service runtime and log directories.  Default:
+.Dq www .
+.El
+.Sh APPLICATION CONFIGURATION
+Use
+.Xr mirotalk.conf 5
+for deployment, site, and supported upstream environment settings.
+The application configuration code at
+.Pa %%WWWDIR%%/app/src/config.js
+is package-owned and is replaced on upgrades.
+Do not edit it to configure the service.
+If an earlier HARDENED installation left a customized
+.Pa %%PREFIX%%/etc/mirotalk/config.js ,
+compare it with the new configuration and move needed supported settings to
+.Pa mirotalk.conf .
+.Sh SITE ASSETS
+Site-owned logos and other presentation files may be stored in
+.Pa %%PREFIX%%/etc/mirotalk/site-assets
+and are served under
+.Pa /site-assets/ .
+The administrator-owned
+.Pa site.css
+is loaded after MiroTalk's own stylesheets so local CSS can adjust such things
+as logo dimensions without patching package-owned CSS.
+.Pp
+The unauthenticated
+.Pa /about
+page identifies the site and upstream open-source software and provides the
+Corresponding Source link for the exact FreeBSD package revision.
+.Sh LOCAL USERS
+Local authentication is enabled by default in
+.Xr mirotalk.conf 5 .
+The account database is
+.Pa %%PREFIX%%/etc/mirotalk/users
+and should be owned by
+.Li root:wheel
+with mode 0600.
+.Pp
+Each account occupies one line with four fields separated by
+.Ql | :
+.Bd -literal -offset indent
+username | password | display name | allowed rooms
+.Ed
+.Pp
+Whitespace around fields is ignored.
+Blank lines and lines whose first non-whitespace character is
+.Ql #
+are ignored.
+The
+.Ql |
+character and newline cannot occur in a field.
+The allowed-rooms field is either
+.Ql *
+or a JSON array of exact meeting keys.
+For example:
+.Bd -literal -offset indent
+fred    | H7mQ9kR4WxPc | Fred Bloggs | *
+mary    | N8vK2pT7YsQa | Mary Smith  | ["staff", "weekly"]
+.Ed
+.Pp
+A template is installed as
+.Pa %%PREFIX%%/etc/mirotalk/users.sample .
+.Sh JWT SECRET
+
+On first start the rc script creates
+.Pa %%PREFIX%%/etc/mirotalk/jwt-secret
+from 32 bytes of kernel-provided random data.
+The resulting 256-bit secret is root-owned, mode 0600, and reused on later
+starts.
+MiroTalk consumes it during configuration and removes
+.Ev JWT_SECRET
+from the Node process environment.
+.Sh LOGGING
+Standard output and error are written to
+.Pa /var/log/mirotalk/mirotalk.log .
+The package installs a
+.Xr newsyslog 8
+configuration to rotate this log rather than retaining it indefinitely.
+.Sh FILES
+.Bl -tag -width "%%PREFIX%%/etc/mirotalk/mirotalk.conf.sample"
+.It Pa %%PREFIX%%/etc/mirotalk/mirotalk.conf
+Deployment and site configuration.
+.It Pa %%PREFIX%%/etc/mirotalk/mirotalk.conf.sample
+Package-provided deployment example.
+.It Pa %%WWWDIR%%/app/src/config.js
+Package-owned application configuration code.
+.It Pa %%PREFIX%%/etc/mirotalk/users
+Root-only local user database.
+.It Pa %%PREFIX%%/etc/mirotalk/users.sample
+Example local user database.
+.It Pa %%PREFIX%%/etc/mirotalk/site-assets
+Site-owned presentation assets.
+.It Pa %%PREFIX%%/etc/mirotalk/jwt-secret
+Automatically generated JWT signing secret.
+.It Pa /var/run/mirotalk
+Runtime state and pid file.
+.It Pa /var/log/mirotalk/mirotalk.log
+Service log.
+.El
+.Sh SECURITY CONSIDERATIONS
+The HARDENED changes, administrator choices, and audit limits are documented in
+.Pa %%DOCSDIR%%/HARDENING.md .
+.Pp
+The files
+.Pa users
+and
+.Pa jwt-secret
+contain secrets and should remain root-owned mode 0600.
+.Pp
+.Pa mirotalk.conf
+is read as configuration data by MiroTalk and is not executed as shell code.
+Do not place user passwords or the JWT secret in it or in
+.Pa rc.conf .
+.Sh SEE ALSO
+.Xr mirotalk.conf 5 ,
+.Xr rc.conf 5 ,
+.Xr service 8
+.Sh PRIVACY
+MiroTalk's upstream privacy page describes an upstream deployment and is not assumed to describe this FreeBSD installation.
+A site privacy policy is optional and is configured with
+.Va PRIVACY_POLICY_NAME
+or
+.Va PRIVACY_POLICY_URL
+in
+.Pa @ETCDIR@/mirotalk.conf .
+If neither is configured, the user interface does not display a Privacy Policy link.
+
+.Sh SITE COPYRIGHT
+Site-specific material may have a different copyright owner from the MiroTalk
+software.  Set
+.Va SITE_COPYRIGHT
+in
+.Pa @ETCDIR@/mirotalk.conf
+to display an optional site copyright notice in the login footer and local
+About page.  MiroTalk software attribution, copyright, license, and
+Corresponding Source information remain on the About page.

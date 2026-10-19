@@ -14,7 +14,6 @@ const PURPOSES = {
     recUpload: 'rec-upload',
     rtmp: 'rtmp-stream',
     createRoom: 'create-room',
-    rcSetup: 'rc-setup',
 };
 
 let cached = null;
@@ -50,7 +49,6 @@ function getJwtKeys(rawSecret = process.env.JWT_SECRET) {
                 recUpload: deriveKey(secret, PURPOSES.recUpload),
                 rtmp: deriveKey(secret, PURPOSES.rtmp),
                 createRoom: deriveKey(secret, PURPOSES.createRoom),
-                rcSetup: deriveKey(secret, PURPOSES.rcSetup),
             }),
         };
     }

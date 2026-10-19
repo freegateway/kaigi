@@ -1,0 +1,62 @@
+{
+    "en": {
+        "SITE_NAME": "Example Video Conferencing",
+        "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
+        "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
+        "PAGE_TITLE": "Example Video Conferencing",
+        "JOIN_DESCRIPTION": "Choose a meeting room",
+        "JOIN_BUTTON_LABEL": "Join meeting",
+        "CUSTOMIZE_BUTTON_LABEL": "Customize room",
+        "JOIN_LAST_LABEL": "Recent room:",
+        "NEW_ROOM_TITLE": "Start a new meeting",
+        "NEW_ROOM_DESCRIPTION": "Select an authorized meeting to continue.",
+        "LOGIN_HEADING": "Sign in",
+        "LOGIN_INSTRUCTIONS": "Enter your username and password",
+        "LOGIN_BUTTON_LABEL": "Login"
+    },
+    "en-CA": {
+        "SITE_NAME": "Example Video Conferencing",
+        "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
+        "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
+        "PAGE_TITLE": "Example Video Conferencing",
+        "JOIN_DESCRIPTION": "Choose a meeting room",
+        "JOIN_BUTTON_LABEL": "Join meeting",
+        "CUSTOMIZE_BUTTON_LABEL": "Customize room",
+        "JOIN_LAST_LABEL": "Recent room:",
+        "NEW_ROOM_TITLE": "Start a new meeting",
+        "NEW_ROOM_DESCRIPTION": "Select an authorized meeting to continue.",
+        "LOGIN_HEADING": "Sign in",
+        "LOGIN_INSTRUCTIONS": "Enter your username and password",
+        "LOGIN_BUTTON_LABEL": "Login"
+    },
+    "fr-CA": {
+        "SITE_NAME": "Vidéoconférence Exemple",
+        "SITE_DESCRIPTION": "Vidéoconférence privée pour la société Exemple.",
+        "SITE_COPYRIGHT": "Copyright © 2026 Société Exemple",
+        "PAGE_TITLE": "Vidéoconférence Exemple",
+        "JOIN_DESCRIPTION": "Choisir une réunion",
+        "JOIN_BUTTON_LABEL": "Rejoindre la réunion",
+        "CUSTOMIZE_BUTTON_LABEL": "Personnaliser la réunion",
+        "JOIN_LAST_LABEL": "Réunion récente :",
+        "NEW_ROOM_TITLE": "Commencer une réunion",
+        "NEW_ROOM_DESCRIPTION": "Sélectionnez une réunion autorisée pour continuer.",
+        "LOGIN_HEADING": "Se connecter",
+        "LOGIN_INSTRUCTIONS": "Entrez votre nom d’utilisateur et votre mot de passe",
+        "LOGIN_BUTTON_LABEL": "Connexion"
+    },
+    "ja": {
+        "SITE_NAME": "ビデオ会議サービス",
+        "SITE_DESCRIPTION": "社内向けのプライベートなビデオ会議。",
+        "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
+        "PAGE_TITLE": "ビデオ会議サービス",
+        "JOIN_DESCRIPTION": "会議を選択",
+        "JOIN_BUTTON_LABEL": "会議に参加",
+        "CUSTOMIZE_BUTTON_LABEL": "会議をカスタマイズ",
+        "JOIN_LAST_LABEL": "最近の会議：",
+        "NEW_ROOM_TITLE": "会議を開始",
+        "NEW_ROOM_DESCRIPTION": "参加が許可されている会議を選択してください。",
+        "LOGIN_HEADING": "ログイン",
+        "LOGIN_INSTRUCTIONS": "ユーザー名とパスワードを入力してください",
+        "LOGIN_BUTTON_LABEL": "ログイン"
+    }
+}

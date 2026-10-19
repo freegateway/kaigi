@@ -1,0 +1,132 @@
+# MiroTalk SFU deployment configuration.
+#
+# This file is read directly by MiroTalk's config.js.  It is not shell code
+# and is not sourced by the rc.d script.  Use NAME=VALUE assignments; leading
+# and trailing whitespace around names and values is ignored.  Blank lines and
+# lines beginning with '#' are ignored.  Matching single or double quotes
+# around a value are optional and are removed by the parser.  Values may refer
+# to other variables in this file using ${VARIABLE}.  References may point
+# forward or backward and may be nested.
+#
+# Commented settings are examples, not empty overrides.  If a setting is not
+# present, MiroTalk retains its upstream environment/default behavior.
+#
+# Secrets are kept outside this non-secret deployment file:
+# - %%PREFIX%%/etc/mirotalk/users contains local-user passwords and grants.
+#   Install it root:wheel mode 0600. The rc script reads it as root and exports
+#   HOST_USERS to the daemon; the daemon does not open this file directly.
+# - %%PREFIX%%/etc/mirotalk/jwt-secret holds the JWT signing secret. At startup,
+#   %%PREFIX%%/etc/rc.d/mirotalk creates it if absent, using 32 random bytes
+#   encoded as 64 hexadecimal characters and umask 077 (mode 0600). It reuses
+#   the existing file on later starts and exports its contents as JWT_SECRET
+#   before daemon(8) switches to the service user. Keep it root-owned and private.
+#   The daemon rejects missing secrets, secrets shorter than 32 characters,
+#   and the published default. An existing secret is not rotated.
+#   Separate authentication, recording-upload and RTMP keys are derived from it.
+#   Changing the secret invalidates outstanding signed tokens after restart.
+# - With LDAP enabled, ldap/ldap.conf names LDAP_BIND_PASSWORD_FILE. That is
+#   a separate administrator-managed search-account password file, read directly
+#   by the daemon. See mirotalk-ldap.conf(5) for ownership and permissions.
+# TLS private keys referenced by WEB_SSL_KEY must also be protected.
+
+NODE_ENV=production
+
+# Site identity.
+# SITE_URL=https://meet.example.com/
+# SITE_CONTACT_EMAIL=video@example.com
+# SITE_LOGO_NAME=logo.svg
+# SITE_LOGO_URL=${SITE_URL}
+
+# Site text is localized in %%PREFIX%%/etc/mirotalk/site-translations.json.
+# Start with site-translations.json.sample and edit its language entries.
+# Text settings: SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE.
+# Meeting-selection instructions, join labels and login messages are in that file too.
+# Changes require a service restart; UI_LANGUAGE/UI_LANGUAGES select languages.
+# Put language-specific text in site-translations.json. Missing translations
+# use the configured text or application default.
+# URLs, email addresses and asset names below are not translated.
+# SITE_ICON_NAME=favicon.svg
+# APPLE_TOUCH_ICON_NAME=apple-touch-icon.png
+# About-page/dialog image in the site-assets directory. This sets upstream
+# ABOUT_IMAGE_URL to /site-assets/<name>; use ABOUT_IMAGE_NAME for a local image.
+# ABOUT_IMAGE_NAME=about.svg
+
+# Optional site privacy policy.  URL takes precedence over NAME.
+# PRIVACY_POLICY_NAME=privacy-private.html
+# PRIVACY_POLICY_URL=https://www.example.com/privacy/
+
+# General MiroTalk localization and language-menu policy.
+# UI_LANGUAGE=en
+# UI_LANGUAGES=en-CA,fr-CA,ja
+
+
+# Web/API/signaling listener.
+# WEB_LISTEN_HOST is the externally meaningful service hostname.  When
+# WEB_LISTEN_IP is omitted, the hostname must resolve to exactly one IPv4
+# address assigned to this host.
+WEB_LISTEN_HOST=meet.example.com
+WEB_LISTEN_PORT=3010
+# WEB_LISTEN_IP=192.0.2.10
+# WEB_URL=https://${WEB_LISTEN_HOST}:${WEB_LISTEN_PORT}
+# WEB_SSL_CERT=/etc/tls/example/cert.pem
+# WEB_SSL_KEY=/etc/tls/example/key.pem
+
+# WebRTC media.  MEDIA_LISTEN_IP defaults to WEB_LISTEN_IP.  The announced
+# address may be specified literally or resolved from MEDIA_ANNOUNCED_HOST.
+# If neither is set, WEB_LISTEN_HOST is resolved and used.
+# MEDIA_LISTEN_IP=192.0.2.20
+# MEDIA_ANNOUNCED_HOST=media.example.com
+# MEDIA_ANNOUNCED_IP=203.0.113.20
+MEDIA_MIN_PORT=40000
+MEDIA_MAX_PORT=40100
+# MEDIA_NUM_WORKERS=4
+
+# Local host protection.  HOST_USERS is supplied transiently by rc.d from the
+# root-only users file.
+HOST_PROTECTED=true
+HOST_USER_AUTH=true
+HOST_USERS_FROM_DB=false
+
+# Local authenticated-session lifetime.  AUTH_IDLE_TIMEOUT is refreshed by
+# meaningful browser activity.  While connected to an active meeting, MiroTalk
+# keeps the session active even when the participant is quiet.
+# AUTH_SESSION_MAX_AGE is absolute and is never extended by activity.
+# Set either value to 0 to disable that limit.  Values are seconds.
+AUTH_IDLE_TIMEOUT=1800
+AUTH_SESSION_MAX_AGE=28800
+
+# Meeting names and restrictions: %%PREFIX%%/etc/mirotalk/meeting-properties.json.
+# Each stable key has a names object (language -> display label) and restrictions array.
+# RP prohibits built-in recording and server recording uploads.
+# Missing/unlisted meetings display their key and have no restrictions.
+# This file grants no meeting access. Changes require a restart.
+
+# Keep the invitation command available but control its automatic popup.
+# Invitations show the site URL and meeting name separately; QR codes contain
+# only the site URL.
+SHOW_SHARE_ROOM_POPUP=false
+
+
+# Optional LDAP authentication supplements the users file; local users win.
+# Requires a package built with HARDENED and the LDAP port option.
+# When enabled, all LDAP settings are read from %%PREFIX%%/etc/mirotalk/ldap/ldap.conf.
+# When disabled, that file is neither read nor validated.
+# See mirotalk-ldap.conf(5). No LDAP environment overrides are used.
+LDAP_ENABLED=false
+
+# HARDENED browser resources are restricted to this site. Virtual-background
+# URL imports accept only locally hosted images; file uploads remain supported.
+# Browser geolocation and external Video AI providers are unavailable.
+
+# Connection deadlines (seconds, 1..3600; zero cannot disable protection).
+# Initial TCP/TLS/HTTP progress deadline. Complete initial request headers within this time.
+CONNECTION_INITIAL_TIMEOUT=15
+# HTTP headers, complete request, idle traffic, and completed-response keepalive.
+HTTP_HEADERS_TIMEOUT=30
+HTTP_REQUEST_TIMEOUT=120
+HTTP_IDLE_TIMEOUT=30
+HTTP_KEEPALIVE_TIMEOUT=5
+# Engine.IO transports that do not authenticate a Socket.IO namespace are closed.
+SOCKET_AUTH_TIMEOUT=30
+# Chat typing shares activity, never draft text. Disabled unless explicitly enabled.
+ENABLE_CHAT_TYPING=false

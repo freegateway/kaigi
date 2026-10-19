@@ -1,30 +1,43 @@
-# In-room UI translations
+# Local UI translations for the HARDENED build
 
-Translation files in this folder apply to the in-room UI, not the landing page or user-generated content.
+The HARDENED build uses administrator-controlled language files in
+`public/lang/<lang>.json`. It does not load an external translation service.
+Missing translated strings remain in English.
 
-## Configuration
+Set `UI_LANGUAGE` in `mirotalk.conf` to choose the initial language. In the
+meeting settings, the local Language picker switches between English and the
+packaged languages without reloading the page. A browser choice is remembered
+as `uiLanguageOverride` and can be reset by choosing the server default.
 
-Set these environment variables, or the corresponding `config.ui.brand.app` fields in
-[config.template.js](../../app/src/config.template.js):
+## How to add a language
 
-```env
-UI_TRANSLATION_MODE=native
-UI_LANGUAGE=en
-```
+Use `public/lang/en.json` as the starting point for every translation. It contains the
+current in-room UI strings, grouped by namespace, with each English source string used as
+both the key and the initial value.
 
-| Mode               | Behavior                                                    |
-| ------------------ | ----------------------------------------------------------- |
-| `google` (default) | Use Google Translate; ignore native JSON files              |
-| `auto`             | Use the native language file if available, otherwise Google |
-| `native`           | Use native files only; missing translations remain English  |
+1. Copy `en.json` to a new file named after the language code used in `UI_LANGUAGE`, e.g.
+   Hungarian:
 
-The config fields are `translationMode` and `language`. In a room, users can override
-the translation mode from **Settings > Language**. The mode override is persisted in
-browser local storage and reused in subsequent rooms on the same browser.
+    ```bash
+    cp public/lang/en.json public/lang/hu.json
+    ```
 
-Mode override precedence is: `browser override` → server `.env` default.
-Language preferences override `UI_LANGUAGE`; reset to the server default when testing
-configuration changes.
+2. Open `hu.json` and translate each **value**. Leave every **key** (the English source
+   string) unchanged.
+
+    ```json
+    {
+        "tooltips": {
+            "Mute": "Némítás"
+        },
+        "dialogs": {
+            "Cancel": "Mégse"
+        }
+    }
+    ```
+
+3. Set `UI_LANGUAGE=hu` in `mirotalk.conf` to make Hungarian the initial
+   language, or select Hungarian from the local Language picker.
 
 ## Add or update a language
 

@@ -1,12 +1,22 @@
 'use strict';
 
-const brandDataKey = 'brandData';
-const brandData = window.sessionStorage.getItem(brandDataKey);
-
 const title = document.getElementById('title');
 const icon = document.getElementById('icon');
 const appleTouchIcon = document.getElementById('appleTouchIcon');
+const headerLogo = document.getElementById('headerLogo') || document.querySelector('.site-header .header-logo-image');
+const headerLogoLink = document.getElementById('headerLogoLink') || headerLogo?.closest('a');
+const privacyPolicyLink = document.getElementById('privacyPolicyLink');
+const siteCopyright = document.getElementById('siteCopyright');
+
+// Site-owned CSS is loaded after MiroTalk's stylesheets so administrators can
+// override presentation without modifying packaged application files.
+const siteStylesheet = document.createElement('link');
+siteStylesheet.rel = 'stylesheet';
+siteStylesheet.href = '/site-assets/site.css';
+document.head.appendChild(siteStylesheet);
 const newRoomTitle = document.getElementById('newRoomTitle');
+const loginNewRoomTitle = document.getElementById('loginNewRoomTitle');
+const joinSelectRoomButton = document.getElementById('joinSelectRoomButton');
 const newRoomDescription = document.getElementById('newRoomDescription');
 
 const description = document.getElementById('description');
@@ -50,7 +60,7 @@ let BRAND = {
         description:
             'Start your next video call with a single click. No download, plug-in, or login is required. Just get straight to talking, messaging, and sharing your screen.',
         joinDescription: 'Pick a room name.<br />How about this one?',
-        joinButtonLabel: 'JOIN ROOM',
+        joinButtonLabel: 'Join meeting',
         customizeButtonLabel: 'CUSTOMIZE ROOM',
         joinLastLabel: 'Your recent room:',
     },
@@ -156,7 +166,7 @@ let BRAND = {
         supportWidget: {
             position: 'top-right',
             expertImages: [
-                'https://photo.cloudron.pocketsolution.net/uploads/original/95/7d/a5f7f7a2c89a5fee7affda5f013c.jpeg',
+                '/images/avatars/avatar_01.png',
             ],
             buttons: {
                 audio: true,
@@ -199,6 +209,9 @@ async function initialize() {
 
     customizeLogin();
 
+    try { BRAND.meetingTranslations = window.sessionStorage.peer_token ? JSON.parse(window.sessionStorage.mirotalk_meeting_translations || '{}') : {}; } catch { BRAND.meetingTranslations = {}; }
+    baseSiteBrand = JSON.parse(JSON.stringify(BRAND));
+    window.applySiteTranslations(window.i18n?.getLang?.() || BRAND.app?.language || 'en');
     checkBrand();
 
     // Notify listeners (e.g. I18n.js) that BRAND is fully resolved.
@@ -206,31 +219,82 @@ async function initialize() {
 }
 
 async function getBrand() {
-    if (brandData) {
-        setBrand(JSON.parse(brandData));
-    } else {
-        try {
-            const response = await fetch('/brand', { timeout: 5000 });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            const serverBrand = data.message;
-            if (serverBrand) {
-                setBrand(serverBrand);
-                console.log('FETCH BRAND SETTINGS', {
-                    serverBrand: serverBrand,
-                    clientBrand: BRAND,
-                });
-                window.sessionStorage.setItem(brandDataKey, JSON.stringify(serverBrand));
-            } else {
-                console.warn('FETCH BRAND SETTINGS - DISABLED');
-            }
-        } catch (error) {
-            console.error('FETCH GET BRAND ERROR', error.message);
+    try {
+        const response = await fetch('/brand', { timeout: 5000 });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        const data = await response.json();
+        const serverBrand = data.message;
+        if (serverBrand) {
+            setBrand(serverBrand);
+            console.log('FETCH BRAND SETTINGS', {
+                serverBrand: serverBrand,
+                clientBrand: BRAND,
+            });
+        } else {
+            console.warn('FETCH BRAND SETTINGS - DISABLED');
+        }
+    } catch (error) {
+        console.error('FETCH GET BRAND ERROR', error.message);
     }
 }
+
+// Apply administrator text by setting name, independently of application dictionaries.
+function localizedSiteBrand(base, language) {
+    const brand = JSON.parse(JSON.stringify(base));
+    const dictionaries = base.siteTranslations || {};
+    const values = { ...(dictionaries.en || {}), ...(dictionaries[language.split('-')[0]] || {}), ...(dictionaries[language] || {}) };
+    const paths = {
+        SITE_NAME: [['site','name'],['app','name'],['og','site_name']],
+        SITE_DESCRIPTION: [['site','description'],['app','description'],['meta','description'],['og','description']],
+        SITE_COPYRIGHT: [['site','copyright']], PAGE_TITLE: [['site','title'],['og','title']],
+        JOIN_DESCRIPTION: [['app','joinDescription']], JOIN_BUTTON_LABEL: [['app','joinButtonLabel']],
+        CUSTOMIZE_BUTTON_LABEL: [['app','customizeButtonLabel']], JOIN_LAST_LABEL: [['app','joinLastLabel']],
+        NEW_ROOM_TITLE: [['site','newRoomTitle']], NEW_ROOM_DESCRIPTION: [['site','newRoomDescription']],
+        LOGIN_HEADING: [['login','heading']], LOGIN_INSTRUCTIONS: [['login','description']], LOGIN_BUTTON_LABEL: [['login','buttonLabel']],
+    };
+    for (const [name, value] of Object.entries(values)) for (const [section, key] of paths[name] || []) {
+        brand[section] ||= {}; brand[section][key] = value;
+    }
+    if (Object.hasOwn(values, 'SITE_NAME') || Object.hasOwn(values, 'SITE_DESCRIPTION')) {
+        // Administrator text is rendered as text below, including the landing heading.
+        const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        brand.app.title = `<h1>${escape(brand.site.name ?? brand.app.name)}</h1>${escape(brand.site.description || '')}`;
+    }
+    return brand;
+}
+let baseSiteBrand;
+window.meetingLabel = (key, language = window.i18n?.getLang?.() || BRAND.app?.language || 'en') => {
+    const dictionary = BRAND.meetingTranslations || {};
+    const labels = Object.hasOwn(dictionary, key) ? dictionary[key] : {};
+    for (const code of [language, language.split('-')[0], 'en']) if (Object.hasOwn(labels, code)) return labels[code];
+    return key;
+};
+window.setMeetingTranslations = (translations) => {
+    BRAND.meetingTranslations = translations;
+    if (baseSiteBrand) baseSiteBrand.meetingTranslations = translations;
+    window.refreshMeetingLabels();
+};
+window.refreshMeetingLabels = () => {
+    const selector = document.getElementById('selectRoom');
+    if (selector) for (const option of selector.options) { option.setAttribute('data-i18n-skip', ''); option.textContent = window.meetingLabel(option.value); }
+    for (const element of document.querySelectorAll('[data-meeting-key]')) element.textContent = window.meetingLabel(element.dataset.meetingKey);
+};
+window.applySiteTranslations = (language) => {
+    if (!baseSiteBrand) return;
+    BRAND = localizedSiteBrand(baseSiteBrand, language);
+    customizeSite(); customizeMetaTags(); customizeApp(); customizeLogin();
+    window.refreshMeetingLabels();
+    const name = document.getElementById('siteName'), description = document.getElementById('siteDescription');
+    if (name) name.textContent = BRAND.site?.name || BRAND.app?.name || 'Video Conferencing';
+    if (description) description.textContent = BRAND.site?.description || '';
+    if (siteCopyright) siteCopyright.hidden = !BRAND.site?.copyright;
+    for (const [property, value] of [['og:title', BRAND.og?.title], ['og:description', BRAND.og?.description], ['og:site_name', BRAND.og?.site_name]]) {
+        const element = document.querySelector(`meta[property="${property}"]`);
+        if (element && value !== undefined) element.content = value;
+    }
+};
 
 // BRAND configurations
 function setBrand(data) {
@@ -271,22 +335,22 @@ function elementDisplay(element, display, mode = 'block') {
 
 // APP customize
 function customizeApp() {
-    if (appTitle && BRAND.app?.title) {
+    if (appTitle && BRAND.app?.title !== undefined) {
         appTitle.innerHTML = BRAND.app?.title;
     }
-    if (appDescription && BRAND.app?.description) {
+    if (appDescription && BRAND.app?.description !== undefined) {
         appDescription.textContent = BRAND.app.description;
     }
-    if (joinDescription && BRAND.app?.joinDescription) {
+    if (joinDescription && BRAND.app?.joinDescription !== undefined) {
         joinDescription.innerHTML = BRAND.app.joinDescription;
     }
-    if (joinRoomBtn && BRAND.app?.joinButtonLabel) {
+    if (joinRoomBtn && BRAND.app?.joinButtonLabel !== undefined) {
         joinRoomBtn.innerText = BRAND.app.joinButtonLabel;
     }
-    if (customizeRoomBtn && BRAND.app?.customizeButtonLabel) {
+    if (customizeRoomBtn && BRAND.app?.customizeButtonLabel !== undefined) {
         customizeRoomBtn.innerText = BRAND.app.customizeButtonLabel;
     }
-    if (joinLastLabel && BRAND.app?.joinLastLabel) {
+    if (joinLastLabel && BRAND.app?.joinLastLabel !== undefined) {
         joinLastLabel.innerText = BRAND.app.joinLastLabel;
     }
 }
@@ -312,7 +376,7 @@ function customizeWidget() {
 
 // SITE metadata
 function customizeSite() {
-    if (title && BRAND.site?.title) {
+    if (title && BRAND.site?.title !== undefined) {
         title.textContent = BRAND.site?.title;
     }
     if (icon && BRAND.site?.icon) {
@@ -321,17 +385,47 @@ function customizeSite() {
     if (appleTouchIcon && BRAND.site?.appleTouchIcon) {
         appleTouchIcon.href = BRAND.site.appleTouchIcon;
     }
-    if (newRoomTitle && BRAND.site?.newRoomTitle) {
+    if (BRAND.site?.logo) {
+        document.querySelectorAll("[data-brand-logo]").forEach((image) => {
+            image.src = BRAND.site.logo;
+        });
+    }
+    if (headerLogo && BRAND.site?.logo) {
+        headerLogo.src = BRAND.site.logo;
+        headerLogo.alt = BRAND.site?.name || BRAND.app?.name || 'Site logo';
+    }
+    if (headerLogoLink && BRAND.site?.logoUrl) {
+        headerLogoLink.href = BRAND.site.logoUrl;
+    }
+    if (privacyPolicyLink && BRAND.site?.privacyPolicyUrl) {
+        privacyPolicyLink.href = BRAND.site.privacyPolicyUrl;
+        privacyPolicyLink.hidden = false;
+    }
+    if (siteCopyright) {
+        siteCopyright.textContent = BRAND.site?.copyright || '';
+        siteCopyright.hidden = false;
+    }
+    if (newRoomTitle && BRAND.site?.newRoomTitle !== undefined) {
         newRoomTitle.innerHTML = BRAND.site?.newRoomTitle;
     }
-    if (newRoomDescription && BRAND.site?.newRoomDescription) {
+    if (loginNewRoomTitle && BRAND.site?.newRoomTitle !== undefined) {
+        loginNewRoomTitle.innerHTML = BRAND.site.newRoomTitle;
+    }
+    if (joinSelectRoomButton && BRAND.app?.joinButtonLabel !== undefined) {
+        joinSelectRoomButton.querySelector('#joinSelectRoomLabel').textContent = BRAND.app.joinButtonLabel;
+    }
+    const loginNewRoomDescription = document.getElementById('loginNewRoomDescription');
+    if (loginNewRoomDescription && BRAND.site?.newRoomDescription !== undefined) {
+        loginNewRoomDescription.textContent = BRAND.site.newRoomDescription;
+    }
+    if (newRoomDescription && BRAND.site?.newRoomDescription !== undefined) {
         newRoomDescription.textContent = BRAND.site.newRoomDescription;
     }
 }
 
 // SEO metadata
 function customizeMetaTags() {
-    if (description && BRAND.meta?.description) {
+    if (description && BRAND.meta?.description !== undefined) {
         description.content = BRAND.meta.description;
     }
     if (keywords && BRAND.meta?.keywords) {
@@ -354,9 +448,9 @@ function customizeWhoAreYou() {
 }
 
 function customizeLogin() {
-    if (loginHeading && BRAND.login?.heading) loginHeading.textContent = BRAND.login.heading;
-    if (loginDescription && BRAND.login?.description) loginDescription.textContent = BRAND.login.description;
-    if (BRAND.login?.buttonLabel) {
+    if (loginHeading && BRAND.login?.heading !== undefined) loginHeading.textContent = BRAND.login.heading;
+    if (loginDescription && BRAND.login?.description !== undefined) loginDescription.textContent = BRAND.login.description;
+    if (BRAND.login?.buttonLabel !== undefined) {
         const loginBtnText = document.getElementById('loginBtnText');
         if (loginBtnText) {
             loginBtnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>&nbsp; ' + BRAND.login.buttonLabel;

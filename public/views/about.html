@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>About, Credits &amp; Open Source</title>
+        <link rel="stylesheet" href="../css/landing.css" />
+        <script defer src="../js/Brand.js"></script>
+        <script defer src="../js/I18n.js"></script>
+        <style>
+            .about-local { max-width: 760px; margin: 5rem auto; padding: 0 1.5rem; }
+            .about-local-logo { max-width: 160px; max-height: 96px; margin-bottom: 1.5rem; }
+            .about-local section { margin: 2rem 0; }
+            .about-local dt { font-weight: 700; margin-top: 1rem; }
+            .about-local dd { margin-left: 0; }
+        </style>
+    </head>
+    <body class="is-boxed has-animations">
+        <main class="about-local">
+            <a id="siteLogoLink" href="/"><img id="siteLogo" class="about-local-logo" data-brand-logo alt="Site logo" /></a>
+            <h1 id="siteName">Video Conferencing</h1>
+            <p id="siteDescription"></p>
+            <dl id="siteDetails">
+                <div id="siteUrlRow" hidden><dt data-about-key="site" data-i18n-skip>Site</dt><dd><a id="siteUrl"></a></dd></div>
+                <div id="siteContactRow" hidden><dt data-about-key="contact" data-i18n-skip>Contact</dt><dd><a id="siteContact"></a></dd></div>
+                <div id="siteCopyrightRow" hidden><dt data-about-key="siteCopyright" data-i18n-skip>Site copyright</dt><dd id="siteCopyright"></dd></div>
+            </dl>
+
+            <section>
+                <h2 data-about-key="creditsTitle" data-i18n-skip>Credits &amp; Open Source Software</h2>
+                <p data-about-key="intro" data-i18n-skip>This service is based on the open-source MiroTalk SFU and mediasoup projects.</p>
+                <p><strong>MiroTalk SFU</strong> <span data-about-key="licenseAndModifications" data-i18n-skip>is by Miroslav Pejic and is licensed under the GNU Affero General Public License version 3. This FreeBSD HARDENED build is part of the FreeGateway Digital Sovereignty Project and includes FreeBSD-specific, security-hardening, and privacy-protecting modifications made under that license. The modified FreeBSD package and its exact Corresponding Source are identified below.</span></p>
+                <p data-about-key="copyrightNotice" data-i18n-skip>MiroTalk SFU is copyright &copy; Miroslav Pejic and other applicable contributors. The software copyright and license are separate from any copyright in site-specific logos, artwork, text, policies, or other operator-provided material.</p>
+                <p><a href="https://github.com/miroslavpejic85/mirotalksfu" rel="noopener noreferrer" data-about-key="upstreamProject" data-i18n-skip>MiroTalk SFU upstream project</a> · <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener noreferrer" data-about-key="licenseLink" data-i18n-skip>GNU AGPLv3</a></p>
+                <p><strong>mediasoup</strong> <span data-about-key="mediasoupNotice" data-i18n-skip>is an open-source WebRTC SFU used by MiroTalk SFU.</span></p>
+                <p><a href="https://mediasoup.org/" rel="noopener noreferrer" data-about-key="mediasoupProject" data-i18n-skip>mediasoup upstream project</a></p>
+                <p><a id="sourceCodeUrl" href="#" data-about-key="correspondingSource" data-i18n-skip>Corresponding Source for this FreeBSD MiroTalk package</a></p>
+                <p><a href="https://www.freegateway.org/" rel="noopener noreferrer" data-about-key="freeGatewayProject" data-i18n-skip>FreeGateway Digital Sovereignty Project</a></p>
+            </section>
+
+            <p><a class="button button-primary" href="/login" data-about-key="returnToLogin" data-i18n-skip>Return to login</a></p>
+        </main>
+        <script>
+            'use strict';
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    await window.i18n?.ready;
+                    const response = await fetch('/brand');
+                    const data = await response.json();
+                    const rawBrand = data.message || {};
+                    const brand = typeof localizedSiteBrand === 'function' ? localizedSiteBrand(rawBrand, window.i18n?.getLang?.() || rawBrand.app?.language || 'en') : rawBrand;
+                    const site = brand.site || {};
+                    const app = brand.app || {};
+                    const logo = document.getElementById('siteLogo');
+                    const logoLink = document.getElementById('siteLogoLink');
+                    const name = document.getElementById('siteName');
+                    const description = document.getElementById('siteDescription');
+                    if (site.logo) logo.src = site.logo;
+                    if (site.logoUrl) logoLink.href = site.logoUrl;
+                    name.textContent = site.name || app.name || 'Video Conferencing';
+                    logo.alt = `${name.textContent} logo`;
+                    description.textContent = site.description || '';
+                    if (site.url) {
+                        const row = document.getElementById('siteUrlRow');
+                        const link = document.getElementById('siteUrl');
+                        row.hidden = false;
+                        link.href = site.url;
+                        link.textContent = site.url;
+                    }
+                    if (site.copyright) {
+                        document.getElementById('siteCopyrightRow').hidden = false;
+                        document.getElementById('siteCopyright').textContent = site.copyright;
+                    }
+                    if (site.contactEmail) {
+                        const row = document.getElementById('siteContactRow');
+                        const link = document.getElementById('siteContact');
+                        row.hidden = false;
+                        link.href = `mailto:${site.contactEmail}`;
+                        link.textContent = site.contactEmail;
+                    }
+                    if (site.sourceCodeUrl) document.getElementById('sourceCodeUrl').href = site.sourceCodeUrl;
+                } catch (error) {
+                    console.error('Unable to load site identity', error);
+                }
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', async () => {
+                if (window.i18n && window.i18n.ready) {
+                    await window.i18n.ready;
+                    document.title = window.i18n.tKey('title', document.title);
+                    document.documentElement.lang = window.i18n.getLang();
+                    document.documentElement.dir = window.i18n.getLang() === 'ar' ? 'rtl' : 'ltr';
+                    for (const element of document.querySelectorAll('[data-about-key]')) {
+                        element.textContent = window.i18n.tKey(element.dataset.aboutKey, element.textContent);
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

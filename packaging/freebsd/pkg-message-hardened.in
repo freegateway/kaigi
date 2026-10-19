@@ -1,0 +1,25 @@
+[
+{ type: install
+  message: <<EOM
+MiroTalk SFU has been installed under %%WWWDIR%% using the HARDENED build.
+
+Enable it in /etc/rc.conf or /etc/rc.conf.local:
+
+    mirotalk_enable="YES"
+
+Configure ordinary deployment and site settings in
+%%PREFIX%%/etc/mirotalk/mirotalk.conf. Configure localized site text in
+%%PREFIX%%/etc/mirotalk/site-translations.json, using its sample file.
+Meeting names and restrictions: meeting-properties.json.
+With the LDAP option, configure ldap/ldap.conf and ldap/group-meetings.json
+before setting LDAP_ENABLED=true. Default groups and group grants belong in
+ldap/group-meetings.json. The rc script reads or creates jwt-secret.
+
+See mirotalk(8), mirotalk.conf(5), and mirotalk-ldap.conf(5).
+Read %%DOCSDIR%%/HARDENING.md for behavior and limits.
+
+To use the standard MiroTalk configuration and build instead, select the
+STANDARD build option and rebuild/reinstall the port.
+EOM
+}
+]

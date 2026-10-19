@@ -1,0 +1,11 @@
+{
+    "test2": {
+        "names": {
+            "en": "Test meeting 2",
+            "en-CA": "Test meeting 2",
+            "fr-CA": "Réunion de test 2",
+            "ja": "テスト会議2"
+        },
+        "restrictions": []
+    }
+}

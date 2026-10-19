@@ -32,3 +32,5 @@ custom
 # python virtual environments
 .venv/
 venv/
+# Kaigi owns the config loader; deployment settings remain outside the repository.
+!app/src/config.js
