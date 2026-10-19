@@ -32,8 +32,8 @@ browser resources should remain under the administrator's control.
 ## Authentication and secrets
 
 - Local accounts and allowed meetings are configured in the root-only
-  `etc/mirotalk/users` file. The rc script reads it at startup. It creates a
-  persistent random JWT signing secret in `etc/mirotalk/jwt-secret` on first
+  `etc/kaigi/users` file. The rc script reads it at startup. It creates a
+  persistent random JWT signing secret in `etc/kaigi/jwt-secret` on first
   start. Keep both files owned by root and mode 0600.
 - JWT secrets must contain at least 32 characters and must not use the published
   default. Authentication, recording-upload and RTMP tokens use independently
@@ -73,10 +73,10 @@ browser resources should remain under the administrator's control.
 - `AUTH_IDLE_TIMEOUT` limits inactivity and `AUTH_SESSION_MAX_AGE` imposes an
   absolute lifetime. Active meeting participation refreshes the idle timer,
   including when a participant is quiet. Expiry and logout invalidate the
-  local browser token and its server-side session. See `mirotalk.conf(5)` for
+  local browser token and its server-side session. See `kaigi.conf(5)` for
   defaults and disabling either limit.
-- The application `config.js` under `www/mirotalk/app/src` is package-owned
-  code. Configure supported behavior in `etc/mirotalk/mirotalk.conf` instead.
+- The application `config.js` under `www/kaigi/app/src` is package-owned
+  code. Configure supported behavior in `etc/kaigi/kaigi.conf` instead.
 
 ## Administrator choices and boundaries
 
@@ -89,7 +89,7 @@ The About page uses stable translation identifiers in the local language files;
 the English legal wording is the fallback when a translation is unavailable.
 
 The administrator controls listener addresses, TLS, WebRTC media addresses,
-accounts, site assets, and the optional privacy-policy URL. `mirotalk.conf`
+accounts, site assets, and the optional privacy-policy URL. `kaigi.conf`
 can also pass upstream environment settings through to MiroTalk. Review such
 settings before enabling integrations or supplying external URLs. A custom
 site asset, user-posted link, shared screen, or administrator-selected remote
@@ -114,7 +114,7 @@ When updating the upstream source or dependencies, recheck automatic browser
 requests, server egress, token handling, and both build options. For a
 deployment audit, record browser network traffic through login, meeting
 selection, joining, chat, media and rejected direct-entry requests; inspect server
-egress and access logs as well. `mirotalk(8)` and `mirotalk.conf(5)` describe
+egress and access logs as well. `kaigi(8)` and `kaigi.conf(5)` describe
 installation and supported settings.
 
 ## Speech recognition and transcription
@@ -133,9 +133,9 @@ always authenticated locally. An incorrect local password never triggers LDAP.
 LDAP canonical usernames that collide with local accounts are denied, including
 when the submitted LDAP login is an alias. LDAP does not modify the users file.
 
-LDAP_ENABLED belongs in mirotalk.conf; directory and authorization settings must be explicitly present in ldap/ldap.conf.
-Operational defaults are documented in ldap.conf.sample and mirotalk-ldap.conf(5).
-Inherited LDAP environment variables are ignored. The LDAP port option is off by default and requires HARDENED. Without that option, no LDAP module, ldapts dependency, LDAP samples or LDAP manual is installed. Unknown LDAP variable names,
+LDAP_ENABLED belongs in kaigi.conf; directory and authorization settings must be explicitly present in ldap/ldap.conf.
+Operational defaults are documented in ldap.conf.sample and kaigi-ldap.conf(5).
+Inherited LDAP environment variables are ignored. Kaigi includes the LDAP module, locked ldapts dependency, samples and manual; runtime LDAP_ENABLED defaults to false. Unknown LDAP variable names,
 missing settings and invalid values cause startup failure. The sample contains
 placeholders for directory-specific settings; no current FreeGateway DNs,
 object classes, attribute names or group layout are assumed.
@@ -234,13 +234,12 @@ a login session and produces the localized no-meetings alert.
 
 ### Optional packaging and LDAP directory layout
 
-LDAP is a separate, default-off port option requiring HARDENED. STANDARD+LDAP
-is rejected at configuration time. Runtime LDAP_ENABLED defaults to false even
-when support is included. HARDENED without LDAP retains local authentication and
-password-free session improvements. Each variant has a separate dependency cache.
+Kaigi includes LDAP support and its configuration samples. Runtime LDAP_ENABLED
+defaults to false. Local authentication and password-free sessions do not require
+LDAP. MiroTalk STANDARD is maintained independently in its own port.
 
-Only LDAP_ENABLED remains in mirotalk.conf. The remaining settings live in
-/usr/local/etc/mirotalk/ldap/ldap.conf, with ldap.conf.sample installed using
+Only LDAP_ENABLED remains in kaigi.conf. The remaining settings live in
+/usr/local/etc/kaigi/ldap/ldap.conf, with ldap.conf.sample installed using
 package sample-file preservation. Supporting files are ldap/bind-secret,
 ldap/group-meetings.json. No bind secret is generated or installed;
 administrators create it with the protected permissions documented above.
@@ -265,10 +264,9 @@ conditional requirements, and documented operational defaults.
 ldap/group-meetings.json consolidates default groups and group grants,
 including shared meetings and union-based grants.
 
-All three dependency variants pin patched proxy-addr 2.0.8, source-map-js 1.2.2,
-and joi 17.13.8 through npm overrides. Rebuilt versioned dependency caches are
-required. LDAP remains a default-off build option requiring HARDENED; runtime
-LDAP_ENABLED remains off by default. LDAP improvements do not add ldapi support.
+The locked dependency set pins proxy-addr 2.0.8, source-map-js 1.2.2 and
+joi 17.13.8 through npm overrides. LDAP_ENABLED remains off by default.
+LDAP improvements do not add ldapi support.
 
 ## Private meeting selection and invitations
 
@@ -369,13 +367,13 @@ the exact meeting and issuing session. Logout/session revocation invalidates the
 
 Silent initial TCP/TLS connections and incomplete initial HTTP requests have a
 15-second deadline. HTTP request, headers, idle and keepalive deadlines and a
-30-second Engine.IO authentication deadline are configurable in mirotalk.conf.
+30-second Engine.IO authentication deadline are configurable in kaigi.conf.
 Authenticated conference WebSockets remain exempt from HTTP inactivity limits.
 The application obtains client addresses directly from the socket: forwarding
 headers are ignored. A reverse proxy therefore requires a separately reviewed
 trusted-proxy policy before IP-based blocking can identify individual clients.
 
-Security events are single-line JSON in /var/log/mirotalk/mirotalk.log, with
+Security events are single-line JSON in /var/log/kaigi/kaigi.log, with
 component `conference-security`, timestamp, stable event, verified peer IP and
 fixed reason. They contain no credentials, tokens, usernames or LDAP attributes.
 These lines supplement existing operational logs. Only repeated
@@ -386,9 +384,9 @@ password attacks and are not matched by the supplied filter.
 
 ### Optional Fail2ban deployment
 
-The port does not install or start a blocker. Copy `files/fail2ban/conference.conf`
+The port does not install or start a blocker. Copy `files/fail2ban/kaigi.conf`
 from the port to /usr/local/etc/fail2ban/filter.d/conference.conf. Configure a
-Fail2ban jail with filter=conference, logpath=/var/log/mirotalk/mirotalk.log,
+Fail2ban jail with filter=conference, logpath=/var/log/kaigi/kaigi.log,
 maxretry=5, findtime=900, bantime=900, usedns=no and appropriate ignoreip entries.
 On a jail host, run Fail2ban on the host and point logpath at the jail's log path.
 

@@ -12,11 +12,11 @@
 # present, MiroTalk retains its upstream environment/default behavior.
 #
 # Secrets are kept outside this non-secret deployment file:
-# - %%PREFIX%%/etc/mirotalk/users contains local-user passwords and grants.
+# - %%PREFIX%%/etc/kaigi/users contains local-user passwords and grants.
 #   Install it root:wheel mode 0600. The rc script reads it as root and exports
 #   HOST_USERS to the daemon; the daemon does not open this file directly.
-# - %%PREFIX%%/etc/mirotalk/jwt-secret holds the JWT signing secret. At startup,
-#   %%PREFIX%%/etc/rc.d/mirotalk creates it if absent, using 32 random bytes
+# - %%PREFIX%%/etc/kaigi/jwt-secret holds the JWT signing secret. At startup,
+#   %%PREFIX%%/etc/rc.d/kaigi creates it if absent, using 32 random bytes
 #   encoded as 64 hexadecimal characters and umask 077 (mode 0600). It reuses
 #   the existing file on later starts and exports its contents as JWT_SECRET
 #   before daemon(8) switches to the service user. Keep it root-owned and private.
@@ -26,7 +26,7 @@
 #   Changing the secret invalidates outstanding signed tokens after restart.
 # - With LDAP enabled, ldap/ldap.conf names LDAP_BIND_PASSWORD_FILE. That is
 #   a separate administrator-managed search-account password file, read directly
-#   by the daemon. See mirotalk-ldap.conf(5) for ownership and permissions.
+#   by the daemon. See kaigi-ldap.conf(5) for ownership and permissions.
 # TLS private keys referenced by WEB_SSL_KEY must also be protected.
 
 NODE_ENV=production
@@ -37,7 +37,7 @@ NODE_ENV=production
 # SITE_LOGO_NAME=logo.svg
 # SITE_LOGO_URL=${SITE_URL}
 
-# Site text is localized in %%PREFIX%%/etc/mirotalk/site-translations.json.
+# Site text is localized in %%PREFIX%%/etc/kaigi/site-translations.json.
 # Start with site-translations.json.sample and edit its language entries.
 # Text settings: SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE.
 # Meeting-selection instructions, join labels and login messages are in that file too.
@@ -95,7 +95,7 @@ HOST_USERS_FROM_DB=false
 AUTH_IDLE_TIMEOUT=1800
 AUTH_SESSION_MAX_AGE=28800
 
-# Meeting names and restrictions: %%PREFIX%%/etc/mirotalk/meeting-properties.json.
+# Meeting names and restrictions: %%PREFIX%%/etc/kaigi/meeting-properties.json.
 # Each stable key has a names object (language -> display label) and restrictions array.
 # RP prohibits built-in recording and server recording uploads.
 # Missing/unlisted meetings display their key and have no restrictions.
@@ -108,10 +108,10 @@ SHOW_SHARE_ROOM_POPUP=false
 
 
 # Optional LDAP authentication supplements the users file; local users win.
-# Requires a package built with HARDENED and the LDAP port option.
-# When enabled, all LDAP settings are read from %%PREFIX%%/etc/mirotalk/ldap/ldap.conf.
+# LDAP support is included in Kaigi and disabled by default.
+# When enabled, all LDAP settings are read from %%PREFIX%%/etc/kaigi/ldap/ldap.conf.
 # When disabled, that file is neither read nor validated.
-# See mirotalk-ldap.conf(5). No LDAP environment overrides are used.
+# See kaigi-ldap.conf(5). No LDAP environment overrides are used.
 LDAP_ENABLED=false
 
 # HARDENED browser resources are restricted to this site. Virtual-background

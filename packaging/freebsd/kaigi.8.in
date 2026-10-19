@@ -1,17 +1,17 @@
 .Dd September 22, 2026
-.Dt MIROTALK 8
+.Dt KAIGI 8
 .Os
 .Sh NAME
-.Nm mirotalk
+.Nm kaigi
 .Nd administer the MiroTalk SFU service on FreeBSD
 .Sh SYNOPSIS
 .Nm service
-.Cm mirotalk
+.Cm kaigi
 .Ar start | stop | restart | status
 .Sh DESCRIPTION
-This installation of MiroTalk SFU was built using the HARDENED build option.
+Kaigi is the FreeGateway privacy-hardened fork of MiroTalk SFU.
 It provides the customizable and privacy-hardened FreeBSD configuration layer.
-To build the standard MiroTalk version instead, select the STANDARD build option when configuring the port, then rebuild and reinstall it.
+MiroTalk STANDARD remains a separate port and service.
 .Pp
 The HARDENED build only supports self-hosted, open-source, administrator-controlled infrastructure.
 Upstream integrations that depend on third-party-controlled services are disabled in this build and are not exposed as supported configuration.
@@ -23,38 +23,38 @@ port installs MiroTalk SFU under
 and integrates it with the FreeBSD rc system.
 Enable it with:
 .Bd -literal -offset indent
-mirotalk_enable="YES"
+kaigi_enable="YES"
 .Ed
 .Pp
 The rc.conf interface is intentionally limited to service
 execution:
-.Bl -tag -width "mirotalk_daemon_group"
-.It Va mirotalk_enable
+.Bl -tag -width "kaigi_daemon_group"
+.It Va kaigi_enable
 Enable the service.  Default:
 .Dq NO .
-.It Va mirotalk_daemon_user
+.It Va kaigi_daemon_user
 Service user passed to
 .Xr daemon 8 .  Default:
 .Dq www .
-.It Va mirotalk_daemon_group
+.It Va kaigi_daemon_group
 Group used for the service runtime and log directories.  Default:
 .Dq www .
 .El
 .Sh APPLICATION CONFIGURATION
 Use
-.Xr mirotalk.conf 5
+.Xr kaigi.conf 5
 for deployment, site, and supported upstream environment settings.
 The application configuration code at
 .Pa %%WWWDIR%%/app/src/config.js
 is package-owned and is replaced on upgrades.
 Do not edit it to configure the service.
 If an earlier HARDENED installation left a customized
-.Pa %%PREFIX%%/etc/mirotalk/config.js ,
+.Pa %%PREFIX%%/etc/kaigi/config.js ,
 compare it with the new configuration and move needed supported settings to
-.Pa mirotalk.conf .
+.Pa kaigi.conf .
 .Sh SITE ASSETS
 Site-owned logos and other presentation files may be stored in
-.Pa %%PREFIX%%/etc/mirotalk/site-assets
+.Pa %%PREFIX%%/etc/kaigi/site-assets
 and are served under
 .Pa /site-assets/ .
 The administrator-owned
@@ -68,9 +68,9 @@ page identifies the site and upstream open-source software and provides the
 Corresponding Source link for the exact FreeBSD package revision.
 .Sh LOCAL USERS
 Local authentication is enabled by default in
-.Xr mirotalk.conf 5 .
+.Xr kaigi.conf 5 .
 The account database is
-.Pa %%PREFIX%%/etc/mirotalk/users
+.Pa %%PREFIX%%/etc/kaigi/users
 and should be owned by
 .Li root:wheel
 with mode 0600.
@@ -98,11 +98,11 @@ mary    | N8vK2pT7YsQa | Mary Smith  | ["staff", "weekly"]
 .Ed
 .Pp
 A template is installed as
-.Pa %%PREFIX%%/etc/mirotalk/users.sample .
+.Pa %%PREFIX%%/etc/kaigi/users.sample .
 .Sh JWT SECRET
 
 On first start the rc script creates
-.Pa %%PREFIX%%/etc/mirotalk/jwt-secret
+.Pa %%PREFIX%%/etc/kaigi/jwt-secret
 from 32 bytes of kernel-provided random data.
 The resulting 256-bit secret is root-owned, mode 0600, and reused on later
 starts.
@@ -111,29 +111,29 @@ MiroTalk consumes it during configuration and removes
 from the Node process environment.
 .Sh LOGGING
 Standard output and error are written to
-.Pa /var/log/mirotalk/mirotalk.log .
+.Pa /var/log/kaigi/kaigi.log .
 The package installs a
 .Xr newsyslog 8
 configuration to rotate this log rather than retaining it indefinitely.
 .Sh FILES
-.Bl -tag -width "%%PREFIX%%/etc/mirotalk/mirotalk.conf.sample"
-.It Pa %%PREFIX%%/etc/mirotalk/mirotalk.conf
+.Bl -tag -width "%%PREFIX%%/etc/kaigi/kaigi.conf.sample"
+.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf
 Deployment and site configuration.
-.It Pa %%PREFIX%%/etc/mirotalk/mirotalk.conf.sample
+.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf.sample
 Package-provided deployment example.
 .It Pa %%WWWDIR%%/app/src/config.js
 Package-owned application configuration code.
-.It Pa %%PREFIX%%/etc/mirotalk/users
+.It Pa %%PREFIX%%/etc/kaigi/users
 Root-only local user database.
-.It Pa %%PREFIX%%/etc/mirotalk/users.sample
+.It Pa %%PREFIX%%/etc/kaigi/users.sample
 Example local user database.
-.It Pa %%PREFIX%%/etc/mirotalk/site-assets
+.It Pa %%PREFIX%%/etc/kaigi/site-assets
 Site-owned presentation assets.
-.It Pa %%PREFIX%%/etc/mirotalk/jwt-secret
+.It Pa %%PREFIX%%/etc/kaigi/jwt-secret
 Automatically generated JWT signing secret.
-.It Pa /var/run/mirotalk
+.It Pa /var/run/kaigi
 Runtime state and pid file.
-.It Pa /var/log/mirotalk/mirotalk.log
+.It Pa /var/log/kaigi/kaigi.log
 Service log.
 .El
 .Sh SECURITY CONSIDERATIONS
@@ -146,12 +146,12 @@ and
 .Pa jwt-secret
 contain secrets and should remain root-owned mode 0600.
 .Pp
-.Pa mirotalk.conf
+.Pa kaigi.conf
 is read as configuration data by MiroTalk and is not executed as shell code.
 Do not place user passwords or the JWT secret in it or in
 .Pa rc.conf .
 .Sh SEE ALSO
-.Xr mirotalk.conf 5 ,
+.Xr kaigi.conf 5 ,
 .Xr rc.conf 5 ,
 .Xr service 8
 .Sh PRIVACY
@@ -161,7 +161,7 @@ A site privacy policy is optional and is configured with
 or
 .Va PRIVACY_POLICY_URL
 in
-.Pa @ETCDIR@/mirotalk.conf .
+.Pa %%PREFIX%%/etc/kaigi/kaigi.conf .
 If neither is configured, the user interface does not display a Privacy Policy link.
 
 .Sh SITE COPYRIGHT
@@ -169,7 +169,7 @@ Site-specific material may have a different copyright owner from the MiroTalk
 software.  Set
 .Va SITE_COPYRIGHT
 in
-.Pa @ETCDIR@/mirotalk.conf
+.Pa %%PREFIX%%/etc/kaigi/kaigi.conf
 to display an optional site copyright notice in the login footer and local
 About page.  MiroTalk software attribution, copyright, license, and
 Corresponding Source information remain on the About page.

@@ -1,16 +1,16 @@
 .Dd October 4, 2026
-.Dt MIROTALK-LDAP.CONF 5
+.Dt KAIGI-LDAP.CONF 5
 .Os
 .Sh NAME
-.Nm mirotalk-ldap.conf
+.Nm kaigi-ldap.conf
 .Nd optional LDAP authentication configuration for MiroTalk
 .Sh DESCRIPTION
 The actual configuration file is
-.Pa %%PREFIX%%/etc/mirotalk/ldap/ldap.conf .
-It uses the same NAME=VALUE syntax as mirotalk.conf, but variable references are
+.Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf .
+It uses the same NAME=VALUE syntax as kaigi.conf, but variable references are
 resolved within this file only.
-Requires the HARDENED build and LDAP port option.
-Set LDAP_ENABLED=true in mirotalk.conf to activate it.
+LDAP support is included in Kaigi and disabled by default.
+Set LDAP_ENABLED=true in kaigi.conf to activate it.
 Disabled LDAP configurations are not opened or validated.
 The users file retains precedence; failed local passwords never fall back to LDAP.
 .Sh TRANSPORTS
@@ -111,11 +111,11 @@ Directory, transport, group and meeting policy settings remain explicit;
 commented examples without a stated default are not active values.
 .Sh FILES
 .Bl -tag -width "ldap/group-meetings.json"
-.It Pa %%PREFIX%%/etc/mirotalk/ldap/ldap.conf
+.It Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf
 LDAP connection, identity and group lookup settings.
-.It Pa %%PREFIX%%/etc/mirotalk/ldap/bind-secret
+.It Pa %%PREFIX%%/etc/kaigi/ldap/bind-secret
 Protected search-account password.
-.It Pa %%PREFIX%%/etc/mirotalk/ldap/group-meetings.json
+.It Pa %%PREFIX%%/etc/kaigi/ldap/group-meetings.json
 Default groups and group-to-meeting grants.
 .El
 .Sh GROUP MEETING POLICY
@@ -143,5 +143,5 @@ An authenticated account with no meeting grants receives a separate,
 localized alert and is denied a login session.
 
 .Sh SEE ALSO
-.Xr mirotalk.conf 5 ,
-.Xr mirotalk 8
+.Xr kaigi.conf 5 ,
+.Xr kaigi 8

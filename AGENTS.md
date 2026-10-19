@@ -26,6 +26,8 @@
   Source obligations. Add FreeGateway attribution without replacing authorship.
 - Run npm test and relevant checks. Report FreeBSD/Poudriere and actual browser
   testing separately from mocks, source inspection and Linux checks.
-- The existing service/path names remain until a reviewed migration changes
-  them. Generate no port/release archives, tags or PORTREVISION bumps unless
+- Kaigi owns the kaigi service, etc/kaigi configuration, www/kaigi installation,
+  and /var/run/kaigi and /var/log/kaigi paths. Keep MiroTalk independently
+  installable; never add implicit configuration or credential sharing.
+  Generate no port/release archives, tags or PORTREVISION bumps unless
   explicitly requested. Follow the FreeBSD Port Workflow for packaging work.

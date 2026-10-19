@@ -62,3 +62,15 @@ Before a release or production deployment:
   this development repository pointer alone is not a completed source offer.
 - Review operational naming/migration and replace inherited deployment tooling
   before making a release. Source tests do not replace firewall/jail/live checks.
+
+## Kaigi operational namespace
+
+The follow-up namespace change replaces the initial compatibility paths with
+`kaigi`: rc service/variables, `/usr/local/etc/kaigi/kaigi.conf`,
+`/usr/local/www/kaigi`, `/var/run/kaigi`, `/var/log/kaigi`, manuals, log rotation
+and filter examples. MiroTalk STANDARD remains independently installable.
+There is no automatic import, alias or sharing of MiroTalk settings, users
+or JWT secrets. LDAP settings remain under `etc/kaigi/ldap`.
+Use separate listener addresses or ports for simultaneous services.
+The original 13ce82a9 port archive predates this change and must be regenerated
+with a new source pin before testing the separate Kaigi namespace.

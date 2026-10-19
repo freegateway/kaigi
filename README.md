@@ -26,9 +26,13 @@ they are not a newly generated port. No application patch replay is needed.
 ## Configuration and deployment
 
 The package-owned `app/src/config.js` loads `config.template.js`. Administrator
-settings live outside the repository. During this source-only transition,
-`KAIGI_CONFIG_DIR` defaults to `/usr/local/etc/mirotalk`, preserving the existing
-installation layout; set it explicitly for another installation or test jail.
+settings live in `/usr/local/etc/kaigi/kaigi.conf` by default. Set
+`KAIGI_CONFIG_DIR` explicitly for another installation or test jail.
+The FreeBSD service is `kaigi`, enabled with `kaigi_enable="YES"`; application,
+runtime and log directories are `/usr/local/www/kaigi`, `/var/run/kaigi` and
+`/var/log/kaigi`. Kaigi does not read MiroTalk configuration or share its JWT
+secret. MiroTalk STANDARD can remain installed separately; configure distinct
+listener addresses or ports when running both services.
 Local account/JWT-secret provisioning remains the FreeBSD service's job.
 LDAP is included in the dependency set but remains disabled until configured.
 No production credentials or live deployment configuration belong in Git.
@@ -38,5 +42,4 @@ for the deployed build, including required dependency and build/install material
 The default repository URL is a development pointer, not release certification.
 
 Before installation, complete FreeBSD/Poudriere, LDAP, browser/media and
-Corresponding Source checks listed in `docs/BASELINE.md`. Service/package/path
-renaming, first release tagging and rollout are separate changes.
+Corresponding Source checks listed in `docs/BASELINE.md`. First release tagging and rollout are separate changes.

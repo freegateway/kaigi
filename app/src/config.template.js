@@ -23,11 +23,11 @@
 const os = require('os');
 const fs = require('fs');
 const splitChar = ',';
-// Retain the existing installation path during the source-only transition.
-const configDirectory = process.env.KAIGI_CONFIG_DIR || '/usr/local/etc/mirotalk';
+// Kaigi owns a separate configuration namespace from upstream MiroTalk.
+const configDirectory = process.env.KAIGI_CONFIG_DIR || '/usr/local/etc/kaigi';
 const sourceCodeUrl = process.env.KAIGI_SOURCE_URL || 'https://github.com/freegateway/kaigi';
 
-const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'mirotalk.conf'), requiredFile = false) => {
+const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'kaigi.conf'), requiredFile = false) => {
 
     if (!fs.existsSync(configPath)) {
         if (requiredFile) throw new Error(`Required configuration file is missing: ${configPath}`);
@@ -45,14 +45,14 @@ const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'm
 
         const separator = line.indexOf('=');
         if (separator < 1) {
-            throw new Error(`Invalid mirotalk.conf entry at line ${lineNumber + 1}`);
+            throw new Error(`Invalid kaigi.conf entry at line ${lineNumber + 1}`);
         }
 
         const name = line.slice(0, separator).trim();
         let value = line.slice(separator + 1).trim();
 
         if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
-            throw new Error(`Invalid mirotalk.conf variable name at line ${lineNumber + 1}: ${name}`);
+            throw new Error(`Invalid kaigi.conf variable name at line ${lineNumber + 1}: ${name}`);
         }
 
         if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
@@ -71,10 +71,10 @@ const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'm
             return resolved.get(name);
         }
         if (!values.has(name)) {
-            throw new Error(`Undefined mirotalk.conf variable referenced: ${name}`);
+            throw new Error(`Undefined kaigi.conf variable referenced: ${name}`);
         }
         if (resolving.has(name)) {
-            throw new Error(`Circular mirotalk.conf variable reference involving: ${name}`);
+            throw new Error(`Circular kaigi.conf variable reference involving: ${name}`);
         }
 
         resolving.add(name);
@@ -99,9 +99,9 @@ for (const name of Object.keys(freeBSDConfig)) {
 if (freeBSDConfig.LDAP_ENABLED !== undefined && !['true', 'false'].includes(freeBSDConfig.LDAP_ENABLED)) throw new Error('LDAP_ENABLED must be true or false');
 let ldapSettings = { enabled: false };
 if (freeBSDConfig.LDAP_ENABLED === 'true') {
-    if (!ldapCompiled) throw new Error('LDAP_ENABLED=true requires the LDAP port option with HARDENED');
+    if (!ldapCompiled) throw new Error('LDAP_ENABLED=true requires LDAP support');
     const ldapValues = loadFreeBSDConfig(require('path').join(configDirectory, 'ldap/ldap.conf'), true);
-    if (Object.hasOwn(ldapValues, 'LDAP_ENABLED')) throw new Error('LDAP_ENABLED belongs only in mirotalk.conf');
+    if (Object.hasOwn(ldapValues, 'LDAP_ENABLED')) throw new Error('LDAP_ENABLED belongs only in kaigi.conf');
     for (const name of Object.keys(ldapValues)) if (!name.startsWith('LDAP_')) throw new Error(`Invalid LDAP configuration setting: ${name}`);
     ldapSettings = require('./LdapAuth.cjs').ldapConfig({ ...ldapValues, LDAP_ENABLED: 'true' }, require('path').join(configDirectory, 'ldap/group-meetings.json'));
 }
@@ -140,7 +140,7 @@ for (const [name, value] of Object.entries(siteTranslations.en || {})) {
 
 // FreeBSD-facing names are translated once into MiroTalk's existing
 // environment-variable configuration interface.  Existing environment values
-// always win, so mirotalk.conf is an override layer above upstream defaults,
+// always win, so kaigi.conf is an override layer above upstream defaults,
 // not a replacement for them.
 if (freeBSDConfig.MEDIA_LISTEN_IP === undefined && freeBSDConfig.WEB_LISTEN_IP !== undefined) {
     freeBSDConfig.MEDIA_LISTEN_IP = freeBSDConfig.WEB_LISTEN_IP;

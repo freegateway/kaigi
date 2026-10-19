@@ -1,0 +1,67 @@
+#!/bin/sh
+
+# PROVIDE: kaigi
+# REQUIRE: LOGIN NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="kaigi"
+rcvar="kaigi_enable"
+
+load_rc_config "$name"
+
+: ${kaigi_enable:="NO"}
+: ${kaigi_daemon_user:="www"}
+: ${kaigi_daemon_group:="www"}
+
+pidfile="/var/run/kaigi/${name}.pid"
+procname="%%LOCALBASE%%/bin/node"
+command="/usr/sbin/daemon"
+command_args="-f -p ${pidfile} -u ${kaigi_daemon_user} -o /var/log/kaigi/kaigi.log %%LOCALBASE%%/bin/node app/src/Server.js"
+
+KAIGI_CONFIG_DIR="%%PREFIX%%/etc/kaigi"
+KAIGI_SOURCE_URL="%%KAIGI_SOURCE_URL%%"
+export KAIGI_CONFIG_DIR KAIGI_SOURCE_URL
+
+start_precmd="kaigi_precmd"
+
+kaigi_precmd()
+{
+	install -d -m 0750 -o "${kaigi_daemon_user}" -g "${kaigi_daemon_group}" /var/run/kaigi || return 1
+	install -d -m 0750 -o "${kaigi_daemon_user}" -g "${kaigi_daemon_group}" /var/log/kaigi || return 1
+	install -d -m 0755 -o root -g wheel "%%PREFIX%%/etc/kaigi" || return 1
+
+	if [ ! -r "%%PREFIX%%/etc/kaigi/kaigi.conf" ]; then
+		echo "${name}: configuration file is not readable: %%PREFIX%%/etc/kaigi/kaigi.conf"
+		return 1
+	fi
+
+	if [ -L "%%PREFIX%%/etc/kaigi/jwt-secret" ]; then
+		echo "${name}: jwt-secret must not be a symlink"
+		return 1
+	fi
+
+	if [ ! -f "%%PREFIX%%/etc/kaigi/jwt-secret" ]; then
+		umask 077
+		dd if=/dev/urandom bs=32 count=1 2>/dev/null | hexdump -ve '1/1 "%02x"' > "%%PREFIX%%/etc/kaigi/jwt-secret" || return 1
+	fi
+
+	JWT_SECRET="$(cat "%%PREFIX%%/etc/kaigi/jwt-secret")" || return 1
+	if [ -z "${JWT_SECRET}" ]; then
+		echo "${name}: JWT secret file is empty: %%PREFIX%%/etc/kaigi/jwt-secret"
+		return 1
+	fi
+	export JWT_SECRET
+
+	if [ ! -r "%%PREFIX%%/etc/kaigi/users" ]; then
+		echo "${name}: users file is not readable: %%PREFIX%%/etc/kaigi/users"
+		return 1
+	fi
+	HOST_USERS="$(cat "%%PREFIX%%/etc/kaigi/users")" || return 1
+	export HOST_USERS
+
+	cd "%%WWWDIR%%" || return 1
+}
+
+run_rc_command "$1"

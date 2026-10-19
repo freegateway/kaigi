@@ -1,16 +1,16 @@
-# MiroTalk LDAP configuration. Read only when LDAP_ENABLED=true in mirotalk.conf.
-# Requires the HARDENED build and LDAP port option. This is not shell code.
+# MiroTalk LDAP configuration. Read only when LDAP_ENABLED=true in kaigi.conf.
+# LDAP support is included in Kaigi and disabled by default. This is not shell code.
 # Use NAME=VALUE assignments, optional matching quotes, and full-line # comments.
 # ${NAME} references refer only to variables within this file.
 # Directory and authorization settings have no defaults and must be explicit.
 # Commented assignments are examples unless marked Default below.
 # Replace directory-specific placeholders. Environment variables cannot override settings.
-# Keep only LDAP_ENABLED in mirotalk.conf; do not set it in this file.
+# Keep only LDAP_ENABLED in kaigi.conf; do not set it in this file.
 # Store the search-account password separately in the protected bind-secret file.
 # LDAP URL must include an explicit port. TLS verification cannot be disabled.
 # No automatic fallback from TLS to plaintext is permitted.
 # Local users take precedence, including failed local passwords.
-# See mirotalk-ldap.conf(5) and HARDENING.md for policy and session behavior.
+# See kaigi-ldap.conf(5) and HARDENING.md for policy and session behavior.
 
 # ====================================================================
 # Connection and search account
@@ -26,7 +26,7 @@
 # LDAP_BIND_DN=<restricted search account DN>
 
 # !!! REQUIRED: absolute path to the search-account password file. Example path; no default. Use mode 0600 or 0640 with appropriate ownership.
-# LDAP_BIND_PASSWORD_FILE=%%PREFIX%%/etc/mirotalk/ldap/bind-secret
+# LDAP_BIND_PASSWORD_FILE=%%PREFIX%%/etc/kaigi/ldap/bind-secret
 
 # ====================================================================
 # User lookup and identity
@@ -112,7 +112,7 @@
 # LDAP_MAPPING_KEY=<name or dn>
 
 # Default groups and group-to-meeting grants are in:
-# %%PREFIX%%/etc/mirotalk/ldap/group-meetings.json
+# %%PREFIX%%/etc/kaigi/ldap/group-meetings.json
 # defaultGroups is an array of stable group keys, used only when no groups are returned.
 # groupMeetings maps stable group keys to arrays of exact meeting keys.
 # Mapped mode uses the union of all matching grants; direct mode uses group keys as meetings.

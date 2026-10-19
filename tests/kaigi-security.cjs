@@ -6,6 +6,27 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { randomUUID } = require('node:crypto');
 const source = fs.readFileSync(path.join(__dirname, '../app/src/Server.js'), 'utf8');
+test('Kaigi configuration is isolated from a colocated MiroTalk configuration', () => {
+    const os = require('node:os'), { spawnSync } = require('node:child_process');
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'kaigi-config-isolation-'));
+    const environment = { ...process.env, KAIGI_CONFIG_DIR: directory, SFU_ANNOUNCED_IP: '127.0.0.1' };
+    delete environment.SERVER_LISTEN_PORT;
+    const config = path.join(__dirname, '../app/src/config.js');
+    const readPort = () => {
+        const result = spawnSync(process.execPath, ['-e',
+            'console.log(JSON.stringify(require(process.argv[1]).server.listen.port))', config],
+            { env: environment, encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+        return Number(JSON.parse(result.stdout.trim()));
+    };
+    try {
+        fs.writeFileSync(path.join(directory, 'mirotalk.conf'), 'WEB_LISTEN_PORT=7444\n');
+        fs.writeFileSync(path.join(directory, 'kaigi.conf'), 'WEB_LISTEN_PORT=7443\n');
+        assert.equal(readPort(), 7443);
+        fs.unlinkSync(path.join(directory, 'kaigi.conf'));
+        assert.equal(readPort(), 3010);
+    } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
 function sessions() {
     const sockets = new Map(), rooms = new Map();
     const hostCfg = { protected: false, users: [{ username: 'alice', allowed_rooms: ['approved'] }] };
