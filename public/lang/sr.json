@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "Снимање је онемогућено за овај састанак"
     },
     "about": {
-        "title": "O projektu, zasluge i otvoreni kod",
+        "title": "О пројекту Kaigi — Zasluge i softver otvorenog koda",
         "site": "Sajt",
         "contact": "Kontakt",
         "siteCopyright": "Autorska prava sajta",
         "creditsTitle": "Zasluge i softver otvorenog koda",
-        "intro": "Ova usluga je zasnovana na projektima otvorenog koda MiroTalk SFU i mediasoup.",
-        "licenseAndModifications": "je delo Miroslava Pejića i licenciran je pod GNU Affero General Public License verzijom 3. Ova FreeBSD HARDENED verzija deo je projekta FreeGateway za digitalni suverenitet i sadrži izmene specifične za FreeBSD, unapređenja bezbednosti i zaštite privatnosti izvršene u skladu s tom licencom. Izmenjeni FreeBSD paket i njegov tačan odgovarajući izvorni kod navedeni su u nastavku.",
+        "intro": "Kaigi је систем за видео-конференције пројекта FreeGateway за FreeBSD, намењен сопственом хостовању. Развија се независно као огранак MiroTalk SFU и користи mediasoup за WebRTC медије.",
+        "licenseAndModifications": "је направио Miroslav Pejic и лиценциран је под GNU AGPLv3. Kaigi задржава обавештења о ауторским правима и лиценци изворног пројекта.",
         "copyrightNotice": "Autorska prava za MiroTalk SFU pripadaju © Miroslav Pejić i drugim odgovarajućim saradnicima. Autorska prava i licenca softvera odvojeni su od autorskih prava nad logotipima, grafikom, tekstom, pravilima ili drugim materijalima specifičnim za sajt koje obezbeđuje operator.",
         "upstreamProject": "MiroTalk SFU upstream projekat",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "je WebRTC SFU otvorenog koda koji koristi MiroTalk SFU.",
+        "mediasoupNotice": "је WebRTC јединица за селективно прослеђивање (SFU) отвореног кода која обрађује медије конференција у Kaigi.",
         "mediasoupProject": "mediasoup upstream projekat",
-        "correspondingSource": "Odgovarajući izvorni kod za ovaj FreeBSD MiroTalk paket",
+        "correspondingSource": "Одговарајући изворни код ове Kaigi инсталације",
         "freeGatewayProject": "Projekat FreeGateway za digitalni suverenitet",
-        "returnToLogin": "Nazad na prijavu"
+        "returnToLogin": "Nazad na prijavu",
+        "projectTitle": "О пројекту Kaigi",
+        "projectPurpose": "Kaigi даје предност приватности, приступу састанцима уз аутентификацију и контроли администратора. Ресурси прегледача се хостују локално, без услуга праћења или превођења трећих страна.",
+        "kaigiProject": "Kaigi пројекат изворног кода",
+        "licenseNotice": "Kaigi се дистрибуира под GNU AGPLv3, без гаранције.",
+        "sourceNotice": "Веза испод води до одговарајућег изворног кода ове инсталације, укључујући измене и материјал за изградњу.",
+        "upstreamCredits": "Заслуге за MiroTalk SFU"
     }
 }

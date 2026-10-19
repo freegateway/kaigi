@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "Bu toplantı için kayıt devre dışı bırakılmıştır"
     },
     "about": {
-        "title": "Hakkında, katkılar ve açık kaynak",
+        "title": "Kaigi hakkında — Katkılar ve açık kaynak yazılımı",
         "site": "Site",
         "contact": "İletişim",
         "siteCopyright": "Site telif hakkı",
         "creditsTitle": "Katkılar ve açık kaynak yazılımı",
-        "intro": "Bu hizmet, açık kaynaklı MiroTalk SFU ve mediasoup projelerini temel alır.",
-        "licenseAndModifications": "Miroslav Pejic tarafından geliştirilmiştir ve GNU Affero General Public License sürüm 3 kapsamında lisanslanmıştır. Bu FreeBSD HARDENED derlemesi FreeGateway Dijital Egemenlik Projesi’nin bir parçasıdır ve bu lisans kapsamında yapılan FreeBSD’ye özgü, güvenliği güçlendiren ve gizliliği koruyan değişiklikler içerir. Değiştirilmiş FreeBSD paketi ve ona ait tam Karşılık Gelen Kaynak aşağıda belirtilmiştir.",
+        "intro": "Kaigi, FreeGateway projesinin FreeBSD için kendi sunucunuzda barındırılan video konferans sistemidir. MiroTalk SFU’nun bağımsız geliştirilen bir türevidir ve WebRTC medyası için mediasoup kullanır.",
+        "licenseAndModifications": "Miroslav Pejic tarafından oluşturulmuştur ve GNU AGPLv3 ile lisanslanmıştır. Kaigi, kaynak projenin telif hakkı ve lisans bildirimlerini korur.",
         "copyrightNotice": "MiroTalk SFU telif hakkı © Miroslav Pejic ve ilgili diğer katkıda bulunanlara aittir. Yazılımın telif hakkı ve lisansı, siteye özgü logoların, görsellerin, metinlerin, politikaların veya operatör tarafından sağlanan diğer materyallerin telif haklarından ayrıdır.",
         "upstreamProject": "MiroTalk SFU upstream projesi",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "mediasoup, MiroTalk SFU tarafından kullanılan açık kaynaklı bir WebRTC SFU’dur.",
+        "mediasoupNotice": "Kaigi’deki konferans medyasını işleyen açık kaynaklı WebRTC Seçici İletim Birimidir (SFU).",
         "mediasoupProject": "mediasoup upstream projesi",
-        "correspondingSource": "Bu FreeBSD MiroTalk paketi için Karşılık Gelen Kaynak",
+        "correspondingSource": "Bu Kaigi kurulumunun İlgili Kaynak Kodu",
         "freeGatewayProject": "FreeGateway Dijital Egemenlik Projesi",
-        "returnToLogin": "Girişe dön"
+        "returnToLogin": "Girişe dön",
+        "projectTitle": "Kaigi hakkında",
+        "projectPurpose": "Kaigi gizliliğe, kimliği doğrulanmış toplantı erişimine ve yönetici denetimine öncelik verir. Tarayıcı kaynakları, üçüncü taraf izleme veya çeviri hizmetleri olmadan yerel olarak barındırılır.",
+        "kaigiProject": "Kaigi kaynak projesi",
+        "licenseNotice": "Kaigi, GNU AGPLv3 kapsamında garantisiz dağıtılır.",
+        "sourceNotice": "Değişiklikler ve derleme malzemeleri dahil bu kurulumun İlgili Kaynak Kodu için aşağıdaki bağlantıyı kullanın.",
+        "upstreamCredits": "MiroTalk SFU katkıları"
     }
 }

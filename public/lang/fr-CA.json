@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "L’enregistrement est désactivé pour cette réunion"
     },
     "about": {
-        "title": "À propos, crédits et logiciel libre",
+        "title": "À propos de Kaigi — Crédits et logiciels libres",
         "site": "Site",
         "contact": "Contact",
         "siteCopyright": "Droit d’auteur du site",
         "creditsTitle": "Crédits et logiciels libres",
-        "intro": "Ce service repose sur les projets libres MiroTalk SFU et mediasoup.",
-        "licenseAndModifications": "est de Miroslav Pejic et est distribué sous la licence publique générale Affero GNU version 3. Cette version FreeBSD HARDENED fait partie du projet de souveraineté numérique FreeGateway et comprend des modifications propres à FreeBSD ainsi que des renforcements de sécurité et des protections de la vie privée réalisés conformément à cette licence. Le paquet FreeBSD modifié et son code source correspondant exact sont indiqués ci-dessous.",
+        "intro": "Kaigi est le système de visioconférence autohébergé du projet FreeGateway pour FreeBSD. Ce projet indépendant est issu de MiroTalk SFU et utilise mediasoup pour les médias WebRTC.",
+        "licenseAndModifications": "a été créé par Miroslav Pejic et est distribué sous GNU AGPLv3. Kaigi conserve les avis de droit d’auteur et de licence du projet d’origine.",
         "copyrightNotice": "MiroTalk SFU est protégé par le droit d’auteur © Miroslav Pejic et les autres contributeurs concernés. Le droit d’auteur et la licence du logiciel sont distincts de tout droit d’auteur portant sur les logos, illustrations, textes, politiques ou autres éléments propres au site fournis par l’exploitant.",
         "upstreamProject": "Projet amont MiroTalk SFU",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "est une SFU WebRTC libre utilisée par MiroTalk SFU.",
+        "mediasoupNotice": "est la SFU WebRTC libre qui assure la transmission sélective des flux multimédias des conférences dans Kaigi.",
         "mediasoupProject": "Projet amont mediasoup",
-        "correspondingSource": "Code source correspondant de ce paquet MiroTalk pour FreeBSD",
+        "correspondingSource": "Code source correspondant de cette installation de Kaigi",
         "freeGatewayProject": "Projet de souveraineté numérique FreeGateway",
-        "returnToLogin": "Retour à la connexion"
+        "returnToLogin": "Retour à la connexion",
+        "projectTitle": "À propos de Kaigi",
+        "projectPurpose": "Kaigi privilégie la vie privée, l’accès authentifié aux réunions et le contrôle par l’administrateur. Les ressources du navigateur sont hébergées localement, sans services tiers de suivi ou de traduction.",
+        "kaigiProject": "Projet source de Kaigi",
+        "licenseNotice": "Kaigi est distribué sous GNU AGPLv3, sans garantie.",
+        "sourceNotice": "Le lien ci-dessous donne accès au code source correspondant de cette installation, y compris ses modifications et les fichiers de compilation.",
+        "upstreamCredits": "Crédits de MiroTalk SFU"
     }
 }

@@ -10037,15 +10037,21 @@ window.addEventListener('beforeunload', (e) => {
 function showAbout() {
     sound('open');
 
+    const content = document.createElement('div');
+    content.innerHTML = BRAND.about?.html || '';
+    for (const element of content.querySelectorAll('[data-about-key]')) {
+        element.textContent = window.i18n?.tKey(element.dataset.aboutKey, element.textContent) || element.textContent;
+    }
+
     Swal.fire({
         background: swalBackground,
         position: 'center',
-        imageUrl: BRAND.about?.imageUrl && BRAND.about.imageUrl.trim() !== '' ? BRAND.about.imageUrl : image.about,
+        imageUrl: BRAND.about?.imageUrl?.trim() || undefined,
         customClass: { image: 'img-about' },
-        title: BRAND.about?.title && BRAND.about.title.trim() !== '' ? BRAND.about.title : 'WebRTC SFU v2.6.48',
+        title: window.i18n?.tKey('projectTitle', BRAND.about?.title || 'About Kaigi') || BRAND.about?.title || 'About Kaigi',
         html: renderRoomTemplate('popupAboutTemplate', {
             html: {
-                aboutContent: BRAND.about.html,
+                aboutContent: content.innerHTML,
             },
         }),
         showClass: { popup: 'animate__animated animate__fadeInDown' },

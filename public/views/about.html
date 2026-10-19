@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>About, Credits &amp; Open Source</title>
+        <title>About Kaigi, Credits &amp; Open Source</title>
         <link rel="stylesheet" href="../css/landing.css" />
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
@@ -26,16 +26,25 @@
                 <div id="siteCopyrightRow" hidden><dt data-about-key="siteCopyright" data-i18n-skip>Site copyright</dt><dd id="siteCopyright"></dd></div>
             </dl>
 
-            <section>
-                <h2 data-about-key="creditsTitle" data-i18n-skip>Credits &amp; Open Source Software</h2>
-                <p data-about-key="intro" data-i18n-skip>This service is based on the open-source MiroTalk SFU and mediasoup projects.</p>
-                <p><strong>MiroTalk SFU</strong> <span data-about-key="licenseAndModifications" data-i18n-skip>is by Miroslav Pejic and is licensed under the GNU Affero General Public License version 3. This FreeBSD HARDENED build is part of the FreeGateway Digital Sovereignty Project and includes FreeBSD-specific, security-hardening, and privacy-protecting modifications made under that license. The modified FreeBSD package and its exact Corresponding Source are identified below.</span></p>
-                <p data-about-key="copyrightNotice" data-i18n-skip>MiroTalk SFU is copyright &copy; Miroslav Pejic and other applicable contributors. The software copyright and license are separate from any copyright in site-specific logos, artwork, text, policies, or other operator-provided material.</p>
-                <p><a href="https://github.com/miroslavpejic85/mirotalksfu" rel="noopener noreferrer" data-about-key="upstreamProject" data-i18n-skip>MiroTalk SFU upstream project</a> · <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener noreferrer" data-about-key="licenseLink" data-i18n-skip>GNU AGPLv3</a></p>
-                <p><strong>mediasoup</strong> <span data-about-key="mediasoupNotice" data-i18n-skip>is an open-source WebRTC SFU used by MiroTalk SFU.</span></p>
-                <p><a href="https://mediasoup.org/" rel="noopener noreferrer" data-about-key="mediasoupProject" data-i18n-skip>mediasoup upstream project</a></p>
-                <p><a id="sourceCodeUrl" href="#" data-about-key="correspondingSource" data-i18n-skip>Corresponding Source for this FreeBSD MiroTalk package</a></p>
+            <section aria-labelledby="kaigiProjectTitle">
+                <h2 id="kaigiProjectTitle" data-about-key="projectTitle" data-i18n-skip>About Kaigi</h2>
+                <p data-about-key="intro" data-i18n-skip>Kaigi is the FreeGateway Project’s self-hosted video conferencing system for FreeBSD. It is developed independently as a fork of MiroTalk SFU and uses mediasoup for WebRTC media.</p>
+                <p data-about-key="projectPurpose" data-i18n-skip>Kaigi puts privacy, authenticated meeting access and administrator control first. Browser resources are hosted locally, without third-party tracking or translation services.</p>
+                <p><a href="https://github.com/freegateway/kaigi" rel="noopener noreferrer" data-about-key="kaigiProject" data-i18n-skip>Kaigi source project</a></p>
                 <p><a href="https://www.freegateway.org/" rel="noopener noreferrer" data-about-key="freeGatewayProject" data-i18n-skip>FreeGateway Digital Sovereignty Project</a></p>
+            </section>
+
+            <section aria-labelledby="softwareCreditsTitle">
+                <h2 id="softwareCreditsTitle" data-about-key="creditsTitle" data-i18n-skip>Credits &amp; Open Source Software</h2>
+                <p><strong>MiroTalk SFU</strong> <span data-about-key="licenseAndModifications" data-i18n-skip>was created by Miroslav Pejic and is licensed under GNU AGPLv3. Kaigi retains the upstream copyright and licence notices.</span></p>
+                <p data-about-key="copyrightNotice" data-i18n-skip>MiroTalk SFU is copyright &copy; Miroslav Pejic and other applicable contributors. The software copyright and license are separate from any copyright in site-specific logos, artwork, text, policies, or other operator-provided material.</p>
+                <p><a href="https://github.com/miroslavpejic85/mirotalksfu" rel="noopener noreferrer" data-about-key="upstreamProject" data-i18n-skip>MiroTalk SFU upstream project</a></p>
+                <p><strong>mediasoup</strong> <span data-about-key="mediasoupNotice" data-i18n-skip>is the open-source WebRTC Selective Forwarding Unit (SFU) that handles conference media in Kaigi.</span></p>
+                <p><a href="https://mediasoup.org/" rel="noopener noreferrer" data-about-key="mediasoupProject" data-i18n-skip>mediasoup upstream project</a></p>
+                <p data-about-key="licenseNotice" data-i18n-skip>Kaigi is distributed under GNU AGPLv3, without warranty.</p>
+                <p><a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="noopener noreferrer" data-about-key="licenseLink" data-i18n-skip>GNU AGPLv3</a></p>
+                <p data-about-key="sourceNotice" data-i18n-skip>For this installation’s Corresponding Source, including its changes and build material, use the link below.</p>
+                <p><a id="sourceCodeUrl" href="#" data-about-key="correspondingSource" data-i18n-skip>Corresponding Source for this Kaigi installation</a></p>
             </section>
 
             <p><a class="button button-primary" href="/login" data-about-key="returnToLogin" data-i18n-skip>Return to login</a></p>

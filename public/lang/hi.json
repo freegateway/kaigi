@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "इस बैठक के लिए रिकॉर्डिंग बंद है"
     },
     "about": {
-        "title": "परिचय, श्रेय और ओपन सोर्स",
+        "title": "Kaigi के बारे में — श्रेय और ओपन-सोर्स सॉफ़्टवेयर",
         "site": "साइट",
         "contact": "संपर्क",
         "siteCopyright": "साइट कॉपीराइट",
         "creditsTitle": "श्रेय और ओपन-सोर्स सॉफ़्टवेयर",
-        "intro": "यह सेवा ओपन-सोर्स MiroTalk SFU और mediasoup परियोजनाओं पर आधारित है।",
-        "licenseAndModifications": "Miroslav Pejic द्वारा बनाया गया है और GNU Affero General Public License संस्करण 3 के अंतर्गत लाइसेंस प्राप्त है। यह FreeBSD HARDENED बिल्ड FreeGateway डिजिटल संप्रभुता परियोजना का हिस्सा है और इसमें उस लाइसेंस के अंतर्गत किए गए FreeBSD-विशिष्ट, सुरक्षा को मजबूत करने वाले और गोपनीयता की रक्षा करने वाले संशोधन शामिल हैं। संशोधित FreeBSD पैकेज और उसका सटीक संबंधित स्रोत कोड नीचे दिया गया है।",
+        "intro": "Kaigi, FreeBSD के लिए FreeGateway परियोजना की स्व-होस्ट की गई वीडियो कॉन्फ़्रेंस प्रणाली है। इसे MiroTalk SFU के स्वतंत्र रूप से विकसित फ़ोर्क के रूप में बनाया गया है और यह WebRTC मीडिया के लिए mediasoup का उपयोग करती है।",
+        "licenseAndModifications": "को Miroslav Pejic ने बनाया है और यह GNU AGPLv3 के अंतर्गत लाइसेंस प्राप्त है। Kaigi मूल परियोजना के कॉपीराइट और लाइसेंस नोटिस सुरक्षित रखता है।",
         "copyrightNotice": "MiroTalk SFU का कॉपीराइट © Miroslav Pejic और अन्य लागू योगदानकर्ताओं के पास है। सॉफ़्टवेयर का कॉपीराइट और लाइसेंस साइट-विशिष्ट लोगो, कलाकृति, पाठ, नीतियों या संचालक द्वारा प्रदान की गई अन्य सामग्री के किसी भी कॉपीराइट से अलग है।",
         "upstreamProject": "MiroTalk SFU अपस्ट्रीम परियोजना",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "एक ओपन-सोर्स WebRTC SFU है जिसका उपयोग MiroTalk SFU करता है।",
+        "mediasoupNotice": "ओपन-सोर्स WebRTC सिलेक्टिव फ़ॉरवर्डिंग यूनिट (SFU) है जो Kaigi के कॉन्फ़्रेंस मीडिया को संभालती है।",
         "mediasoupProject": "mediasoup अपस्ट्रीम परियोजना",
-        "correspondingSource": "इस FreeBSD MiroTalk पैकेज का Corresponding Source",
+        "correspondingSource": "इस Kaigi इंस्टॉलेशन का संबंधित स्रोत कोड",
         "freeGatewayProject": "FreeGateway डिजिटल संप्रभुता परियोजना",
-        "returnToLogin": "लॉगिन पर वापस जाएँ"
+        "returnToLogin": "लॉगिन पर वापस जाएँ",
+        "projectTitle": "Kaigi के बारे में",
+        "projectPurpose": "Kaigi गोपनीयता, प्रमाणीकरण के बाद बैठक में प्रवेश और प्रशासक के नियंत्रण को प्राथमिकता देता है। ब्राउज़र संसाधन स्थानीय रूप से होस्ट किए जाते हैं और तृतीय-पक्ष ट्रैकिंग या अनुवाद सेवाओं का उपयोग नहीं होता।",
+        "kaigiProject": "Kaigi स्रोत परियोजना",
+        "licenseNotice": "Kaigi को GNU AGPLv3 के अंतर्गत बिना वारंटी वितरित किया जाता है।",
+        "sourceNotice": "इस इंस्टॉलेशन के संबंधित स्रोत कोड, उसके बदलावों और बिल्ड सामग्री के लिए नीचे दिए लिंक का उपयोग करें।",
+        "upstreamCredits": "MiroTalk SFU का श्रेय"
     }
 }

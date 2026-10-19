@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "Recording is disabled for this meeting"
     },
     "about": {
-        "title": "title",
+        "title": "About Kaigi — creditsTitle",
         "site": "site",
         "contact": "contact",
         "siteCopyright": "siteCopyright",
         "creditsTitle": "creditsTitle",
-        "intro": "intro",
-        "licenseAndModifications": "licenseAndModifications",
+        "intro": "Kaigi is the FreeGateway Project’s self-hosted video conferencing system for FreeBSD. It is developed independently as a fork of MiroTalk SFU and uses mediasoup for WebRTC media.",
+        "licenseAndModifications": "was created by Miroslav Pejic and is licensed under GNU AGPLv3. Kaigi retains the upstream copyright and licence notices.",
         "copyrightNotice": "copyrightNotice",
         "upstreamProject": "upstreamProject",
         "licenseLink": "licenseLink",
-        "mediasoupNotice": "mediasoupNotice",
+        "mediasoupNotice": "is the open-source WebRTC Selective Forwarding Unit (SFU) that handles conference media in Kaigi.",
         "mediasoupProject": "mediasoupProject",
-        "correspondingSource": "correspondingSource",
+        "correspondingSource": "Corresponding Source for this Kaigi installation",
         "freeGatewayProject": "freeGatewayProject",
-        "returnToLogin": "returnToLogin"
+        "returnToLogin": "returnToLogin",
+        "projectTitle": "About Kaigi",
+        "projectPurpose": "Kaigi puts privacy, authenticated meeting access and administrator control first. Browser resources are hosted locally, without third-party tracking or translation services.",
+        "kaigiProject": "Kaigi source project",
+        "licenseNotice": "Kaigi is distributed under GNU AGPLv3, without warranty.",
+        "sourceNotice": "For this installation’s Corresponding Source, including its changes and build material, use the link below.",
+        "upstreamCredits": "MiroTalk SFU credits"
     }
 }

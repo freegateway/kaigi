@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "Ebben a megbeszélésben a felvétel le van tiltva"
     },
     "about": {
-        "title": "Névjegy, közreműködők és nyílt forráskód",
+        "title": "A Kaigi névjegye — Közreműködők és nyílt forráskódú szoftverek",
         "site": "Webhely",
         "contact": "Kapcsolat",
         "siteCopyright": "A webhely szerzői joga",
         "creditsTitle": "Közreműködők és nyílt forráskódú szoftverek",
-        "intro": "Ez a szolgáltatás a nyílt forráskódú MiroTalk SFU és mediasoup projektekre épül.",
-        "licenseAndModifications": "Miroslav Pejic munkája, és a GNU Affero General Public License 3. verziója alatt licencelt. Ez a FreeBSD HARDENED változat a FreeGateway digitális szuverenitási projekt része, és a licencnek megfelelően készült FreeBSD-specifikus, biztonsági megerősítést és adatvédelmet szolgáló módosításokat tartalmaz. A módosított FreeBSD csomag és annak pontos megfelelő forráskódja alább található.",
+        "intro": "A Kaigi a FreeGateway projekt saját üzemeltetésű videókonferencia-rendszere FreeBSD-re. A MiroTalk SFU önállóan fejlesztett elágazása, amely a WebRTC médiaforgalomhoz a mediasoup rendszert használja.",
+        "licenseAndModifications": "alkotója Miroslav Pejic, licence GNU AGPLv3. A Kaigi megőrzi az eredeti projekt szerzői jogi és licencnyilatkozatait.",
         "copyrightNotice": "A MiroTalk SFU szerzői joga © Miroslav Pejic és az egyéb érintett közreműködők tulajdona. A szoftver szerzői joga és licence elkülönül a webhelyspecifikus logók, grafikák, szövegek, szabályzatok vagy az üzemeltető által biztosított egyéb anyagok szerzői jogától.",
         "upstreamProject": "MiroTalk SFU upstream projekt",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "A mediasoup egy nyílt forráskódú WebRTC SFU, amelyet a MiroTalk SFU használ.",
+        "mediasoupNotice": "a nyílt forrású WebRTC szelektív továbbító egység (SFU), amely a Kaigi konferenciamédia-forgalmát kezeli.",
         "mediasoupProject": "mediasoup upstream projekt",
-        "correspondingSource": "A FreeBSD MiroTalk csomag megfelelő forráskódja",
+        "correspondingSource": "A Kaigi ezen telepítéséhez tartozó forráskód",
         "freeGatewayProject": "FreeGateway digitális szuverenitási projekt",
-        "returnToLogin": "Vissza a bejelentkezéshez"
+        "returnToLogin": "Vissza a bejelentkezéshez",
+        "projectTitle": "A Kaigi névjegye",
+        "projectPurpose": "A Kaigi az adatvédelmet, a hitelesített hozzáférést és az adminisztrátori ellenőrzést helyezi előtérbe. A böngésző erőforrásai helyben érhetők el, külső követési és fordítási szolgáltatások nélkül.",
+        "kaigiProject": "A Kaigi forrásprojektje",
+        "licenseNotice": "A Kaigi GNU AGPLv3 licenc alatt, garancia nélkül kerül terjesztésre.",
+        "sourceNotice": "Az alábbi hivatkozás a telepítéshez tartozó forráskódra, módosításokra és fordítási anyagokra mutat.",
+        "upstreamCredits": "MiroTalk SFU közreműködők"
     }
 }

@@ -55,26 +55,26 @@ const loginButton = document.getElementById('loginButton');
 let BRAND = {
     app: {
         language: 'en',
-        name: 'MiroTalk SFU',
-        title: 'MiroTalk SFU<br />Free browser based Real-time video calls.<br />Simple, Secure, Fast.',
+        name: 'Kaigi',
+        title: 'Kaigi<br />Self-hosted video conferencing.',
         description:
-            'Start your next video call with a single click. No download, plug-in, or login is required. Just get straight to talking, messaging, and sharing your screen.',
+            'Self-hosted video conferencing with authenticated access to authorized meetings.',
         joinDescription: 'Pick a room name.<br />How about this one?',
         joinButtonLabel: 'Join meeting',
         customizeButtonLabel: 'CUSTOMIZE ROOM',
         joinLastLabel: 'Your recent room:',
     },
     site: {
-        title: 'MiroTalk SFU - Open Source WebRTC Video Conferencing',
+        title: 'Kaigi - Self-hosted Video Conferencing',
         icon: '../images/logo.svg',
         appleTouchIcon: '../images/logo.svg',
-        newRoomTitle: 'Pick name. <br />Share URL. <br />Start conference.',
+        newRoomTitle: 'Choose a meeting',
         newRoomDescription:
-            "Each room has its disposable URL. Just pick a room name and share your custom URL. It's that easy.",
+            "Sign in and choose a meeting you are authorized to join.",
     },
     meta: {
         description:
-            'Build your own Zoom alternative with MiroTalk SFU, an open-source, self-hosted WebRTC platform powered by Mediasoup for scalable video meetings.',
+            'Self-hosted video conferencing with authenticated access to authorized meetings.',
         keywords:
             'webrtc, miro, mediasoup, mediasoup-client, self hosted, voip, sip, real-time communications, chat, messaging, meet, webrtc stun, webrtc turn, webrtc p2p, webrtc sfu, video meeting, video chat, video conference, multi video chat, multi video conference, peer to peer, p2p, sfu, rtc, alternative to, zoom, microsoft teams, google meet, jitsi, meeting',
     },
@@ -110,10 +110,11 @@ let BRAND = {
         buttonLabel: 'Login',
     },
     about: {
-        imageUrl: '../images/mirotalk-logo.gif',
-        title: '<strong>WebRTC SFU v2.6.48</strong>',
+        imageUrl: '',
+        title: 'About Kaigi',
         html: `
             <div class="about-content">
+                <h3 data-about-key="upstreamCredits" data-i18n-skip>MiroTalk SFU credits</h3>
                 <p class="about-description">
                     Self-hosted group video meetings with scalable WebRTC conferencing.
                 </p>
@@ -152,8 +153,22 @@ let BRAND = {
                     </div>
                 </dl>
                 <footer class="about-footer">
-                    &copy; ${new Date().getFullYear()} MiroTalk SFU. All rights reserved.
+                    &copy; ${new Date().getFullYear()} MiroTalk SFU · GNU AGPLv3
                 </footer>
+                <section class="about-build-info">
+                    <h3 data-about-key="projectTitle" data-i18n-skip>About Kaigi</h3>
+                    <p data-about-key="intro" data-i18n-skip>Kaigi is the FreeGateway Project’s self-hosted video conferencing system for FreeBSD. It is developed independently as a fork of MiroTalk SFU and uses mediasoup for WebRTC media.</p>
+                    <p data-about-key="projectPurpose" data-i18n-skip>Kaigi puts privacy, authenticated meeting access and administrator control first. Browser resources are hosted locally, without third-party tracking or translation services.</p>
+                    <p><a href="https://github.com/freegateway/kaigi" target="_blank" rel="noopener noreferrer" data-about-key="kaigiProject" data-i18n-skip>Kaigi source project</a></p>
+                    <p><a href="https://www.freegateway.org/" target="_blank" rel="noopener noreferrer" data-about-key="freeGatewayProject" data-i18n-skip>FreeGateway Digital Sovereignty Project</a></p>
+                    <p><strong>mediasoup</strong> <span data-about-key="mediasoupNotice" data-i18n-skip>is the open-source WebRTC Selective Forwarding Unit (SFU) that handles conference media in Kaigi.</span></p>
+                    <p><a href="https://mediasoup.org/" target="_blank" rel="noopener noreferrer" data-about-key="mediasoupProject" data-i18n-skip>mediasoup upstream project</a></p>
+                    <p data-about-key="licenseNotice" data-i18n-skip>Kaigi is distributed under GNU AGPLv3, without warranty.</p>
+                    <p><a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" data-about-key="licenseLink" data-i18n-skip>GNU AGPLv3</a></p>
+                    <p data-about-key="sourceNotice" data-i18n-skip>For this installation’s Corresponding Source, including its changes and build material, use the link below.</p>
+                    <p><a href="/about" target="_blank" rel="noopener noreferrer" data-about-key="correspondingSource" data-i18n-skip>Corresponding Source for this Kaigi installation</a></p>
+                    <p><a href="/about" target="_blank" rel="noopener noreferrer" data-about-key="creditsTitle" data-i18n-skip>Credits &amp; Open Source Software</a></p>
+                </section>
             </div>
         `,
     },

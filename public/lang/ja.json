@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "この会議では録画が無効になっています"
     },
     "about": {
-        "title": "このサービスについて・クレジット・オープンソース",
+        "title": "Kaigi について — クレジットとオープンソースソフトウェア",
         "site": "サイト",
         "contact": "連絡先",
         "siteCopyright": "サイトの著作権",
         "creditsTitle": "クレジットとオープンソースソフトウェア",
-        "intro": "このサービスは、オープンソースの MiroTalk SFU および mediasoup プロジェクトを基盤としています。",
-        "licenseAndModifications": "は Miroslav Pejic によるソフトウェアで、GNU Affero General Public License バージョン 3 の下でライセンスされています。この FreeBSD HARDENED ビルドは FreeGateway Digital Sovereignty Project の一部であり、同ライセンスに基づいて FreeBSD 固有の変更、セキュリティ強化、プライバシー保護のための変更が加えられています。変更された FreeBSD パッケージと、その正確な対応するソースは以下に示されています。",
+        "intro": "Kaigi は、FreeGateway プロジェクトが FreeBSD 向けに開発するセルフホスト型ビデオ会議システムです。MiroTalk SFU から派生した独立したプロジェクトで、WebRTC のメディア処理には mediasoup を使用しています。",
+        "licenseAndModifications": "は Miroslav Pejic が開発し、GNU AGPLv3 の下で提供されています。Kaigi は、元のプロジェクトの著作権表示とライセンス表示を保持しています。",
         "copyrightNotice": "MiroTalk SFU の著作権は © Miroslav Pejic および該当するその他の貢献者に帰属します。ソフトウェアの著作権およびライセンスは、サイト固有のロゴ、アートワーク、テキスト、ポリシー、その他運営者が提供する素材の著作権とは別個のものです。",
         "upstreamProject": "MiroTalk SFU アップストリームプロジェクト",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "は、MiroTalk SFU で使用されているオープンソースの WebRTC SFU です。",
+        "mediasoupNotice": "は、Kaigi の会議メディアを処理するオープンソースの WebRTC 選択的転送ユニット（SFU）です。",
         "mediasoupProject": "mediasoup アップストリームプロジェクト",
-        "correspondingSource": "この FreeBSD MiroTalk パッケージの対応するソース",
+        "correspondingSource": "この Kaigi 環境に対応するソースコード",
         "freeGatewayProject": "FreeGateway デジタル主権プロジェクト",
-        "returnToLogin": "ログインに戻る"
+        "returnToLogin": "ログインに戻る",
+        "projectTitle": "Kaigi について",
+        "projectPurpose": "Kaigi は、プライバシー、認証されたユーザーの会議へのアクセス、管理者による制御を重視しています。ブラウザーのリソースはローカルで配信され、第三者の追跡サービスや翻訳サービスは使用しません。",
+        "kaigiProject": "Kaigi ソースプロジェクト",
+        "licenseNotice": "Kaigi は GNU AGPLv3 の下で、無保証で配布されています。",
+        "sourceNotice": "この環境の変更内容やビルドに必要な資料を含む、対応するソースコードは、以下のリンクから参照できます。",
+        "upstreamCredits": "MiroTalk SFU のクレジット"
     }
 }

@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "此会议已禁用录制"
     },
     "about": {
-        "title": "关于、鸣谢与开源软件",
+        "title": "关于 Kaigi — 鸣谢与开源软件",
         "site": "站点",
         "contact": "联系方式",
         "siteCopyright": "站点版权",
         "creditsTitle": "鸣谢与开源软件",
-        "intro": "本服务基于开源的 MiroTalk SFU 和 mediasoup 项目。",
-        "licenseAndModifications": "由 Miroslav Pejic 开发，并依据 GNU Affero General Public License 第 3 版授权。此 FreeBSD HARDENED 构建是 FreeGateway 数字主权项目的一部分，包含依据该许可证作出的 FreeBSD 专用修改、安全加固及隐私保护改动。修改后的 FreeBSD 软件包及其准确的对应源代码如下所示。",
+        "intro": "Kaigi 是 FreeGateway 项目为 FreeBSD 开发的自托管视频会议系统。它是从 MiroTalk SFU 派生并独立开发的项目，使用 mediasoup 处理 WebRTC 媒体。",
+        "licenseAndModifications": "由 Miroslav Pejic 创建，采用 GNU AGPLv3 许可证。Kaigi 保留原项目的版权和许可证声明。",
         "copyrightNotice": "MiroTalk SFU 版权所有 © Miroslav Pejic 及其他相关贡献者。软件的版权和许可证与站点专用徽标、图稿、文本、政策或运营方提供的其他材料的版权相互独立。",
         "upstreamProject": "MiroTalk SFU 上游项目",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "是 MiroTalk SFU 使用的开源 WebRTC SFU。",
+        "mediasoupNotice": "是开源的 WebRTC 选择性转发单元（SFU），负责处理 Kaigi 的会议媒体流。",
         "mediasoupProject": "mediasoup 上游项目",
-        "correspondingSource": "此 FreeBSD MiroTalk 软件包的对应源代码",
+        "correspondingSource": "此 Kaigi 安装的对应源代码",
         "freeGatewayProject": "FreeGateway 数字主权项目",
-        "returnToLogin": "返回登录"
+        "returnToLogin": "返回登录",
+        "projectTitle": "关于 Kaigi",
+        "projectPurpose": "Kaigi 重视隐私、经过身份验证的会议访问和管理员控制。浏览器资源均在本地托管，不使用第三方跟踪或翻译服务。",
+        "kaigiProject": "Kaigi 源代码项目",
+        "licenseNotice": "Kaigi 根据 GNU AGPLv3 发布，不提供任何担保。",
+        "sourceNotice": "请通过以下链接获取此安装的对应源代码，包括修改内容和构建材料。",
+        "upstreamCredits": "MiroTalk SFU 致谢"
     }
 }

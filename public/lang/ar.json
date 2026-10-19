@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "التسجيل معطّل لهذا الاجتماع"
     },
     "about": {
-        "title": "حول الخدمة والشكر والمصادر المفتوحة",
+        "title": "حول Kaigi — الشكر والبرمجيات مفتوحة المصدر",
         "site": "الموقع",
         "contact": "الاتصال",
         "siteCopyright": "حقوق نشر الموقع",
         "creditsTitle": "الشكر والبرمجيات مفتوحة المصدر",
-        "intro": "تعتمد هذه الخدمة على مشروعي MiroTalk SFU و mediasoup مفتوحي المصدر.",
-        "licenseAndModifications": "من تطوير Miroslav Pejic ومرخّص بموجب رخصة GNU Affero General Public License الإصدار 3. يشكّل إصدار FreeBSD HARDENED هذا جزءًا من مشروع FreeGateway للسيادة الرقمية، ويتضمن تعديلات خاصة بـ FreeBSD وتحسينات أمنية وتعديلات لحماية الخصوصية أُجريت بموجب تلك الرخصة. وترد أدناه حزمة FreeBSD المعدّلة والمصدر المقابل الدقيق لها.",
+        "intro": "Kaigi هو نظام مؤتمرات فيديو مستضاف ذاتيًا من مشروع FreeGateway لنظام FreeBSD. يُطوَّر بشكل مستقل كتفرع من MiroTalk SFU ويستخدم mediasoup لوسائط WebRTC.",
+        "licenseAndModifications": "أنشأه Miroslav Pejic وهو مرخص بموجب GNU AGPLv3. يحتفظ Kaigi بإشعارات حقوق النشر والترخيص الخاصة بالمشروع الأصلي.",
         "copyrightNotice": "حقوق نشر MiroTalk SFU هي © Miroslav Pejic والمساهمين الآخرين المعنيين. حقوق نشر البرنامج وترخيصه منفصلان عن أي حقوق نشر للشعارات أو الرسومات أو النصوص أو السياسات أو المواد الأخرى الخاصة بالموقع والتي يوفرها المشغّل.",
         "upstreamProject": "مشروع MiroTalk SFU الأصلي",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "هو WebRTC SFU مفتوح المصدر يستخدمه MiroTalk SFU.",
+        "mediasoupNotice": "هو وحدة إعادة التوجيه الانتقائي (SFU) مفتوحة المصدر لبروتوكول WebRTC التي تتولى وسائط المؤتمرات في Kaigi.",
         "mediasoupProject": "مشروع mediasoup الأصلي",
-        "correspondingSource": "المصدر المقابل لحزمة MiroTalk هذه على FreeBSD",
+        "correspondingSource": "المصدر الموافق لهذا التثبيت من Kaigi",
         "freeGatewayProject": "مشروع FreeGateway للسيادة الرقمية",
-        "returnToLogin": "العودة إلى تسجيل الدخول"
+        "returnToLogin": "العودة إلى تسجيل الدخول",
+        "projectTitle": "حول Kaigi",
+        "projectPurpose": "يعطي Kaigi الأولوية للخصوصية والوصول إلى الاجتماعات بعد المصادقة وتحكم المسؤول. تُستضاف موارد المتصفح محليًا دون خدمات تتبع أو ترجمة من جهات خارجية.",
+        "kaigiProject": "مشروع الشفرة المصدرية لـ Kaigi",
+        "licenseNotice": "يُوزَّع Kaigi بموجب GNU AGPLv3 دون ضمان.",
+        "sourceNotice": "استخدم الرابط أدناه للحصول على المصدر الموافق لهذا التثبيت، بما في ذلك التغييرات ومواد البناء.",
+        "upstreamCredits": "شكر وتقدير MiroTalk SFU"
     }
 }

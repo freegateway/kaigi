@@ -1480,20 +1480,26 @@
         "Recording is disabled for this meeting": "이 회의에서는 녹화가 비활성화되어 있습니다"
     },
     "about": {
-        "title": "정보, 크레딧 및 오픈 소스",
+        "title": "Kaigi 소개 — 크레딧 및 오픈 소스 소프트웨어",
         "site": "사이트",
         "contact": "연락처",
         "siteCopyright": "사이트 저작권",
         "creditsTitle": "크레딧 및 오픈 소스 소프트웨어",
-        "intro": "이 서비스는 오픈 소스 MiroTalk SFU 및 mediasoup 프로젝트를 기반으로 합니다.",
-        "licenseAndModifications": "Miroslav Pejic의 소프트웨어이며 GNU Affero General Public License 버전 3에 따라 라이선스됩니다. 이 FreeBSD HARDENED 빌드는 FreeGateway 디지털 주권 프로젝트의 일부이며, 해당 라이선스에 따라 이루어진 FreeBSD 전용 수정, 보안 강화 및 개인정보 보호를 위한 변경 사항을 포함합니다. 수정된 FreeBSD 패키지와 정확한 해당 소스 코드는 아래에 명시되어 있습니다.",
+        "intro": "Kaigi는 FreeGateway 프로젝트가 FreeBSD용으로 개발하는 자체 호스팅 화상 회의 시스템입니다. MiroTalk SFU에서 파생되어 독립적으로 개발되며 WebRTC 미디어 처리에 mediasoup를 사용합니다.",
+        "licenseAndModifications": "는 Miroslav Pejic이 개발했으며 GNU AGPLv3에 따라 배포됩니다. Kaigi는 원본 프로젝트의 저작권 및 라이선스 고지를 유지합니다.",
         "copyrightNotice": "MiroTalk SFU의 저작권은 © Miroslav Pejic 및 기타 해당 기여자에게 있습니다. 소프트웨어의 저작권과 라이선스는 사이트별 로고, 아트워크, 텍스트, 정책 또는 운영자가 제공한 기타 자료의 저작권과 별개입니다.",
         "upstreamProject": "MiroTalk SFU 업스트림 프로젝트",
         "licenseLink": "GNU AGPLv3",
-        "mediasoupNotice": "mediasoup은 MiroTalk SFU에서 사용하는 오픈 소스 WebRTC SFU입니다.",
+        "mediasoupNotice": "는 Kaigi의 회의 미디어를 처리하는 오픈 소스 WebRTC 선택적 전달 장치(SFU)입니다.",
         "mediasoupProject": "mediasoup 업스트림 프로젝트",
-        "correspondingSource": "이 FreeBSD MiroTalk 패키지의 Corresponding Source",
+        "correspondingSource": "이 Kaigi 설치의 해당 소스 코드",
         "freeGatewayProject": "FreeGateway 디지털 주권 프로젝트",
-        "returnToLogin": "로그인으로 돌아가기"
+        "returnToLogin": "로그인으로 돌아가기",
+        "projectTitle": "Kaigi 소개",
+        "projectPurpose": "Kaigi는 개인정보 보호, 인증된 회의 접근 및 관리자 제어를 우선합니다. 브라우저 리소스는 로컬에서 호스팅되며 타사 추적 또는 번역 서비스를 사용하지 않습니다.",
+        "kaigiProject": "Kaigi 소스 프로젝트",
+        "licenseNotice": "Kaigi는 GNU AGPLv3에 따라 보증 없이 배포됩니다.",
+        "sourceNotice": "변경 사항과 빌드 자료를 포함한 이 설치의 해당 소스 코드는 아래 링크를 참조하십시오.",
+        "upstreamCredits": "MiroTalk SFU 크레딧"
     }
 }
