@@ -147,8 +147,8 @@ Kaigi maps this setting to
 .Ev ABOUT_IMAGE_URL
 as
 .Pa /site-assets/<name> .
-If omitted, the configured site logo is used, followed by the packaged
-MiroTalk logo.
+If omitted, the configured site logo is used when available; otherwise
+no About image is displayed.
 .It Ev JOIN_DESCRIPTION
 Join-room description.
 .It Ev JOIN_BUTTON_LABEL

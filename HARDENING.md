@@ -1,11 +1,10 @@
-# MiroTalk SFU: HARDENED build on FreeBSD
+# Kaigi security and privacy
 
-This document describes the inherited FreeBSD HARDENED policies now maintained
-as Kaigi source at fork parent `bb49feb24ed35938cd7cd6916ddd2256cacb1c20`.
-See `docs/BASELINE.md` for the canonical port input, reconciliation and remaining
-release checks. Kaigi implements the FreeGateway
-Project's Digital Sovereignty objectives: meeting infrastructure and routine
-browser resources should remain under the administrator's control.
+Kaigi implements the FreeGateway Project's Digital Sovereignty objectives:
+meeting infrastructure and routine browser resources should remain under the
+administrator's control. This guide describes current Kaigi behavior and
+administrator responsibilities. Historical source inputs and reconciliation
+decisions are recorded separately in `docs/BASELINE.md` and `docs/UPSTREAM.md`.
 
 ## Network and privacy behavior
 
@@ -19,13 +18,12 @@ browser resources should remain under the administrator's control.
   by default. An administrator who supplies an external service changes this
   network and privacy boundary.
 - Upstream analytics and telemetry, remote avatar generation, automatic
-  third-party images, and external browser CDN loads identified in the port
-  patches are disabled or replaced with local assets. User-initiated links to
+  third-party images, and external browser CDN loads inherited from upstream are disabled or replaced with local assets. User-initiated links to
   external sites, including upstream attribution links, remain links and may
   contact those sites when opened.
 - Cloud-dependent features, including S3 upload, hosted AI services, external
   IP geolocation, Sentry, Discord, Mattermost, and ngrok, are disabled in
-  HARDENED. The associated unused Node packages are removed from its curated
+  Kaigi. The associated unused Node packages are removed from its curated
   dependency set where possible. This is not a claim that every remaining
   dependency has been independently audited.
 
@@ -44,7 +42,7 @@ browser resources should remain under the administrator's control.
   machinery: an allowed user can open the pre-meeting page and start an empty
   meeting without waiting for a designated host. The old host-wait page
   redirects to login. Pre-meeting page access, meeting creation and socket
-  joining each validate the live session and allowed-meeting permissions. HARDENED does not assign presenter status, use a lobby, or
+  joining each validate the live session and allowed-meeting permissions. Kaigi does not assign presenter status, use a lobby, or
   let a participant end the meeting for everyone. Each attendee leaves
   independently; the room closes when the last attendee leaves. Upstream
   presenter-only controls, such as breakout assignment and room-wide
@@ -63,7 +61,7 @@ browser resources should remain under the administrator's control.
   upload. `RP` in `meeting-properties.json` restricts recording, not these snapshots.
   Export annotations before stopping the screen share.
 - Active-room listing, scheduling and email invitations, RTMP streaming, and
-  the support widget are disabled in HARDENED.
+  the support widget are disabled in Kaigi.
 - Authentication tokens are held in browser session storage and sent through
   authenticated requests and socket messages, never navigation URLs. Meeting
   selection is authorized server-side. The pre-meeting page requires a live
@@ -81,8 +79,8 @@ browser resources should remain under the administrator's control.
 ## Administrator choices and boundaries
 
 The in-meeting About dialog retains upstream MiroTalk SFU authorship and
-contact information, identifies this as a FreeBSD HARDENED build of the
-FreeGateway Digital Sovereignty Project, and links to the project's site,
+contact information, identifies Kaigi as an independently maintained
+FreeGateway fork, and links to the project's site,
 the GNU AGPLv3 license, and the exact Corresponding Source for the package.
 Those external links are followed only when a user chooses to open them.
 The About page uses stable translation identifiers in the local language files;
@@ -90,13 +88,13 @@ the English legal wording is the fallback when a translation is unavailable.
 
 The administrator controls listener addresses, TLS, WebRTC media addresses,
 accounts, site assets, and the optional privacy-policy URL. `kaigi.conf`
-can also pass upstream environment settings through to MiroTalk. Review such
+can also pass supported environment settings through to Kaigi. Review such
 settings before enabling integrations or supplying external URLs. A custom
 site asset, user-posted link, shared screen, or administrator-selected remote
 service can still expose data to its recipient. An upstream MiroTalk privacy
 page is not a substitute for the deployment's own privacy policy.
 
-HARDENED does not replace TLS deployment, firewall rules, operating-system
+Kaigi does not replace TLS deployment, firewall rules, operating-system
 updates, package updates, or access-log policy. A browser necessarily
 connects to the configured meeting host, and media connectivity depends on
 the chosen network topology. The port does not claim end-to-end encryption
@@ -105,13 +103,13 @@ third-party traffic.
 
 ## Verification and updates
 
-Validate the patches against the exact pinned upstream source and check
-changed JavaScript syntax before packaging. Source-level checks do not
+Validate changes against the exact Kaigi source selected for deployment and
+check changed JavaScript syntax before packaging. Source-level checks do not
 replace a FreeBSD/poudriere build, a live network audit of browser features
 and server egress, or multi-user authorization and session-expiry testing.
 
-When updating the upstream source or dependencies, recheck automatic browser
-requests, server egress, token handling, and both build options. For a
+When selectively adopting upstream changes or updating dependencies, recheck
+automatic browser requests, server egress and token handling. For a
 deployment audit, record browser network traffic through login, meeting
 selection, joining, chat, media and rejected direct-entry requests; inspect server
 egress and access logs as well. `kaigi(8)` and `kaigi.conf(5)` describe
@@ -119,12 +117,12 @@ installation and supported settings.
 
 ## Speech recognition and transcription
 
-HARDENED disables browser transcription, voice commands, speech-to-text chat input,
+Kaigi disables browser transcription, voice commands, speech-to-text chat input,
 and video-assistant speech input. It contains no active speech recognition or
 Whisper audio-capture implementation. Transcription commands are not relayed,
 and the server rejects Whisper requests without processing audio or contacting
 a backend. Environment settings cannot enable these features. Local annotation,
-chat, and whiteboard exports remain available. STANDARD retains upstream behavior.
+chat, and whiteboard exports remain available.
 
 ## LDAP authentication alongside local users
 
@@ -236,7 +234,7 @@ a login session and produces the localized no-meetings alert.
 
 Kaigi includes LDAP support and its configuration samples. Runtime LDAP_ENABLED
 defaults to false. Local authentication and password-free sessions do not require
-LDAP. MiroTalk STANDARD is maintained independently in its own port.
+LDAP. MiroTalk is maintained independently in its own port.
 
 Only LDAP_ENABLED remains in kaigi.conf. The remaining settings live in
 /usr/local/etc/kaigi/ldap/ldap.conf, with ldap.conf.sample installed using
@@ -249,8 +247,8 @@ ldap-starttls and ldap-plain; plaintext remains loopback-only.
 
 ## Included and excluded upstream features
 
-Pinned source: 597c4506f079290d332de373e3e6433b4286d5fa.
-HARDENED excludes SIP controls, browser client and initialization, and excludes
+The deployed source version is fixed by the FreeBSD port's application pin.
+Kaigi excludes SIP controls, browser client and initialization, and excludes
 Anam's browser SDK, provider and server handlers. The new shared VideoAI provider
 modules are not installed; the existing disabled external VideoAI policy remains.
 Native translation is mandatory: no Google translation selector or browser mode
@@ -270,7 +268,7 @@ LDAP improvements do not add ldapi support.
 
 ## Private meeting selection and invitations
 
-HARDENED no longer generates meeting-name navigation or invitation URLs.
+Kaigi no longer generates meeting-name navigation or invitation URLs.
 Users authenticate, select a meeting, and submit its name in an authenticated
 POST body. The server checks the live session and its meeting grants before
 issuing an opaque per-tab selection reference. The pre-meeting URL contains
@@ -332,12 +330,12 @@ on each login. The rc script uses only the current `jwt-secret` filename.
 
 ## Annotation privacy
 
-HARDENED sends text annotations to other participants only after Save.
+Kaigi sends text annotations to other participants only after Save.
 Unsaved drafts are not broadcast; Cancel discards the local draft.
 
 ## Browser resource isolation
 
-HARDENED sends a Content-Security-Policy restricting runtime resources to
+Kaigi sends a Content-Security-Policy restricting runtime resources to
 this site. Embedded raster images, generated blob media and locally hosted
 workers remain supported. WebSocket connections use this site and its
 configured public host. Inline scripts/styles and dynamic functions remain
@@ -351,7 +349,7 @@ supported. Remote geolocation commands are rejected server-side, the browser
 handlers and prompts are removed, and Permissions-Policy disables geolocation.
 LiveAvatar browser request paths, controls and the LiveKit vendor dependency
 are removed. Normal links opened explicitly by users can still navigate to
-external sites; the resource policy applies to resources loaded by MiroTalk.
+external sites; the resource policy applies to resources loaded by Kaigi.
 
 Explicitly configured server-side integrations (such as LDAP, SMTP and
 webhooks) remain administrator-controlled. Browser resource isolation does
@@ -384,13 +382,14 @@ password attacks and are not matched by the supplied filter.
 
 ### Optional Fail2ban deployment
 
-The port does not install or start a blocker. Copy `files/fail2ban/kaigi.conf`
-from the port to /usr/local/etc/fail2ban/filter.d/conference.conf. Configure a
-Fail2ban jail with filter=conference, logpath=/var/log/kaigi/kaigi.log,
+The port does not install or start a blocker. Copy the installed example
+`/usr/local/share/examples/kaigi/fail2ban/kaigi.conf` to
+`/usr/local/etc/fail2ban/filter.d/kaigi.conf`. Configure a
+Fail2ban jail with filter=kaigi, logpath=/var/log/kaigi/kaigi.log,
 maxretry=5, findtime=900, bantime=900, usedns=no and appropriate ignoreip entries.
 On a jail host, run Fail2ban on the host and point logpath at the jail's log path.
 
-Use one dedicated firewall table for Conference and a rule scoped to TCP 7443.
+Use one dedicated firewall table for Kaigi and a rule scoped to TCP 7443.
 For PF use a PF action supported by your installed Fail2ban version; for IPFW use
 its bsd-ipfw action. Review their table/rule ownership and rule order locally;
 existing firewall policies differ. Test the filter with fail2ban-regex before

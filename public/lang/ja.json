@@ -1304,7 +1304,7 @@
         "Would you like to continue the room broadcast?": "ルーム配信を続けますか?",
         "Yes": "はい",
         "You are banned from this room!": "あなたはこのルームから追放されています!",
-        "You can optionally rate your MiroTalk experience before you go.": "ご希望であれば、退出前に MiroTalk の利用体験を評価できます.",
+        "You can optionally rate your Kaigi experience before you go.": "ご希望であれば、退出前に Kaigi の利用体験を評価できます.",
         "Your microphone is off": "マイクがオフです",
         "Your private note will be lost unless you save it to a file.": "プライベートノートはファイルに保存しない限り失われます.",
         "Your recording could not be saved. Stay in the meeting or leave without saving?": "録画を保存できませんでした。会議に残りますか、それとも保存せずに退出しますか？",
@@ -1480,6 +1480,14 @@
         "Recording is disabled for this meeting": "この会議では録画が無効になっています"
     },
     "about": {
+        "privacyTitle": "Kaigiのプライバシー情報",
+        "privacyOperator": "このページはKaigiソフトウェアについて説明しています。この環境を運営する組織が、プライバシーポリシー、連絡先、ログ記録および保存期間の規則を定めます。会議に適用されるポリシーは、その組織にお問い合わせください。",
+        "privacyAccessTitle": "アカウントと会議へのアクセス",
+        "privacyAccess": "すべての参加者はサインインし、許可された会議にのみ参加できます。Kaigiは、認証、会議の選択および設定のために、安全なセッションCookieとブラウザーのストレージを使用します。認証ログや運用ログには、接続情報やアカウント情報が含まれる場合があります。",
+        "privacyMediaTitle": "メディアと録画",
+        "privacyMedia": "会議サーバーは会議のメディアを処理します。通信経路の暗号化は、そのサーバーに対するエンドツーエンド暗号化を提供するものではありません。録画の可否とサーバーへのアップロードは、管理者の設定と会議の制限によって異なります。参加者が外部の録画ツールを使用する場合もあります。",
+        "privacyResourcesTitle": "ローカルリソースと管理者の選択",
+        "privacyResources": "Kaigiは、対応するブラウザー用リソースと翻訳をローカルに配信し、組み込みのクラウド連携やアクセス解析を除外しています。管理者が設定したサービス、サイトのカスタマイズ、利用者が開いたリンクは、他のシステムに接続する場合があります。ログと録画の保存期間は、導入環境によって異なります。",
         "title": "Kaigi について — クレジットとオープンソースソフトウェア",
         "site": "サイト",
         "contact": "連絡先",

@@ -4,14 +4,14 @@
 
 Security is very important to us.
 
-If you have discovered a security issue, please report it privately through [GitHub Security Advisories](https://github.com/miroslavpejic85/mirotalksfu/security/advisories/new).
+If you have discovered a security issue, please report it privately through [GitHub Security Advisories](https://github.com/freegateway/kaigi/security/advisories/new).
 Please refrain from creating a public GitHub issue or disclosing the vulnerability publicly.
 We prefer a Coordinated Vulnerability Disclosure (CVD) to properly understand and fix the root cause problem.
 
-The advisory form guides you through the required details, so please describe the issue.
+Use the private reporting form if it is available. Otherwise, ask the operator of your Kaigi installation to arrange a private channel with the Kaigi maintainer. Do not post vulnerability details in a public issue.
 
-A member of the security team will confirm the vulnerability, determine its impact, and develop a fix.
-The fix will be applied to the master branch, tested, and packaged in the next security release.
+The Kaigi maintainer will confirm the vulnerability, determine its impact, and develop a fix.
+The fix will be applied to the main branch, tested, and packaged in the next security release.
 
 Thanks in advance for your support to make our products safer!
 
@@ -19,7 +19,7 @@ Thanks in advance for your support to make our products safer!
 
 ## 🙏 Acknowledgements
 
-We would like to extend our gratitude to the following individuals for their responsible disclosure of security vulnerabilities:
+The following acknowledgements are retained from upstream MiroTalk SFU for responsible disclosures to that project:
 
 | Name                                                 | Contact                                                                                             |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |

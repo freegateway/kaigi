@@ -51,3 +51,26 @@ that the tests detect the missing protection.
 
 The associated Chokidar 6 and AWS dependency changes are not adopted in this
 targeted fix. The Kaigi commit is identified by the commit introducing this entry.
+
+## Operator and attendee identity cleanup (2026-10-21)
+
+Limit identity changes to operator documentation and supported UI output.
+Correct installed LDAP/user/CSS samples, current security/privacy guidance,
+translation instructions, branding fallbacks, reachable page footers, feedback
+copy and the fallback avatar. Reuse the neutral local icon and existing login
+footer; preserve normal document flow and administrator branding. Privacy
+information describes deployment-dependent behavior instead of making claims
+on behalf of an upstream service. New text has Japanese, en-CA and fr-CA entries;
+other locales retain English fallback for these additions.
+
+Mark inherited deployment/API examples as upstream references and prevent the
+Ubuntu installer from deploying MiroTalk as though it were Kaigi. Upstream
+copyright, About credits, historical records, graphics files and internal
+cookies/storage/cryptographic/DOM/CSS names are retained. Do not apply cosmetic
+renaming to implementation code when incorporating upstream changes.
+
+Validation: 406 Mocha tests and 23 security tests passed on Linux/Node 24.19.0.
+Focused DOM tests cover operator branding and local footer links on six pages,
+text-only privacy localization in en-CA/fr-CA/ja, and fallback identity. Existing
+About tests retain upstream credits and configured source/logo behavior. Actual
+browser rendering, 150% display scaling and FreeBSD/Poudriere were not tested.

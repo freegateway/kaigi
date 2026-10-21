@@ -9,7 +9,7 @@ body:
 
         **Before posting, please make sure to check if the same or similar bugs have already been reported.**
 
-        ⚠️ General questions regarding usage, installation, etc. should be posted in our [community forum](https://discord.gg/rgGYfeYW3N).
+        For deployment support, contact the operator of your Kaigi installation. Do not publish credentials, tokens or private meeting names.
   - type: textarea
     attributes:
       label: Describe the bug
@@ -64,12 +64,12 @@ body:
       render: shell
   - type: markdown
     attributes:
-      value: "**Please indicate whether the problem is reproducible on sfu.mirotalk.com.**"
+      value: "**Please indicate whether the problem is reproducible after signing in again to your Kaigi installation.**"
 
   - type: dropdown
     attributes:
       label: Reproducibility
-      description: Is the bug reproducible on sfu.mirotalk.com?
+      description: Is the bug reproducible after signing in again?
       options:
         - '--'
         - 'Yes'
@@ -79,7 +79,7 @@ body:
   - type: textarea
     attributes:
       label: Additional context
-      description: Please provide more details in case they apply (such as the MiroTalk SFU version you are running, if you are hosting your own server).
+      description: Please provide more details in case they apply (such as the Kaigi commit or package version you are running, if you are hosting your own server).
   - type: markdown
     attributes:
       value: |

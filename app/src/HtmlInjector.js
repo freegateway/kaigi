@@ -21,13 +21,13 @@ class HtmlInjector {
     // Function to get dynamic data for injection (e.g., OG data, title, etc.)
     getInjectData() {
         return {
-            APP_NAME: this.config?.app?.name || 'MiroTalk SFU',
+            APP_NAME: this.config?.app?.name || 'Kaigi',
             OG_TYPE: this.config?.og?.type || 'app-webrtc',
-            OG_SITE_NAME: this.config?.og?.siteName || 'MiroTalk SFU',
-            OG_TITLE: this.config?.og?.title || 'MiroTalk SFU - Open Source WebRTC Video Conferencing',
+            OG_SITE_NAME: this.config?.og?.siteName || 'Kaigi',
+            OG_TITLE: this.config?.og?.title || 'Kaigi - Self-hosted Video Conferencing',
             OG_DESCRIPTION:
                 this.config?.og?.description ||
-                'Build your own Zoom alternative with MiroTalk SFU, an open-source self-hosted WebRTC video conferencing platform powered by Mediasoup. Host scalable meetings, webinars, classrooms, screen sharing and real-time collaboration.',
+                'Self-hosted video conferencing with authenticated access to authorized meetings.',
             OG_IMAGE: this.config?.og?.image || '/images/logo.svg',
             OG_URL: this.config?.og?.url || '/',
             // Add more data here as needed with fallbacks
@@ -81,7 +81,7 @@ class HtmlInjector {
 
         // Check if HTML injection is enabled in the config
         if (!this.config?.htmlInjection) {
-            return res.send(html?.replace(/{{APP_NAME}}/g, 'MiroTalk SFU'));
+            return res.send(html?.replace(/{{APP_NAME}}/g, 'Kaigi'));
         }
 
         if (!html) {

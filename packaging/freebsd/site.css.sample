@@ -1,7 +1,7 @@
 /*
- * Site-specific MiroTalk presentation overrides.
+ * Site-specific Kaigi presentation overrides.
  *
- * This stylesheet is loaded after MiroTalk's own stylesheets.  Keep local
+ * This stylesheet is loaded after Kaigi's own stylesheets.  Keep local
  * presentation changes here so package upgrades do not overwrite them.
  *
  * Example for a wide (approximately 4:1) header logo:
@@ -16,7 +16,7 @@
 
 
 /*
- * Custom landing/login background example.  MiroTalk paints the visible
+ * Custom landing/login background example.  Kaigi paints the visible
  * full-page background on .body-wrap rather than body.
  *
  * .body-wrap {
@@ -30,7 +30,7 @@
  */
 
 /*
- * Optional: suppress MiroTalk's animated hero illustration while retaining
+ * Optional: suppress Kaigi's animated hero illustration while retaining
  * the rest of the landing/login page.
  *
  * .hero-figure {

@@ -32,6 +32,10 @@ FreeBSD packaging is maintained in
 Application configuration examples and administrator manuals are kept here
 under [packaging/freebsd](packaging/freebsd).
 
+The inherited Ubuntu installer, Docker Compose files, and cloud/SIP/widget/RTMP
+examples are upstream reference material, not supported Kaigi deployment tools.
+In particular, the upstream Docker image runs MiroTalk, not Kaigi.
+
 Read the [security and privacy documentation](HARDENING.md) for the access
 model, deployment requirements and limits of the privacy protections.
 Administrator-selected external services and user-opened links can still
