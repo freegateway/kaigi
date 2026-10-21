@@ -3089,6 +3089,8 @@ function startServer() {
         socket.on('producerClosed', (data) => {
             if (!roomExists(socket)) return;
 
+            if (rejectProtectedPeerInfo(data)) return;
+
             const { room, peer } = getRoomAndPeer(socket);
 
             if (isPeerInLobby(peer)) return;
@@ -3686,6 +3688,7 @@ function startServer() {
 
             if (!Validator.isValidData(data)) return;
 
+            if (rejectProtectedPeerInfo(data)) return;
             if (data.type === 'recording' && !recordingAllowedIn(socket.room_id)) return;
             peer.updatePeerInfo(data);
 
@@ -5364,6 +5367,14 @@ function startServer() {
                 unlock.room_id === room.id &&
                 RoomPassword.passwordMatches(unlock.password, room.getPassword())
             );
+        }
+
+        // Client events must never change admission or role state, including
+        // events such as producerClosed that also update peer metadata.
+        function rejectProtectedPeerInfo(data) {
+            if (data?.type !== 'lobby' && data?.type !== 'presenter') return false;
+            securityEvent('socket_event_rejected', socket, 'protected_peer_info');
+            return true;
         }
 
         // Security: block lobby-waiting peers from WebRTC/media handlers.

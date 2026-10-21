@@ -23,3 +23,31 @@ The canonical HARDENED transformation originates at `e3b483809c6642c7c5be274d592
 Reviewed does not mean adopted unchanged. For subsequent work, record the exact
 upstream hash, affected behavior, disposition, Kaigi commit and validation.
 Fetch upstream for comparison; never automatically sync it into Kaigi main.
+
+## Protected peer metadata (2026-10-21)
+
+Adapted upstream `cd8633fbbd58192aa5011d698339b2c6e5aaa975`:
+https://github.com/miroslavpejic85/mirotalksfu/commit/cd8633fbbd58192aa5011d698339b2c6e5aaa975
+
+Reject client changes to `lobby` and `presenter` in `updatePeerInfo` and in
+`producerClosed`, which also reaches the peer metadata mutator. Reject before
+mutation, broadcast or producer closure, and use the fixed-field security logger
+with reason `protected_peer_info`. Server-owned metadata transitions remain
+available. Kaigi's existing admission middleware already blocks waiting sockets,
+and presenter authorization always returns false; this change does not establish
+that the upstream privilege escalation was exploitable in Kaigi.
+
+Validation: seven Socket.IO/WebSocket regression cases exercise the production
+namespace authentication middleware, admission/session middleware, relevant
+handlers, Peer class and security logger in an isolated HTTP server. Session
+lookup and media allocation are fixtures; no full daemon, browser media or
+FreeBSD test is claimed. Cover protected fields through both events, rejected
+waiting-socket traffic, log data minimization, valid peer updates and producer
+closure, permitted admitted media requests and retained recording restrictions.
+The complete application suite passed on Linux with Node 24.19.0: 403 Mocha
+tests plus 23 security tests. Disabling only the two guards in the test's
+in-memory source caused all four protected-field cases to fail, confirming
+that the tests detect the missing protection.
+
+The associated Chokidar 6 and AWS dependency changes are not adopted in this
+targeted fix. The Kaigi commit is identified by the commit introducing this entry.
