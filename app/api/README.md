@@ -1,3 +1,7 @@
+> **Upstream reference only.** These MiroTalk examples are not Kaigi setup instructions.
+> Use the [Kaigi README](https://github.com/freegateway/kaigi#readme) and installed Kaigi manuals.
+> Kaigi requires authenticated meeting grants and does not support direct meeting links, embedding or cloud integrations.
+
 ![restAPI](restAPI.png)
 
 ## Create a meeting

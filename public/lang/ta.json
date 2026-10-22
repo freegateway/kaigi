@@ -1304,7 +1304,7 @@
         "Would you like to continue the room broadcast?": "அறை ஒளிபரப்பைத் தொடர விரும்புகிறீர்களா?",
         "Yes": "ஆம்",
         "You are banned from this room!": "இந்த அறையில் இருந்து நீங்கள் தடைசெய்யப்பட்டுள்ளீர்கள்!",
-        "You can optionally rate your MiroTalk experience before you go.": "விரும்பினால், வெளியேறுவதற்கு முன் உங்கள் MiroTalk அனுபவத்தை மதிப்பிடலாம்.",
+        "You can optionally rate your Kaigi experience before you go.": "விரும்பினால், வெளியேறுவதற்கு முன் உங்கள் Kaigi அனுபவத்தை மதிப்பிடலாம்.",
         "Your microphone is off": "உங்கள் மைக்ரோஃபோன் முடக்கப்பட்டுள்ளது",
         "Your private note will be lost unless you save it to a file.": "உங்கள் தனிப்பட்ட குறிப்பை நீங்கள் ஒரு கோப்பில் சேமிக்கும் வரை அதை இழக்க நேரிடும்.",
         "Your recording could not be saved. Stay in the meeting or leave without saving?": "உங்கள் பதிவைச் சேமிக்க முடியவில்லை. சந்திப்பில் தொடர விரும்புகிறீர்களா அல்லது சேமிக்காமல் வெளியேற விரும்புகிறீர்களா?",
@@ -1480,6 +1480,14 @@
         "Recording is disabled for this meeting": "Recording is disabled for this meeting"
     },
     "about": {
+        "privacyTitle": "Kaigi privacy information",
+        "privacyOperator": "This page describes Kaigi software. The organization operating this installation is responsible for its privacy policy, contact details, logging and retention rules. Ask that organization for the policy that applies to your meetings.",
+        "privacyAccessTitle": "Accounts and meeting access",
+        "privacyAccess": "Every participant signs in and may join only authorized meetings. Kaigi uses a secure session cookie and browser storage for authentication, meeting selection and preferences. Authentication and operational logs can contain connection and account information.",
+        "privacyMediaTitle": "Media and recordings",
+        "privacyMedia": "The conferencing server handles meeting media. Transport encryption does not provide end-to-end encryption against that server. Recording availability and server uploads depend on administrator settings and meeting restrictions. Participants can also use external recording tools.",
+        "privacyResourcesTitle": "Local resources and administrator choices",
+        "privacyResources": "Kaigi serves its supported browser assets and translations locally and excludes built-in cloud integrations and analytics. Administrator-configured services, site customizations and links opened by users may contact other systems. Log and recording retention depend on the deployment.",
         "title": "About Kaigi — creditsTitle",
         "site": "site",
         "contact": "contact",

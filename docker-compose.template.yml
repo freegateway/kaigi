@@ -1,3 +1,5 @@
+# Unsupported upstream MiroTalk example; this image does not run Kaigi.
+# Install Kaigi using freegateway/kaigi-freebsd-port.
 services:
     mirotalksfu:
         image: mirotalk/sfu:latest

@@ -1,3 +1,6 @@
+> **Kaigi users:** communicate respectfully and report sensitive conduct concerns privately to your deployment operator.
+> The upstream MiroTalk community policy below is retained for reference; its committee and contact addresses belong to the upstream project.
+
 # MiroTalk Open Source Community Code of Conduct
 
 ## About the Code of Conduct

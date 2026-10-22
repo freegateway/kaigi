@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-# MiroTalk SFU installer for Ubuntu 22.04 and 24.04.
+# Unsupported upstream MiroTalk installer retained for reference.
+# Kaigi is installed using freegateway/kaigi-freebsd-port.
 # Run from the repository root with: sudo ./install.sh
+
+printf "%s\n" "This upstream installer does not install Kaigi. Use the Kaigi FreeBSD port." >&2
+exit 1
 
 set -Eeuo pipefail
 

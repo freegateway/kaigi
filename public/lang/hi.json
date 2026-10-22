@@ -1304,7 +1304,7 @@
         "Would you like to continue the room broadcast?": "क्या आप रूम ब्रॉडकास्ट जारी रखना चाहते हैं?",
         "Yes": "हाँ",
         "You are banned from this room!": "आपको इस रूम से बैन कर दिया गया है!",
-        "You can optionally rate your MiroTalk experience before you go.": "अगर आप चाहें, तो जाने से पहले अपने MiroTalk अनुभव को रेटिंग दे सकते हैं।",
+        "You can optionally rate your Kaigi experience before you go.": "अगर आप चाहें, तो जाने से पहले अपने Kaigi अनुभव को रेटिंग दे सकते हैं।",
         "Your microphone is off": "आपका माइक्रोफ़ोन बंद है",
         "Your private note will be lost unless you save it to a file.": "जब तक आप इसे किसी फ़ाइल में नहीं सहेजते, आपका निजी नोट खो जाएगा।",
         "Your recording could not be saved. Stay in the meeting or leave without saving?": "आपकी रिकॉर्डिंग सहेजी नहीं जा सकी। मीटिंग में रहें या बिना सहेजे बाहर निकलें?",
@@ -1480,6 +1480,14 @@
         "Recording is disabled for this meeting": "इस बैठक के लिए रिकॉर्डिंग बंद है"
     },
     "about": {
+        "privacyTitle": "Kaigi privacy information",
+        "privacyOperator": "This page describes Kaigi software. The organization operating this installation is responsible for its privacy policy, contact details, logging and retention rules. Ask that organization for the policy that applies to your meetings.",
+        "privacyAccessTitle": "Accounts and meeting access",
+        "privacyAccess": "Every participant signs in and may join only authorized meetings. Kaigi uses a secure session cookie and browser storage for authentication, meeting selection and preferences. Authentication and operational logs can contain connection and account information.",
+        "privacyMediaTitle": "Media and recordings",
+        "privacyMedia": "The conferencing server handles meeting media. Transport encryption does not provide end-to-end encryption against that server. Recording availability and server uploads depend on administrator settings and meeting restrictions. Participants can also use external recording tools.",
+        "privacyResourcesTitle": "Local resources and administrator choices",
+        "privacyResources": "Kaigi serves its supported browser assets and translations locally and excludes built-in cloud integrations and analytics. Administrator-configured services, site customizations and links opened by users may contact other systems. Log and recording retention depend on the deployment.",
         "title": "Kaigi के बारे में — श्रेय और ओपन-सोर्स सॉफ़्टवेयर",
         "site": "साइट",
         "contact": "संपर्क",

@@ -103,7 +103,7 @@ const icons = {
 
 const image = {
     about: '../images/mirotalk-logo.gif',
-    avatar: '../images/mirotalksfu-logo.png',
+    avatar: '../images/logo.svg',
     audio: '../images/audio.gif',
     noiseSuppression: '../images/noise-suppression.svg',
     rec: '../images/rec.png',
@@ -10531,7 +10531,7 @@ class RoomClient {
             },
             ...(imageUrl
                 ? {
-                      imageAlt: 'mirotalksfu-file-sharing',
+                      imageAlt: 'Shared file',
                       imageUrl,
                   }
                 : {}),
@@ -10788,7 +10788,7 @@ class RoomClient {
                     title: 'Received file',
                     text: this.incomingFileInfo.fileName + ' size ' + this.bytesToSize(this.incomingFileInfo.fileSize),
                     imageUrl: e.target.result,
-                    imageAlt: 'mirotalksfu-file-img-download',
+                    imageAlt: 'Shared image',
                     showCancelButton: true,
                     confirmButtonText: `Save`,
                     cancelButtonText: 'Cancel',

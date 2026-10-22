@@ -5641,7 +5641,7 @@ function leaveFeedback(allowCancel, disconnectAll = false, ejectReason = '') {
         imageUrl: image.feedback,
         position: 'center',
         title: 'Leave the meeting?',
-        text: 'You can optionally rate your MiroTalk experience before you go.',
+        text: 'You can optionally rate your Kaigi experience before you go.',
         confirmButtonText: 'Leave without rating',
         denyButtonText: 'Leave & rate',
         cancelButtonText: 'Stay in meeting',

@@ -3,7 +3,7 @@
 .Os
 .Sh NAME
 .Nm kaigi-ldap.conf
-.Nd optional LDAP authentication configuration for MiroTalk
+.Nd optional LDAP authentication configuration for Kaigi
 .Sh DESCRIPTION
 The actual configuration file is
 .Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf .

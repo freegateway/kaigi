@@ -1,4 +1,4 @@
-# MiroTalk LDAP configuration. Read only when LDAP_ENABLED=true in kaigi.conf.
+# Kaigi LDAP configuration. Read only when LDAP_ENABLED=true in kaigi.conf.
 # LDAP support is included in Kaigi and disabled by default. This is not shell code.
 # Use NAME=VALUE assignments, optional matching quotes, and full-line # comments.
 # ${NAME} references refer only to variables within this file.

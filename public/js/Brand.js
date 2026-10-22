@@ -8,7 +8,7 @@ const headerLogoLink = document.getElementById('headerLogoLink') || headerLogo?.
 const privacyPolicyLink = document.getElementById('privacyPolicyLink');
 const siteCopyright = document.getElementById('siteCopyright');
 
-// Site-owned CSS is loaded after MiroTalk's stylesheets so administrators can
+// Site-owned CSS is loaded after the application stylesheets so administrators can
 // override presentation without modifying packaged application files.
 const siteStylesheet = document.createElement('link');
 siteStylesheet.rel = 'stylesheet';
@@ -87,7 +87,7 @@ let BRAND = {
         sponsors: true,
         pastSponsors: true,
         advertisers: true,
-        supportUs: true,
+        supportUs: false,
         footer: true,
     },
     whoAreYou: {

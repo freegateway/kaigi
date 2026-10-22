@@ -1,13 +1,13 @@
 name: Feature request
-description: Suggest an idea for MiroTalk SFU
+description: Suggest an idea for Kaigi
 labels: ["feature-request"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting an idea to make MiroTalk SFU better.
+        Thank you for suggesting an idea to make Kaigi better.
 
-        **Note**: the ultimate decision for implementing features lies on the MiroTalk team, not all feature requests shall be accepted.
+        **Note**: the ultimate decision for implementing features lies on the Kaigi maintainer, not all feature requests shall be accepted.
   - type: textarea
     attributes:
       label: Feature request
