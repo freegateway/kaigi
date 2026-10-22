@@ -216,9 +216,6 @@ definitions:
             notify:
                 type: boolean
                 default: false
-            duration:
-                type: string
-                default: 'unlimited'
             noiseSuppression:
                 type: boolean
                 description: Optional initial noise suppression state, omit to use the server default

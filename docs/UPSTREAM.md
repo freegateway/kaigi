@@ -1,5 +1,6 @@
 # Upstream intake
 
+
 Source: https://github.com/miroslavpejic85/mirotalksfu
 
 The initial Kaigi parent is `bb49feb24ed35938cd7cd6916ddd2256cacb1c20`.
@@ -74,3 +75,13 @@ Focused DOM tests cover operator branding and local footer links on six pages,
 text-only privacy localization in en-CA/fr-CA/ja, and fallback identity. Existing
 About tests retain upstream credits and configured source/logo behavior. Actual
 browser rendering, 150% display scaling and FreeBSD/Poudriere were not tested.
+
+## Meeting timers (2026-10-22)
+
+Excluded upstream [fa2ddf2b52c28a6c8e4041b370a6cf8959b1714d](https://github.com/miroslavpejic85/mirotalksfu/commit/fa2ddf2b52c28a6c8e4041b370a6cf8959b1714d):
+Kaigi supports neither shared countdowns nor personal departure timers.
+Removed inherited `duration` URL handling for meeting and breakout initialization
+and the API schema option. Authentication idle and absolute expiry still apply.
+
+Validation: URL regression coverage and the full application test suite passed
+on Linux/Node 24.19.0. Browser and FreeBSD testing were not performed.

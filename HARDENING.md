@@ -29,6 +29,10 @@ decisions are recorded separately in `docs/BASELINE.md` and `docs/UPSTREAM.md`.
 
 ## Authentication and secrets
 
+Kaigi does not support shared meeting countdowns or personal departure timers.
+URL parameters such as `duration` do not schedule a departure or end a meeting.
+Authentication idle and absolute session limits still apply independently.
+
 - Local accounts and allowed meetings are configured in the root-only
   `etc/kaigi/users` file. The rc script reads it at startup. It creates a
   persistent random JWT signing secret in `etc/kaigi/jwt-secret` on first

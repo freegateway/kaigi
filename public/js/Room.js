@@ -317,7 +317,6 @@ let chatMessagesId = 0;
 
 let room_id = getRoomId();
 let room_password = getRoomPassword();
-let room_duration = getRoomDuration();
 let peer_name = getPeerName();
 let peer_avatar = getPeerAvatar();
 let hasTemporaryAvatar = !!(
@@ -1620,62 +1619,6 @@ function getRoomPassword() {
         return roomPassword;
     }
     return false;
-}
-
-function getRoomDuration() {
-    const roomDuration = getQueryParam('duration');
-
-    if (isValidDuration(roomDuration)) {
-        if (roomDuration === 'unlimited') {
-            console.log('The room has no time limit');
-            return roomDuration;
-        }
-        const timeLimit = timeToMilliseconds(roomDuration);
-        setTimeout(() => {
-            sound('eject');
-            Swal.fire({
-                background: swalBackground,
-                position: 'center',
-                title: 'Time Limit Reached',
-                text: 'The room has reached its time limit and will close shortly',
-                icon: 'warning',
-                timer: 6000, // 6 seconds
-                timerProgressBar: true,
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                },
-                willClose: () => {
-                    rc.exitRoom(true);
-                },
-            });
-        }, timeLimit);
-
-        console.log('Direct join', { duration: roomDuration, timeLimit: timeLimit });
-        return roomDuration;
-    }
-    return 'unlimited';
-}
-
-function timeToMilliseconds(timeString) {
-    const [hours, minutes, seconds] = timeString.split(':').map(Number);
-    return (hours * 3600 + minutes * 60 + seconds) * 1000;
-}
-
-function isValidDuration(duration) {
-    if (duration === 'unlimited') return true;
-
-    // Check if the format is HH:MM:SS
-    const regex = /^(\d{2}):(\d{2}):(\d{2})$/;
-    const match = duration.match(regex);
-    if (!match) return false;
-    const [hours, minutes, seconds] = match.slice(1).map(Number);
-    // Validate ranges: hours, minutes, and seconds
-    if (hours < 0 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
-        return false;
-    }
-    return true;
 }
 
 // ####################################################
@@ -10093,7 +10036,6 @@ function checkBreakoutRoom() {
             toolbar.classList.remove('hidden');
             toolbar.dataset.mainRoom = breakoutMain;
         }
-        checkBreakoutTimer();
     }
 }
 
@@ -10788,16 +10730,6 @@ function validateBreakoutDuration(input) {
 }
 
 let breakoutTimerInterval = null;
-
-function checkBreakoutTimer() {
-    const duration = getQueryParam('duration');
-    if (!duration || duration === 'unlimited') return;
-
-    const seconds = parseDurationToSeconds(duration);
-    if (seconds <= 0) return;
-
-    startBreakoutCountdown(seconds, { warn: false });
-}
 
 function startBreakoutEndCountdown(seconds) {
     if (!rc || seconds <= 0) return;
