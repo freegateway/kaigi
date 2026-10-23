@@ -461,6 +461,9 @@ const views = {
 
 const filesPath = [
     views.landing,
+    views.privacy,
+    views.about,
+    views.notFound,
     views.newRoom,
     views.room,
     views.login,
@@ -1274,12 +1277,12 @@ function startServer() {
 
     // privacy policy
     app.get('/privacy', (req, res) => {
-        res.sendFile(views.privacy);
+        htmlInjector.injectHtml(views.privacy, res);
     });
 
     // local site and open-source information
     app.get('/about', (req, res) => {
-        res.sendFile(views.about);
+        htmlInjector.injectHtml(views.about, res);
     });
 
     // Reject the upstream host-wait flow; users must sign in and select an authorized meeting.
@@ -2094,7 +2097,7 @@ function startServer() {
 
     // not match any of page before, so 404 not found
     app.use((req, res) => {
-        res.sendFile(views.notFound);
+        htmlInjector.injectHtml(views.notFound, res);
     });
 
     // Global error handler for URIError and other errors

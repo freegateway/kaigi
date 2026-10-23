@@ -121,3 +121,20 @@ STARTTLS, native-worker or FreeBSD application test was performed here.
 The port needs its application pin, mediasoup minimum version, npm-deps.mk and
 distinfo updated after this application change is merged. This intake does not
 adopt upstream presenter, countdown, cloud or promotional-page changes.
+
+## Administrator metadata (2026-10-23)
+
+Kaigi-specific correction: render PAGE_TITLE, META_DESCRIPTION and Open Graph
+metadata in initial page HTML. Twitter-card text follows OG_TITLE and
+OG_DESCRIPTION. Each field has independent administrator/localized overrides;
+visible SITE_DESCRIPTION translations cannot replace explicit metadata values.
+Default-language HTML and browser language changes share the same resolved
+values. Text is escaped, empty metadata overrides remain empty, and public
+previews contain no request or meeting context. Existing page templates and
+upstream attribution are retained. Samples include Japanese, en-CA and fr-CA.
+
+Validation: 423 Mocha tests and 23 security tests passed on Linux/Node 24.19.0.
+New HTTP/JSDOM tests inspect initial HTML without executing JavaScript, metadata
+precedence, browser language changes, empty settings, escaping and private
+meeting-context separation. No browser rendering, preview-app cache or FreeBSD
+test was performed. No dependency or port metadata changes are included.

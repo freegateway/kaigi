@@ -261,9 +261,9 @@ function localizedSiteBrand(base, language) {
     const dictionaries = base.siteTranslations || {};
     const values = { ...(dictionaries.en || {}), ...(dictionaries[language.split('-')[0]] || {}), ...(dictionaries[language] || {}) };
     const paths = {
-        SITE_NAME: [['site','name'],['app','name'],['og','site_name']],
-        SITE_DESCRIPTION: [['site','description'],['app','description'],['meta','description'],['og','description']],
-        SITE_COPYRIGHT: [['site','copyright']], PAGE_TITLE: [['site','title'],['og','title']],
+        SITE_NAME: [['site','name'],['app','name'],['og','siteName']],
+        SITE_DESCRIPTION: [['site','description'],['app','description']],
+        SITE_COPYRIGHT: [['site','copyright']], PAGE_TITLE: [['site','title']],
         JOIN_DESCRIPTION: [['app','joinDescription']], JOIN_BUTTON_LABEL: [['app','joinButtonLabel']],
         CUSTOMIZE_BUTTON_LABEL: [['app','customizeButtonLabel']], JOIN_LAST_LABEL: [['app','joinLastLabel']],
         NEW_ROOM_TITLE: [['site','newRoomTitle']], NEW_ROOM_DESCRIPTION: [['site','newRoomDescription']],
@@ -271,6 +271,15 @@ function localizedSiteBrand(base, language) {
     };
     for (const [name, value] of Object.entries(values)) for (const [section, key] of paths[name] || []) {
         brand[section] ||= {}; brand[section][key] = value;
+    }
+    const metadata = base.metadataByLanguage?.[language] ||
+        base.metadataByLanguage?.[language.split('-')[0]] || base.metadataByLanguage?.en;
+    if (metadata) {
+        brand.site ||= {}; brand.meta ||= {}; brand.og ||= {};
+        brand.site.title = metadata.PAGE_TITLE;
+        brand.meta.description = metadata.META_DESCRIPTION;
+        brand.og.title = metadata.OG_TITLE;
+        brand.og.description = metadata.OG_DESCRIPTION;
     }
     if (Object.hasOwn(values, 'SITE_NAME') || Object.hasOwn(values, 'SITE_DESCRIPTION')) {
         // Administrator text is rendered as text below, including the landing heading.
@@ -305,10 +314,6 @@ window.applySiteTranslations = (language) => {
     if (name) name.textContent = BRAND.site?.name || BRAND.app?.name || 'Video Conferencing';
     if (description) description.textContent = BRAND.site?.description || '';
     if (siteCopyright) siteCopyright.hidden = !BRAND.site?.copyright;
-    for (const [property, value] of [['og:title', BRAND.og?.title], ['og:description', BRAND.og?.description], ['og:site_name', BRAND.og?.site_name]]) {
-        const element = document.querySelector(`meta[property="${property}"]`);
-        if (element && value !== undefined) element.content = value;
-    }
 };
 
 // BRAND configurations
@@ -445,6 +450,16 @@ function customizeMetaTags() {
     }
     if (keywords && BRAND.meta?.keywords) {
         keywords.content = BRAND.meta.keywords;
+    }
+    for (const [attribute, key, value] of [
+        ['property', 'og:title', BRAND.og?.title], ['property', 'og:description', BRAND.og?.description],
+        ['property', 'og:site_name', BRAND.og?.siteName], ['property', 'og:type', BRAND.og?.type],
+        ['property', 'og:image', BRAND.og?.image], ['property', 'og:url', BRAND.og?.url],
+        ['name', 'twitter:title', BRAND.og?.title], ['name', 'twitter:description', BRAND.og?.description],
+        ['name', 'twitter:image', BRAND.og?.image],
+    ]) {
+        const element = document.querySelector(`meta[${attribute}="${key}"]`);
+        if (element && value !== undefined) element.content = value;
     }
 }
 

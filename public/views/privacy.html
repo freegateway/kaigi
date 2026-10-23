@@ -98,7 +98,7 @@
             document.addEventListener('DOMContentLoaded', async () => {
                 await window.i18n?.ready;
                 const translate = () => {
-                    document.title = window.i18n?.tKey('privacyTitle', 'Kaigi privacy information') || 'Kaigi privacy information';
+                    if (!document.querySelector('title[data-site-title]')) document.title = window.i18n?.tKey('privacyTitle', 'Kaigi privacy information') || 'Kaigi privacy information';
                     document.documentElement.lang = window.i18n?.getLang() || 'en';
                     document.documentElement.dir = document.documentElement.lang === 'ar' ? 'rtl' : 'ltr';
                     document.querySelectorAll('[data-about-key]').forEach((element) => {

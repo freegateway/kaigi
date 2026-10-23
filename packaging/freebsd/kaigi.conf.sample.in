@@ -40,6 +40,16 @@ NODE_ENV=production
 # Site text is localized in %%PREFIX%%/etc/kaigi/site-translations.json.
 # Start with site-translations.json.sample and edit its language entries.
 # Text settings: SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE.
+# Public metadata is rendered in the initial HTML, including link previews.
+# These independent text settings also accept site-translations.json overrides.
+# PAGE_TITLE=Example Video Conferencing
+# META_DESCRIPTION=Private meetings for Example Corporation.
+# OG_TITLE=Example meetings
+# OG_DESCRIPTION=Sign in to your authorized meetings.
+# OG_TITLE defaults to PAGE_TITLE; OG_DESCRIPTION defaults to META_DESCRIPTION.
+# Twitter-card title/description use OG_TITLE/OG_DESCRIPTION.
+# SITE_DESCRIPTION is visible site text and only a metadata fallback.
+# Initial HTML uses UI_LANGUAGE; browser language changes update metadata too.
 # Meeting-selection instructions, join labels and login messages are in that file too.
 # Changes require a service restart; UI_LANGUAGE/UI_LANGUAGES select languages.
 # Put language-specific text in site-translations.json. Missing translations

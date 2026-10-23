@@ -73,7 +73,7 @@ describe('Kaigi operator and attendee branding', () => {
         assert.equal(HtmlInjector.prototype.getInjectData.call({ config: {} }).APP_NAME, 'Kaigi');
         assert.equal(HtmlInjector.prototype.getInjectData.call({ config: { app: { name: 'Operator' } } }).APP_NAME, 'Operator');
         let html;
-        HtmlInjector.prototype.injectHtml.call({ cache: { page: '<title>{{APP_NAME}}</title>' }, config: { htmlInjection: false } }, 'page', { send: (value) => { html = value; } });
+        HtmlInjector.prototype.injectHtml.call({ cache: { page: '<title>{{APP_NAME}}</title>' }, config: { htmlInjection: false }, getInjectData: HtmlInjector.prototype.getInjectData }, 'page', { send: (value) => { html = value; } });
         assert.equal(html, '<title>Kaigi</title>');
         const client = read('public/js/RoomClient.js');
         assert.match(client, /avatar: '\.\.\/images\/logo\.svg'/);

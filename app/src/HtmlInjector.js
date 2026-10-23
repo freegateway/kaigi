@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { siteMetadata } = require('./SiteMetadata');
 
 const chokidar = require('chokidar');
 
@@ -20,16 +21,22 @@ class HtmlInjector {
 
     // Function to get dynamic data for injection (e.g., OG data, title, etc.)
     getInjectData() {
+        const config = this.config?.htmlInjection === false ? {} : this.config;
+        const metadata = siteMetadata({
+            PAGE_TITLE: config?.site?.title,
+            META_DESCRIPTION: config?.meta?.description,
+            OG_TITLE: config?.og?.title,
+            OG_DESCRIPTION: config?.og?.description,
+            SITE_NAME: config?.site?.name || undefined,
+            SITE_DESCRIPTION: config?.site?.description || undefined,
+        });
         return {
-            APP_NAME: this.config?.app?.name || 'Kaigi',
-            OG_TYPE: this.config?.og?.type || 'app-webrtc',
-            OG_SITE_NAME: this.config?.og?.siteName || 'Kaigi',
-            OG_TITLE: this.config?.og?.title || 'Kaigi - Self-hosted Video Conferencing',
-            OG_DESCRIPTION:
-                this.config?.og?.description ||
-                'Self-hosted video conferencing with authenticated access to authorized meetings.',
-            OG_IMAGE: this.config?.og?.image || '/images/logo.svg',
-            OG_URL: this.config?.og?.url || '/',
+            ...metadata,
+            APP_NAME: config?.app?.name || 'Kaigi',
+            OG_TYPE: config?.og?.type || 'app-webrtc',
+            OG_SITE_NAME: config?.og?.siteName || 'Kaigi',
+            OG_IMAGE: config?.og?.image || '/images/logo.svg',
+            OG_URL: config?.og?.url || '/',
             // Add more data here as needed with fallbacks
         };
     }
@@ -79,11 +86,6 @@ class HtmlInjector {
             html = html.replace('</head>', `<script type="application/json" id="authorizedMeeting">${data}</script></head>`);
         }
 
-        // Check if HTML injection is enabled in the config
-        if (!this.config?.htmlInjection) {
-            return res.send(html?.replace(/{{APP_NAME}}/g, 'Kaigi'));
-        }
-
         if (!html) {
             log.error(`File not cached: ${filePath}`);
             if (!res.headersSent) {
@@ -93,17 +95,32 @@ class HtmlInjector {
         }
 
         try {
-            // Replace placeholders with dynamic data (OG, TITLE, etc.)
-            const modifiedHTML = html.replace(/{{(APP_NAME|OG_[A-Z_]+)}}/g, (_, key) => {
-                const value = this.injectData[key] || '';
-                return String(value).replace(/[&<>"']/g, (character) => {
-                    const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-                    return entities[character];
-                });
+            const escape = value => String(value ?? '').replace(/[&<>"']/g, character =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+            const data = this.getInjectData();
+            html = html.replace(/{{(APP_NAME|OG_[A-Z_]+)}}/g, (_, key) => escape(data[key]));
+            // Only rewrite metadata inside the trusted template's head. Cached
+            // templates remain unchanged; no request fields enter public previews.
+            html = html.replace(/<head>([\s\S]*?)<\/head>/i, (_, head) => {
+                head = head.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i,
+                    () => `<title id="title" data-site-title>${escape(data.PAGE_TITLE)}</title>`);
+                const tags = [
+                    ['name', 'description', data.META_DESCRIPTION],
+                    ['property', 'og:type', data.OG_TYPE], ['property', 'og:site_name', data.OG_SITE_NAME],
+                    ['property', 'og:title', data.OG_TITLE], ['property', 'og:description', data.OG_DESCRIPTION],
+                    ['property', 'og:image', data.OG_IMAGE], ['property', 'og:url', data.OG_URL],
+                    ['name', 'twitter:card', 'summary_large_image'], ['name', 'twitter:title', data.OG_TITLE],
+                    ['name', 'twitter:description', data.OG_DESCRIPTION], ['name', 'twitter:image', data.OG_IMAGE],
+                ];
+                for (const [attribute, key, value] of tags) {
+                    const pattern = new RegExp(`<meta\\b(?=[^>]*\\b${attribute}=["']${key}["'])[^>]*>`, 'gi');
+                    head = head.replace(pattern, '');
+                    head += `\n<meta ${attribute}="${key}"${key === 'description' ? ' id="description"' : ''} content="${escape(value)}" />`;
+                }
+                return `<head>${head}\n</head>`;
             });
-
             if (!res.headersSent) {
-                res.send(modifiedHTML);
+                res.send(html);
             }
         } catch (error) {
             log.error('Error injecting HTML data:', error);
