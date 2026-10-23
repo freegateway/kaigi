@@ -31,7 +31,6 @@ if ((EMAIL_ALERT || EMAIL_NOTIFY) && EMAIL_HOST && EMAIL_PORT && EMAIL_USERNAME 
         host: EMAIL_HOST,
         port: EMAIL_PORT,
         username: EMAIL_USERNAME,
-        password: EMAIL_PASSWORD,
         from: EMAIL_FROM,
         to: EMAIL_SEND_TO,
     });
