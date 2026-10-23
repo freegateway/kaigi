@@ -194,9 +194,18 @@ module.exports = class Peer {
 
         let producer;
         try {
+            // Static screen content may stop emitting frames. Keep the worker's
+            // inactivity exemption server-side; dtx is no longer a WebRTC encoding option.
+            const rtpParameters =
+                producer_kind === 'video' && producer_type === 'screenType' && Array.isArray(producer_rtpParameters.encodings)
+                    ? {
+                          ...producer_rtpParameters,
+                          encodings: producer_rtpParameters.encodings.map((encoding) => ({ ...encoding, dtx: true })),
+                      }
+                    : producer_rtpParameters;
             producer = await producerTransport.produce({
                 kind: producer_kind,
-                rtpParameters: producer_rtpParameters,
+                rtpParameters,
             });
 
             this.addProducer(producer.id, producer);

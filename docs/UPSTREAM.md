@@ -74,3 +74,50 @@ Focused DOM tests cover operator branding and local footer links on six pages,
 text-only privacy localization in en-CA/fr-CA/ja, and fallback identity. Existing
 About tests retain upstream credits and configured source/logo behavior. Actual
 browser rendering, 150% display scaling and FreeBSD/Poudriere were not tested.
+
+## Media and mail dependency update (2026-10-23)
+
+Selectively adopt the dependency changes from upstream
+`826d8cc61604b47f199a91a285ab2f263e491c26` and the preceding client fixes through
+`fe9a5d6f88e0e56e4ab257eb09ba05f61563291b`:
+
+- mediasoup 3.30.1 to 3.31.0. The FreeBSD package supplies the Node module and
+  matching native worker; its separately maintained 3.31.0 port has been tested
+  and installed locally and on the remote Poudriere system by the maintainer.
+- mediasoup-client 3.24.5 to 3.25.3, rebuilding the locally served browser bundle
+  with the locked esbuild tool. Preserve audio/video RTP header extensions with
+  matching IDs regardless of SDP section order. Remove obsolete browser encoding
+  `dtx`; apply the retained worker inactivity exemption to screen-video encodings
+  in `Peer.createProducer()` instead. Audio's `opusDtx` codec option remains.
+- Nodemailer 10.1.3 to 10.2.1. Retain the configured mail boundary and remove the
+  SMTP password from application configuration logs. Scheduling remains disabled.
+
+Primary diffs:
+https://github.com/versatica/mediasoup/compare/3.30.1...3.31.0
+https://github.com/versatica/mediasoup-client/compare/3.24.5...3.25.3
+https://github.com/nodemailer/nodemailer/compare/v10.1.3...v10.2.1
+
+The production dependency audit also identified existing advisories in two
+retained transitive packages. Update only follow-redirects 1.16.0 to 1.16.1
+(Axios) and ip-address 10.7.2 to 10.7.4 (express-rate-limit), after reviewing
+their primary diffs. These patches repair cross-origin credential stripping and
+quadratic IPv6-zone parsing respectively; no Kaigi exploit is demonstrated.
+
+https://github.com/follow-redirects/follow-redirects/compare/v1.16.0...v1.16.1
+https://github.com/beaugunderson/ip-address/compare/v10.7.2...v10.7.4
+https://github.com/advisories/GHSA-q3jh-wrc6-jgq8
+https://github.com/advisories/GHSA-8r9p-f939-6h3c
+https://github.com/advisories/GHSA-rxp7-6hxx-x8q5
+
+Validation: 418 Mocha tests and 23 security tests passed on Linux/Node 24.19.0.
+New tests execute the shipped client bundle with mocked SDP offers in both media
+orders, check browser and worker screen encodings, build Unicode mail and ICS
+content, exercise a loopback SMTP refusal, check password-free configuration
+logging, and verify cross-origin header stripping and bounded malformed IPv6
+rejection. Both RTP-extension tests fail against the previous bundle. A fresh
+production npm audit reports zero known vulnerabilities. No actual browser,
+STARTTLS, native-worker or FreeBSD application test was performed here.
+
+The port needs its application pin, mediasoup minimum version, npm-deps.mk and
+distinfo updated after this application change is merged. This intake does not
+adopt upstream presenter, countdown, cloud or promotional-page changes.

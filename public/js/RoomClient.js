@@ -3538,7 +3538,6 @@ class RoomClient {
                     {
                         maxBitrate: 5000000,
                         scalabilityMode: this.sharingScalabilityMode || 'L3T3',
-                        dtx: true,
                     },
                 ];
             } else {
@@ -3548,7 +3547,6 @@ class RoomClient {
                         scaleResolutionDownBy: 1,
                         maxBitrate: 5000000,
                         scalabilityMode: this.sharingScalabilityMode || 'L1T3',
-                        dtx: true,
                     },
                 ];
                 if (this.numSimulcastStreamsSharing > 1) {
@@ -3556,7 +3554,6 @@ class RoomClient {
                         scaleResolutionDownBy: 2,
                         maxBitrate: 1000000,
                         scalabilityMode: this.sharingScalabilityMode || 'L1T3',
-                        dtx: true,
                     });
                 }
                 if (this.numSimulcastStreamsSharing > 2) {
@@ -3564,7 +3561,6 @@ class RoomClient {
                         scaleResolutionDownBy: 4,
                         maxBitrate: 500000,
                         scalabilityMode: this.sharingScalabilityMode || 'L1T3',
-                        dtx: true,
                     });
                 }
             }
@@ -3574,7 +3570,6 @@ class RoomClient {
                 {
                     scaleResolutionDownBy: 1,
                     maxBitrate: 5000000,
-                    dtx: true,
                 },
             ];
         }
