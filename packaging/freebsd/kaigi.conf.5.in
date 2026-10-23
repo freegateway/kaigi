@@ -43,6 +43,7 @@ It is read at startup; restart the service after editing it.
 The JSON object is keyed by language code (for example en, en-CA, fr-CA, ja).
 Each language object maps a supported setting name to a string:
 SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE,
+META_DESCRIPTION, OG_TITLE, OG_DESCRIPTION,
 JOIN_DESCRIPTION, JOIN_BUTTON_LABEL, CUSTOMIZE_BUTTON_LABEL, JOIN_LAST_LABEL,
 NEW_ROOM_TITLE, NEW_ROOM_DESCRIPTION, LOGIN_HEADING, LOGIN_INSTRUCTIONS,
 and LOGIN_BUTTON_LABEL.
@@ -101,7 +102,8 @@ upstream MiroTalk attribution.
 .It Ev SITE_NAME
 Site or service name.
 .It Ev SITE_DESCRIPTION
-Short site description.
+Visible site description. Used as a metadata fallback only when no independent
+metadata description is supplied.
 .It Ev SITE_URL
 Public site URL.
 .It Ev SITE_CONTACT_EMAIL
@@ -136,7 +138,21 @@ Leave them absent to retain Kaigi's defaults and localization.
 They may intentionally contain bilingual text.
 .Bl -tag -width "CUSTOMIZE_BUTTON_LABEL"
 .It Ev PAGE_TITLE
-Browser page-title override.
+Browser page-title override, also used as the default Open Graph title.
+.It Ev META_DESCRIPTION
+Ordinary HTML description. A localized SITE_DESCRIPTION does not override an
+explicit META_DESCRIPTION.
+.It Ev OG_TITLE
+Open Graph and Twitter-card title. Defaults to PAGE_TITLE.
+.It Ev OG_DESCRIPTION
+Open Graph and Twitter-card description. Defaults to META_DESCRIPTION.
+Each metadata field uses its exact-language translation, base-language
+translation, English translation, configured value, then the Kaigi default.
+An empty metadata translation intentionally clears that field.
+Metadata is escaped and rendered in the initial HTML, without JavaScript.
+Initial HTML uses UI_LANGUAGE; the browser's selected language updates the
+ordinary, Open Graph and Twitter-card metadata together.
+Preview applications may cache previously fetched metadata.
 .It Ev SITE_ICON_NAME
 Favicon file name in the site-assets directory.
 .It Ev APPLE_TOUCH_ICON_NAME

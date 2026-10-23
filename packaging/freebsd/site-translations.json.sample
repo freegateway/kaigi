@@ -2,6 +2,9 @@
     "en": {
         "SITE_NAME": "Example Video Conferencing",
         "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
+        "META_DESCRIPTION": "Sign in to Example Corporation's authorized meetings.",
+        "OG_TITLE": "Example Corporation meetings",
+        "OG_DESCRIPTION": "Private meetings for Example Corporation.",
         "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
         "PAGE_TITLE": "Example Video Conferencing",
         "JOIN_DESCRIPTION": "Choose a meeting room",
@@ -17,6 +20,9 @@
     "en-CA": {
         "SITE_NAME": "Example Video Conferencing",
         "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
+        "META_DESCRIPTION": "Sign in to Example Corporation's authorized meetings.",
+        "OG_TITLE": "Example Corporation meetings",
+        "OG_DESCRIPTION": "Private meetings for Example Corporation.",
         "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
         "PAGE_TITLE": "Example Video Conferencing",
         "JOIN_DESCRIPTION": "Choose a meeting room",
@@ -32,6 +38,9 @@
     "fr-CA": {
         "SITE_NAME": "Vidéoconférence Exemple",
         "SITE_DESCRIPTION": "Vidéoconférence privée pour la société Exemple.",
+        "META_DESCRIPTION": "Connectez-vous aux réunions autorisées de la société Exemple.",
+        "OG_TITLE": "Réunions de la société Exemple",
+        "OG_DESCRIPTION": "Réunions privées pour la société Exemple.",
         "SITE_COPYRIGHT": "Copyright © 2026 Société Exemple",
         "PAGE_TITLE": "Vidéoconférence Exemple",
         "JOIN_DESCRIPTION": "Choisir une réunion",
@@ -47,6 +56,9 @@
     "ja": {
         "SITE_NAME": "ビデオ会議サービス",
         "SITE_DESCRIPTION": "社内向けのプライベートなビデオ会議。",
+        "META_DESCRIPTION": "ログインして、参加が許可された会議に参加できます。",
+        "OG_TITLE": "社内ビデオ会議",
+        "OG_DESCRIPTION": "社内向けのプライベートな会議サービス。",
         "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
         "PAGE_TITLE": "ビデオ会議サービス",
         "JOIN_DESCRIPTION": "会議を選択",

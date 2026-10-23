@@ -107,7 +107,7 @@ if (freeBSDConfig.LDAP_ENABLED === 'true') {
 }
 
 // Administrator-owned public text only; never publish the deployment config.
-const siteTextSettings = Object.freeze(["SITE_NAME", "SITE_DESCRIPTION", "SITE_COPYRIGHT", "PAGE_TITLE", "JOIN_DESCRIPTION", "JOIN_BUTTON_LABEL", "CUSTOMIZE_BUTTON_LABEL", "JOIN_LAST_LABEL", "NEW_ROOM_TITLE", "NEW_ROOM_DESCRIPTION", "LOGIN_HEADING", "LOGIN_INSTRUCTIONS", "LOGIN_BUTTON_LABEL"]);
+const siteTextSettings = Object.freeze(["SITE_NAME", "SITE_DESCRIPTION", "SITE_COPYRIGHT", "PAGE_TITLE", "META_DESCRIPTION", "OG_TITLE", "OG_DESCRIPTION", "JOIN_DESCRIPTION", "JOIN_BUTTON_LABEL", "CUSTOMIZE_BUTTON_LABEL", "JOIN_LAST_LABEL", "NEW_ROOM_TITLE", "NEW_ROOM_DESCRIPTION", "LOGIN_HEADING", "LOGIN_INSTRUCTIONS", "LOGIN_BUTTON_LABEL"]);
 const siteTranslationsPath = require('path').join(configDirectory, 'site-translations.json');
 const loadSiteTranslations = () => {
     let source;
@@ -189,6 +189,15 @@ for (const [name, value] of Object.entries(freeBSDConfig)) {
         process.env[target] = mappedValue;
     }
 }
+
+const metadataSettings = {
+    PAGE_TITLE: process.env.SITE_TITLE,
+    META_DESCRIPTION: process.env.META_DESCRIPTION,
+    OG_TITLE: process.env.OG_TITLE,
+    OG_DESCRIPTION: process.env.OG_DESCRIPTION,
+    SITE_NAME: process.env.SITE_NAME,
+    SITE_DESCRIPTION: process.env.SITE_DESCRIPTION,
+};
 
 // Site identity is a FreeBSD convenience layer.  Populate the corresponding
 // upstream branding variables only when they were not explicitly supplied.
@@ -1816,6 +1825,20 @@ module.exports = {
         },
     },
 };
+
+// Metadata is public branding data. Precompute language variants once so the
+// initial HTML and later browser language changes use the same precedence.
+const { siteMetadata } = require('./SiteMetadata');
+const metadataBrand = module.exports.ui.brand;
+metadataBrand.metadataByLanguage = Object.fromEntries(
+    [...new Set(['en', metadataBrand.app.language, ...Object.keys(siteTranslations)])]
+        .map(language => [language, siteMetadata(metadataSettings, siteTranslations, language)])
+);
+const initialMetadata = metadataBrand.metadataByLanguage[metadataBrand.app.language];
+metadataBrand.site.title = initialMetadata.PAGE_TITLE;
+metadataBrand.meta.description = initialMetadata.META_DESCRIPTION;
+metadataBrand.og.title = initialMetadata.OG_TITLE;
+metadataBrand.og.description = initialMetadata.OG_DESCRIPTION;
 
 // ==============================================
 // Helper Functions

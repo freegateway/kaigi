@@ -97,7 +97,7 @@
             document.addEventListener('DOMContentLoaded', async () => {
                 if (window.i18n && window.i18n.ready) {
                     await window.i18n.ready;
-                    document.title = window.i18n.tKey('title', document.title);
+                    if (!document.querySelector('title[data-site-title]')) document.title = window.i18n.tKey('title', document.title);
                     document.documentElement.lang = window.i18n.getLang();
                     document.documentElement.dir = window.i18n.getLang() === 'ar' ? 'rtl' : 'ltr';
                     for (const element of document.querySelectorAll('[data-about-key]')) {
