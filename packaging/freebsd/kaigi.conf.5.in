@@ -189,6 +189,17 @@ Set to
 to suppress the automatic invitation dialog while retaining the invitation command.
 Invitations show the site URL and meeting name separately; QR codes contain
 only the site URL.
+.It Ev HIDE_LOCAL_SCREEN_SHARE_PREVIEW
+Defaults to
+.Dq true :
+replace the sharer's local screen preview with a localized sharing notice and
+Stop sharing button.
+Set to
+.Dq false
+to restore the original live preview, controls and automatic pinning.
+Sharing the display containing Kaigi can then produce a mirror effect.
+This setting does not alter the screen share received by other participants.
+Restart Kaigi to apply changes.
 .El
 .Sh LOCALIZATION
 Kaigi uses bundled language files for general interface localization.

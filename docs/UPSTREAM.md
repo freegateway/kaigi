@@ -1,5 +1,16 @@
 # Upstream intake
 
+## Local screen-preview choice (2026-10-27)
+
+Kaigi's administrator option `HIDE_LOCAL_SCREEN_SHARE_PREVIEW` defaults to
+`true` (localized notice). `false` restores the original local screen preview,
+including controls and automatic pinning; remote screen reception is unchanged.
+The entire original producer method from `1fa0826467e68a90b58f4fa53f96d2981d6dae94`
+is retained unchanged after the notice dispatch guard, enforced by a SHA-256
+regression assertion. DOM tests cover visible preview controls/auto-pin, repeated
+cleanup/recreation in both modes, intact media tracks, and notice localization.
+These checks are not actual browser capture or FreeBSD media testing.
+
 Source: https://github.com/miroslavpejic85/mirotalksfu
 
 The initial Kaigi parent is `bb49feb24ed35938cd7cd6916ddd2256cacb1c20`.
