@@ -639,6 +639,8 @@ module.exports = class Room {
         const {
             iceConsentTimeout = 35,
             initialAvailableOutgoingBitrate,
+            minimumAvailableOutgoingBitrate,
+            maxIncomingBitrate,
             listenInfos,
             maxSendMessageSize = 262144,
             maxReceiveMessageSize = 262144,
@@ -649,7 +651,10 @@ module.exports = class Room {
             enableTcp: true,
             preferUdp: true,
             iceConsentTimeout,
+            enableBwe: true,
             initialAvailableOutgoingBitrate,
+            ...(minimumAvailableOutgoingBitrate !== undefined && { minOutgoingBitrate: minimumAvailableOutgoingBitrate }),
+            ...(maxIncomingBitrate !== undefined && { maxIncomingBitrate }),
             enableSctp: true,
             // mediasoup 3.20.0: numSctpStreams/maxSctpMessageSize removed;
             // use maxSendMessageSize / maxReceiveMessageSize instead.
@@ -687,23 +692,6 @@ module.exports = class Room {
         }
 
         const { id, type, iceParameters, iceCandidates, dtlsParameters, sctpParameters } = transport;
-        const { maxIncomingBitrate, minimumAvailableOutgoingBitrate } = this.webRtcTransport;
-
-        if (maxIncomingBitrate) {
-            try {
-                await transport.setMaxIncomingBitrate(maxIncomingBitrate);
-            } catch (error) {
-                log.warn('Failed to set max incoming bitrate', error);
-            }
-        }
-
-        if (minimumAvailableOutgoingBitrate) {
-            try {
-                await transport.setMinOutgoingBitrate(minimumAvailableOutgoingBitrate);
-            } catch (error) {
-                log.warn('Failed to set minimum outgoing bitrate', error);
-            }
-        }
 
         const peer = this.getPeer(socket_id);
 

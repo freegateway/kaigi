@@ -122,6 +122,39 @@ The port needs its application pin, mediasoup minimum version, npm-deps.mk and
 distinfo updated after this application change is merged. This intake does not
 adopt upstream presenter, countdown, cloud or promotional-page changes.
 
+## Poll, breakout and mediasoup update (2026-10-27)
+
+Adapt upstream security fixes:
+
+- `44526587301509ab2d9f5305b848a216965a43ed`: validate poll indexes before
+  lookup or mutation, reject malformed poll payloads/entries and invalid vote
+  choices. Preserve ordinary poll operation and existing moderator restrictions.
+- `46aba72670b198a84f1852432cd11b42904ef4d2`: reject all breakout socket
+  operations, including enumeration and help, in production packet middleware.
+  Kaigi excludes breakout controls rather than adopting presenter authorization.
+  Both changes use fixed-field security logging without client payload data.
+
+Selectively adopt `71a7c69a109109ef3387fce60713f64655023af7`: update mediasoup
+3.31.0 to 3.32.0 and enable built-in BWE explicitly. Preserve configuration names,
+passing initial/minimum outgoing and maximum incoming limits at transport
+creation, with no post-creation setters. Preserve zero limits, existing transport
+lifecycle handling and the independently updated 3.25.3 local browser bundle.
+The maintainer has installed the separate mediasoup 3.32.0 FreeBSD port locally
+and on the remote Poudriere server; integrated browser/media testing is pending.
+
+The Kaigi port must raise its mediasoup minimum to 3.32.0 and update its application
+pin/distinfo after merge. No port files or archives are included here. Public
+upstream version footers, excluded RTMP/FFmpeg integrations and cloud-SDK bumps
+are not adopted. An optional administrator-controlled Kaigi version display is
+deferred from this security/media update.
+
+Validation: 430 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
+Six new WebSocket/Socket.IO cases run production authentication/admission
+middleware, poll/breakout handlers and security logging against fixture sessions
+and simultaneous meetings. Transport tests verify creation-time BWE/bitrate
+options, zero/omitted limits, shared-server options and observer cleanup. No
+native worker, browser media or FreeBSD application test was performed here.
+
 ## Administrator metadata (2026-10-23)
 
 Kaigi-specific correction: render PAGE_TITLE, META_DESCRIPTION and Open Graph
