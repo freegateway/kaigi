@@ -2403,6 +2403,15 @@ function startServer() {
     io.on('connection', (socket) => {
         socket.use((packet, next) => {
             const event = packet[0];
+            // Breakout rooms are not part of Kaigi. Deny every inherited operation,
+            // including read/help events that upstream did not presenter-gate.
+            if (['getBreakoutRoomsInfo', 'breakoutRoomBroadcast', 'breakoutRoomEnd',
+                'breakoutRoomCountdown', 'breakoutRoomHelp', 'breakoutRoom'].includes(event)) {
+                securityEvent('socket_event_rejected', socket, 'breakout_disabled');
+                const ack = packet[packet.length - 1];
+                if (typeof ack === 'function') ack({ error: 'Breakout rooms are disabled' });
+                return next(new Error('Breakout rooms are disabled'));
+            }
             const preJoin = ['createRoom', 'join', 'getMeetingRecordingPolicy'];
             const peer = roomList.get(socket.room_id)?.getPeer(socket.id);
             if (preJoin.includes(event) || (socket.authenticatedMeeting && peer)) return next();
@@ -4985,7 +4994,12 @@ function startServer() {
 
             const data = checkXSS(dataObject);
 
-            if (!Validator.isValidData(data)) return;
+            if (!Validator.isValidData(data) || typeof data.question !== 'string' ||
+                !Array.isArray(data.options) || data.options.length === 0 ||
+                !data.options.every((option) => typeof option === 'string')) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
 
             const { question, options } = data;
 
@@ -5026,7 +5040,10 @@ function startServer() {
 
             const data = checkXSS(dataObject);
 
-            if (!Validator.isValidData(data)) return;
+            if (!Validator.isValidData(data)) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
 
             const { room, peer } = getRoomAndPeer(socket);
 
@@ -5034,7 +5051,16 @@ function startServer() {
 
             const roomPolls = room.getPolls();
 
+            if (!Validator.isValidArrayIndex(data.pollIndex, roomPolls)) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
             const poll = roomPolls[data.pollIndex];
+            if (!poll || !(poll.voters instanceof Map) || typeof data.option !== 'string' ||
+                !Array.isArray(poll.options) || !poll.options.includes(data.option)) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
             if (poll) {
                 poll.voters.set(peer_name, data.option);
                 room.sendToAll('updatePolls', room.convertPolls(roomPolls));
@@ -5060,7 +5086,12 @@ function startServer() {
 
             const data = checkXSS(dataObject);
 
-            if (!Validator.isValidData(data)) return;
+            if (!Validator.isValidData(data) || typeof data.question !== 'string' ||
+                !Array.isArray(data.options) || data.options.length === 0 ||
+                !data.options.every((option) => typeof option === 'string')) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
 
             const { index, question, options } = data;
 
@@ -5085,6 +5116,11 @@ function startServer() {
 
             const roomPolls = room.getPolls();
 
+            if (!Validator.isValidArrayIndex(index, roomPolls) || !roomPolls[index] ||
+                !(roomPolls[index].voters instanceof Map)) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
             if (roomPolls[index]) {
                 roomPolls[index].question = question;
                 roomPolls[index].options = options;
@@ -5093,10 +5129,15 @@ function startServer() {
             }
         });
 
-        socket.on('deletePoll', async (data) => {
+        socket.on('deletePoll', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const { index, peer_name, peer_uuid } = checkXSS(data);
+            const data = checkXSS(dataObject);
+            if (!Validator.isValidData(data)) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
+            const { index, peer_name, peer_uuid } = data;
 
             const room = getRoom(socket);
 
@@ -5111,6 +5152,11 @@ function startServer() {
 
             const roomPolls = room.getPolls();
 
+            if (!Validator.isValidArrayIndex(index, roomPolls) || !roomPolls[index] ||
+                !(roomPolls[index].voters instanceof Map)) {
+                securityEvent('socket_event_rejected', socket, 'invalid_poll');
+                return;
+            }
             if (roomPolls[index]) {
                 roomPolls.splice(index, 1);
                 room.sendToAll('updatePolls', roomPolls);

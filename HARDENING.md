@@ -62,6 +62,11 @@ decisions are recorded separately in `docs/BASELINE.md` and `docs/UPSTREAM.md`.
   Export annotations before stopping the screen share.
 - Active-room listing, scheduling and email invitations, RTMP streaming, and
   the support widget are disabled in Kaigi.
+- All inherited breakout socket operations are rejected server-side, including
+  participant enumeration and help requests. Poll indexes must be in-range
+  integers; malformed poll payloads and invalid choices are rejected before
+  mutation or broadcast. Rejections use fixed-field security events without
+  client-supplied meeting names, identities or payloads.
 - Authentication tokens are held in browser session storage and sent through
   authenticated requests and socket messages, never navigation URLs. Meeting
   selection is authorized server-side. The pre-meeting page requires a live

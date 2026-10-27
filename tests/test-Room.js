@@ -261,9 +261,9 @@ describe('test-Room', () => {
         room.router.should.equal(router);
     });
 
-    it('applies minimum bitrate and cleans up a transport through its observer', async () => {
+    it('passes BWE and bitrate limits at creation and cleans up through the observer', async () => {
         const room = Object.create(Room.prototype);
-        let minimumBitrate;
+        let transportOptions;
         let removedTransportId;
         let notification;
         const transport = Object.assign(new EventEmitter(), {
@@ -275,9 +275,6 @@ describe('test-Room', () => {
             dtlsParameters: {},
             sctpParameters: {},
             observer: new EventEmitter(),
-            setMinOutgoingBitrate: async (bitrate) => {
-                minimumBitrate = bitrate;
-            },
         });
         const peer = {
             peer_name: 'Peer',
@@ -286,19 +283,27 @@ describe('test-Room', () => {
                 removedTransportId = id;
             },
         };
-        room.router = { createWebRtcTransport: async () => transport };
+        room.router = { createWebRtcTransport: async (options) => {
+            transportOptions = options;
+            return transport;
+        } };
         room.peers = new Map([['peer-id', peer]]);
         room.webRtcServerActive = false;
         room.webRtcTransport = {
             listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+            initialAvailableOutgoingBitrate: 2500000,
             minimumAvailableOutgoingBitrate: 1000000,
+            maxIncomingBitrate: 3000000,
         };
         room.send = (socketId, action, data) => {
             notification = { socketId, action, data };
         };
 
         await room.createWebRtcTransport('peer-id');
-        minimumBitrate.should.equal(1000000);
+        transportOptions.enableBwe.should.equal(true);
+        transportOptions.initialAvailableOutgoingBitrate.should.equal(2500000);
+        transportOptions.minOutgoingBitrate.should.equal(1000000);
+        transportOptions.maxIncomingBitrate.should.equal(3000000);
         transport.closed = true;
         transport.observer.emit('close');
 
@@ -308,5 +313,22 @@ describe('test-Room', () => {
             action: 'transportClosed',
             data: { transport_id: transport.id },
         });
+    });
+
+    it('preserves shared-server options, zero limits and omitted optional limits', () => {
+        const room = Object.create(Room.prototype);
+        room.webRtcServerActive = true;
+        room.webRtcServer = { id: 'shared-server' };
+        room.webRtcTransport = { minimumAvailableOutgoingBitrate: 0, maxIncomingBitrate: 0 };
+        const options = room.getWebRtcTransportOptions();
+        options.webRtcServer.should.equal(room.webRtcServer);
+        options.should.not.have.property('listenInfos');
+        options.minOutgoingBitrate.should.equal(0);
+        options.maxIncomingBitrate.should.equal(0);
+        room.webRtcTransport = {};
+        const defaults = room.getWebRtcTransportOptions();
+        defaults.enableBwe.should.equal(true);
+        defaults.should.not.have.property('minOutgoingBitrate');
+        defaults.should.not.have.property('maxIncomingBitrate');
     });
 });

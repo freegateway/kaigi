@@ -1802,14 +1802,15 @@ module.exports = {
             iceConsentTimeout: 35, // Timeout for ICE consent (seconds)
 
             /**
-             * Bandwidth Control Settings
+             * Bandwidth Control Settings (mediasoup 3.32.0+ built-in BWE)
+             * Limits are passed to transport creation; retain these configuration names.
              * Kubernetes implications:
              * - These values should be tuned based on Node resources
              * - Consider network plugin overhead (Calico, Cilium etc.)
              */
             initialAvailableOutgoingBitrate: 2500000, // 2.5 Mbps initial bitrate
             minimumAvailableOutgoingBitrate: 1000000, // 1 Mbps minimum guaranteed
-            maxIncomingBitrate: 3000000, // 3 Mbps max per producer
+            maxIncomingBitrate: 3000000, // 3 Mbps maximum incoming per transport
 
             /**
              * Data Channel Settings (mediasoup 3.20.0+)

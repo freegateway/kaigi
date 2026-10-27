@@ -111,6 +111,12 @@ function isValidData(data) {
     return Object.keys(data).length > 0;
 }
 
+// Never resolve prototype properties or coerce client input into array indexes.
+function isValidArrayIndex(index, array) {
+    return Array.isArray(array) && Number.isInteger(index) && index >= 0 &&
+        index < array.length && Object.hasOwn(array, index);
+}
+
 /**
  * Block private / loopback / link-local / unspecified / well known internal hosts.
  * Note: does NOT do DNS resolution, so a public domain that resolves to
@@ -291,6 +297,7 @@ module.exports = {
     parseEmailList,
     hasAllowedEmailDomains,
     isValidData,
+    isValidArrayIndex,
     isPrivateOrLoopbackHost,
     isPublicHttpUrl,
     safeDnsLookup,
