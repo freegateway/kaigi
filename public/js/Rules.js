@@ -66,6 +66,7 @@ let BUTTONS = {
         customNoiseSuppressionDefault: true, // initial RNNoise state for users without a saved choice
     },
     producerVideo: {
+        hideLocalScreenSharePreview: true,
         videoPictureInPicture: true,
         videoMirrorButton: true,
         pinVideoButton: true,

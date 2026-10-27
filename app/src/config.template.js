@@ -1348,6 +1348,7 @@ module.exports = {
 
             // Video controls for producer (local user)
             producerVideo: {
+                hideLocalScreenSharePreview: process.env.HIDE_LOCAL_SCREEN_SHARE_PREVIEW !== 'false',
                 videoPictureInPicture: process.env.ENABLE_PIP !== 'false',
                 videoMirrorButton: process.env.SHOW_MIRROR_BUTTON !== 'false',
                 pinVideoButton: process.env.SHOW_PIN_BUTTON !== 'false',

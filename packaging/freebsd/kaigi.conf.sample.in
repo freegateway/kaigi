@@ -116,6 +116,12 @@ AUTH_SESSION_MAX_AGE=28800
 # only the site URL.
 SHOW_SHARE_ROOM_POPUP=false
 
+# Replace only the sharer's own screen preview with a localized sharing notice.
+# false restores the original live preview, including its controls and auto-pin.
+# Sharing the display containing Kaigi may then create a mirror effect.
+# Other participants' received screen share is unaffected. Restart to apply.
+HIDE_LOCAL_SCREEN_SHARE_PREVIEW=true
+
 
 # Optional LDAP authentication supplements the users file; local users win.
 # LDAP support is included in Kaigi and disabled by default.

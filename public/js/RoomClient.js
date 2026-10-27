@@ -3733,7 +3733,9 @@ class RoomClient {
     }
 
     async handleProducer(id, type, stream) {
-        if (type === mediaType.screen) return this.handleLocalScreenShare(id, stream);
+        if (type === mediaType.screen && BUTTONS.producerVideo.hideLocalScreenSharePreview !== false) {
+            return this.handleLocalScreenShare(id, stream);
+        }
         let elem, vb, vp, ts, d, p, i, au, pip, ha, fs, pm, pb, pn, pv, mv, st, dw, ri;
         switch (type) {
             case mediaType.video:
