@@ -468,7 +468,8 @@
         "Signing in...": "Signing in...",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
-        "Show password": "Show password"
+        "Show password": "Show password",
+        "Stop sharing": "Stop sharing"
     },
     "labels": {
         "(get it here)": "(இங்கே பெறுங்கள்)",
@@ -1081,7 +1082,8 @@
         "Privacy Policy": "Privacy Policy",
         "Logout": "Logout",
         "Username": "Username",
-        "No meetings are assigned to your account. Please contact your administrator.": "உங்கள் கணக்கிற்கு எந்தக் கூட்டமும் ஒதுக்கப்படவில்லை. உங்கள் நிர்வாகியைத் தொடர்பு கொள்ளவும்."
+        "No meetings are assigned to your account. Please contact your administrator.": "உங்கள் கணக்கிற்கு எந்தக் கூட்டமும் ஒதுக்கப்படவில்லை. உங்கள் நிர்வாகியைத் தொடர்பு கொள்ளவும்.",
+        "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
         "A presenter is required to start the meeting. Please try joining again later.": "கூட்டத்தைத் தொடங்க ஒரு வழங்குபவர் தேவை. பின்னர் மீண்டும் சேர முயற்சிக்கவும்.",

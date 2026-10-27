@@ -468,7 +468,8 @@
         "Signing in...": "Signing in...",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
-        "Show password": "Show password"
+        "Show password": "Show password",
+        "Stop sharing": "Stop sharing"
     },
     "labels": {
         "(get it here)": "(यहाँ से प्राप्त करें)",
@@ -1081,7 +1082,8 @@
         "Privacy Policy": "Privacy Policy",
         "Logout": "Logout",
         "Username": "Username",
-        "No meetings are assigned to your account. Please contact your administrator.": "आपके खाते को कोई बैठक आवंटित नहीं की गई है। कृपया अपने व्यवस्थापक से संपर्क करें।"
+        "No meetings are assigned to your account. Please contact your administrator.": "आपके खाते को कोई बैठक आवंटित नहीं की गई है। कृपया अपने व्यवस्थापक से संपर्क करें।",
+        "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
         "A presenter is required to start the meeting. Please try joining again later.": "मीटिंग शुरू करने के लिए एक प्रस्तोता ज़रूरी है. कृपया थोड़ी देर बाद फिर से जुड़ने की कोशिश करें.",

@@ -9738,3 +9738,35 @@ z-index:
 }
 
 .init-modal-size { width: min(1024px, calc(100vw - 24px)) !important; }
+
+/* The local screen producer must never display its own captured pixels. */
+.Camera.local-screen-share-notice > video {
+    display: none !important;
+}
+.local-screen-share-message {
+    position: absolute;
+    inset: 10px 10px 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    text-align: center;
+    overflow-wrap: anywhere;
+    color: var(--text-color, #fff);
+    font-size: clamp(0.75rem, 1.2vw, 1rem);
+}
+.local-screen-share-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: center;
+}
+.local-screen-share-controls > button {
+    max-width: 100%;
+    min-height: 32px;
+    padding: 6px 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
