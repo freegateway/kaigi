@@ -2410,7 +2410,8 @@ function startServer() {
                 securityEvent('socket_event_rejected', socket, 'breakout_disabled');
                 const ack = packet[packet.length - 1];
                 if (typeof ack === 'function') ack({ error: 'Breakout rooms are disabled' });
-                return next(new Error('Breakout rooms are disabled'));
+                // Stop this packet here. Expected denials are not socket errors.
+                return;
             }
             const preJoin = ['createRoom', 'join', 'getMeetingRecordingPolicy'];
             const peer = roomList.get(socket.room_id)?.getPeer(socket.id);
@@ -2418,12 +2419,20 @@ function startServer() {
             securityEvent('socket_event_rejected', socket, 'not_admitted');
             const ack = packet[packet.length - 1];
             if (typeof ack === 'function') ack({ error: 'Not in meeting' });
-            next(new Error('Not in meeting'));
+            return;
         });
         socket.use((_packet, next) => {
-            if (!socket.authSessionId) { socket.disconnect(true); return next(new Error('Authentication required')); }
+            if (!socket.authSessionId) {
+                securityEvent('socket_event_rejected', socket, 'invalid_session');
+                socket.disconnect(true);
+                return;
+            }
             try { requireAuthSession(socket.authSessionId); next(); }
-            catch { socket.disconnect(true); next(new Error('Authentication session expired')); }
+            catch {
+                securityEvent('socket_event_rejected', socket, 'session_expired');
+                socket.disconnect(true);
+                return;
+            }
         });
         socket.on('clientError', (error) => {
             try {
@@ -2435,6 +2444,8 @@ function startServer() {
         });
 
         socket.on('error', (error) => {
+            // Already queued errors may arrive after disconnect cleanup.
+            if (!socket.connected) return;
             try {
                 log.error('Socket error', error.message);
                 socket.disconnect(true); // true indicates a forced disconnection
@@ -5204,7 +5215,9 @@ function startServer() {
             releaseWhiteboardSnapshotSocket(socket.id);
             if (!roomExists(socket)) {
                 // Clean up socket listeners even if room doesn't exist
-                socket.removeAllListeners();
+                for (const event of socket.eventNames()) {
+                    if (event !== 'error') socket.removeAllListeners(event);
+                }
                 return;
             }
 
@@ -5283,8 +5296,11 @@ function startServer() {
 
             socket.room_id = null;
 
-            // Clean up all socket event listeners to prevent memory leaks
-            socket.removeAllListeners();
+            // Socket.IO dispatches middleware errors on nextTick. Keep the error
+            // listener until this socket is collected so queued errors stay handled.
+            for (const event of socket.eventNames()) {
+                if (event !== 'error') socket.removeAllListeners(event);
+            }
         });
 
         socket.on('exitRoom', (_, callback) => {

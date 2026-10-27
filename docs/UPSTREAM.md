@@ -155,6 +155,27 @@ and simultaneous meetings. Transport tests verify creation-time BWE/bitrate
 options, zero/omitted limits, shared-server options and observer cleanup. No
 native worker, browser media or FreeBSD application test was performed here.
 
+## Socket rejection teardown (2026-10-27)
+
+Kaigi-specific fix for queued Socket.IO middleware errors arriving after
+disconnect cleanup removed the socket's error listener. Expected admission and
+breakout denials now acknowledge and stop the packet without emitting an error;
+live-session checks still disconnect missing/expired sessions. Disconnect cleanup
+removes ordinary listeners but retains the error handler, which ignores errors
+on an already disconnected socket. Process-wide uncaught-exception handling is
+unchanged. Admission checks, session expiry and blocked breakout commands remain
+enforced; ordinary admitted traffic is unaffected.
+
+Regression tests use isolated child processes without uncaught-exception traps,
+real WebSocket/Socket.IO bursts, and the production namespace/packet middleware,
+error handlers and both disconnect cleanup branches. Session lookup and meeting
+resources are fixtures, not a native worker or full-daemon deployment. The same
+unadmitted-packet scenario crashes against the unfixed source.
+
+Validation: 437 Mocha tests and 23 security tests passed on Linux/Node 24.22.1,
+including seven child-process lifecycle cases. No FreeBSD or browser media test
+was performed for this fix.
+
 ## Administrator metadata (2026-10-23)
 
 Kaigi-specific correction: render PAGE_TITLE, META_DESCRIPTION and Open Graph
