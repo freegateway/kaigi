@@ -468,7 +468,8 @@
         "Signing in...": "ログイン中...",
         "SCHEDULE MEETING": "会議を予約",
         "Generate random room name": "会議名を自動生成",
-        "Show password": "パスワードを表示"
+        "Show password": "パスワードを表示",
+        "Stop sharing": "共有を停止"
     },
     "labels": {
         "(get it here)": "(こちらから入手)",
@@ -1081,7 +1082,8 @@
         "Privacy Policy": "プライバシーポリシー",
         "Logout": "ログアウト",
         "Username": "ユーザー名",
-        "No meetings are assigned to your account. Please contact your administrator.": "このアカウントには会議が割り当てられていません。管理者にお問い合わせください。"
+        "No meetings are assigned to your account. Please contact your administrator.": "このアカウントには会議が割り当てられていません。管理者にお問い合わせください。",
+        "You are sharing your screen": "画面を共有しています"
     },
     "dialogs": {
         "A presenter is required to start the meeting. Please try joining again later.": "会議を開始するにはプレゼンターが必要です。後でもう一度参加をお試しください.",

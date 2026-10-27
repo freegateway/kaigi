@@ -468,7 +468,8 @@
         "Signing in...": "Connexion en cours...",
         "SCHEDULE MEETING": "Planifier une réunion",
         "Generate random room name": "Générer un nom de réunion",
-        "Show password": "Afficher le mot de passe"
+        "Show password": "Afficher le mot de passe",
+        "Stop sharing": "Arrêter le partage"
     },
     "labels": {
         "(get it here)": "(le télécharger ici)",
@@ -1081,7 +1082,8 @@
         "Privacy Policy": "Politique de confidentialité",
         "Logout": "Déconnexion",
         "Username": "Nom d’utilisateur",
-        "No meetings are assigned to your account. Please contact your administrator.": "Aucune réunion n’est attribuée à votre compte. Veuillez communiquer avec votre administrateur."
+        "No meetings are assigned to your account. Please contact your administrator.": "Aucune réunion n’est attribuée à votre compte. Veuillez communiquer avec votre administrateur.",
+        "You are sharing your screen": "Vous partagez votre écran"
     },
     "dialogs": {
         "A presenter is required to start the meeting. Please try joining again later.": "Un présentateur est nécessaire pour démarrer la réunion. Veuillez réessayer plus tard.",

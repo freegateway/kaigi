@@ -468,7 +468,8 @@
         "Signing in...": "Signing in...",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
-        "Show password": "Show password"
+        "Show password": "Show password",
+        "Stop sharing": "Stop sharing"
     },
     "labels": {
         "(get it here)": "(ఇక్కడ పొందండి)",
@@ -1081,7 +1082,8 @@
         "Privacy Policy": "Privacy Policy",
         "Logout": "Logout",
         "Username": "Username",
-        "No meetings are assigned to your account. Please contact your administrator.": "మీ ఖాతాకు సమావేశాలు కేటాయించబడలేదు. దయచేసి మీ నిర్వాహకుడిని సంప్రదించండి."
+        "No meetings are assigned to your account. Please contact your administrator.": "మీ ఖాతాకు సమావేశాలు కేటాయించబడలేదు. దయచేసి మీ నిర్వాహకుడిని సంప్రదించండి.",
+        "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
         "A presenter is required to start the meeting. Please try joining again later.": "సమావేశాన్ని ప్రారంభించడానికి ప్రెజెంటర్ అవసరం. దయచేసి తర్వాత మళ్లీ చేరడానికి ప్రయత్నించండి.",

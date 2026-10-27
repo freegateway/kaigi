@@ -192,3 +192,18 @@ New HTTP/JSDOM tests inspect initial HTML without executing JavaScript, metadata
 precedence, browser language changes, empty settings, escaping and private
 meeting-context separation. No browser rendering, preview-app cache or FreeBSD
 test was performed. No dependency or port metadata changes are included.
+
+## Local screen-share notice (2026-10-27)
+
+Kaigi-specific UI change: replace only the local screen producer's visible preview
+with a text notice and Stop sharing button. Keep its hidden media element and
+track attachment for existing stop, track-ended and recovery cleanup; do not
+change screen/audio production or remote consumer rendering. Do not auto-pin or
+offer local picture-in-picture/fullscreen controls for this notice. Camera
+previews retain their existing path. Add Japanese, en-CA and fr-CA translations,
+with English fallback keys in other catalogues. Text uses the existing local
+translation observer and supports live language changes.
+
+Regression coverage checks hidden media, unchanged source tracks, stop delegation,
+normal cleanup/recreation and live localization. Actual browser capture, short
+viewports, 150% scaling and FreeBSD media testing remain separate checks.

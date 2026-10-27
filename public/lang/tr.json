@@ -468,7 +468,8 @@
         "Signing in...": "Signing in...",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
-        "Show password": "Show password"
+        "Show password": "Show password",
+        "Stop sharing": "Stop sharing"
     },
     "labels": {
         "(get it here)": "(buradan edinin)",
@@ -1081,7 +1082,8 @@
         "Privacy Policy": "Privacy Policy",
         "Logout": "Logout",
         "Username": "Username",
-        "No meetings are assigned to your account. Please contact your administrator.": "Hesabınıza atanmış toplantı yok. Lütfen yöneticinizle iletişime geçin."
+        "No meetings are assigned to your account. Please contact your administrator.": "Hesabınıza atanmış toplantı yok. Lütfen yöneticinizle iletişime geçin.",
+        "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
         "A presenter is required to start the meeting. Please try joining again later.": "Toplantıyı başlatmak için bir sunumcu gerekli. Lütfen daha sonra yeniden katılmayı deneyin.",

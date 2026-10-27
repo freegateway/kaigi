@@ -3689,7 +3689,51 @@ class RoomClient {
         }, 1000);
     }
 
+    async handleLocalScreenShare(id, stream) {
+        // Keep the media element for producer cleanup/recovery, never render it.
+        // Only the local producer uses this path; remote consumers are unchanged.
+        const tile = document.createElement('div');
+        tile.id = id + '__video';
+        tile.className = 'Camera local-screen-share-notice';
+        tile.dataset.peerId = this.peer_id;
+        tile.dataset.cameraOff = 'false';
+
+        const video = document.createElement('video');
+        video.id = id;
+        video.hidden = true;
+        video.setAttribute('aria-hidden', 'true');
+        video.setAttribute('playsinline', '');
+        video.muted = true;
+        video.volume = 0;
+        video.autoplay = false;
+        video.controls = false;
+
+        const message = document.createElement('div');
+        message.className = 'local-screen-share-message';
+        message.setAttribute('role', 'status');
+        message.textContent = 'You are sharing your screen';
+
+        // Retain the existing menu ID so normal stop/track-ended/recovery cleanup
+        // removes the notice and its controls along with the producer element.
+        const controls = document.createElement('div');
+        controls.id = id + '__vb';
+        controls.className = 'local-screen-share-controls';
+        const stop = document.createElement('button');
+        stop.type = 'button';
+        stop.textContent = 'Stop sharing';
+        stop.addEventListener('click', () => this.closeProducer(mediaType.screen));
+        controls.appendChild(stop);
+
+        tile.append(video, message, controls);
+        this.videoMediaContainer.appendChild(tile);
+        await this.attachMediaStream(video, stream, mediaType.screen, 'Producer');
+        if (typeof applyParticipantGridVisibility === 'function') applyParticipantGridVisibility();
+        handleAspectRatio();
+        return video;
+    }
+
     async handleProducer(id, type, stream) {
+        if (type === mediaType.screen) return this.handleLocalScreenShare(id, stream);
         let elem, vb, vp, ts, d, p, i, au, pip, ha, fs, pm, pb, pn, pv, mv, st, dw, ri;
         switch (type) {
             case mediaType.video:
