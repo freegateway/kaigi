@@ -5722,8 +5722,9 @@ html body.swal2-toast-shown .swal2-container.swal2-top-end > .swal2-popup {
     justify-self: center;
 }
 
-.img-about {
-    margin: 0 !important;
+.swal2-popup .swal2-image.img-about {
+    margin: 0 auto !important;
+    justify-self: center;
 }
 
 /*--------------------------------------------------------------
