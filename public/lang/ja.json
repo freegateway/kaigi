@@ -1086,6 +1086,8 @@
         "You are sharing your screen": "画面を共有しています"
     },
     "dialogs": {
+        "Server restarting": "サーバーを再起動しています",
+        "Waiting for the server. You may need to sign in again.": "サーバーの応答を待っています。再度サインインが必要になる場合があります。",
         "A presenter is required to start the meeting. Please try joining again later.": "会議を開始するにはプレゼンターが必要です。後でもう一度参加をお試しください.",
         "Add to board": "ボードに追加",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "すべての参加者の接続が切断されます。理由を入力した場合は参加者に表示されます。",

@@ -2395,8 +2395,10 @@ function startServer() {
             next();
         } catch {
             securityEvent('socket_auth_rejected', socket, 'invalid_session');
+            // Socket.IO queues CONNECT_ERROR on nextTick. Let that packet flush
+            // before closing the unauthenticated transport (its deadline still applies).
+            socket.conn.once('drain', () => socket.conn.close());
             next(new Error('Authentication required'));
-            socket.conn.close();
         }
     });
 
@@ -5991,14 +5993,18 @@ async function getScheduleMeetingAuthState(req) {
 // ####################################################
 
 let isShuttingDown = false;
+let shutdownStartedAt = 0;
 
 async function gracefulShutdown(signal) {
     if (isShuttingDown) {
+        if (Date.now() - shutdownStartedAt < 2000) return;
         log.warn(`${signal} received again, forcing exit...`);
         process.exit(1);
+        return;
     }
 
     isShuttingDown = true;
+    shutdownStartedAt = Date.now();
     log.info(`${signal} received, starting graceful shutdown...`);
 
     try {
@@ -6008,13 +6014,14 @@ async function gracefulShutdown(signal) {
             log.info('HTTP server closed');
         });
 
-        // 2. Close all active rooms and notify peers
+        // Notify before closing media transports, allowing the event to flush.
+        io.emit('serverShutdown');
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // 2. Close all active rooms
         log.debug(`Closing ${roomList.size} active rooms...`);
         for (const [roomId, room] of roomList.entries()) {
             try {
-                // Notify all peers in the room
-                room.sendToAll('serverShutdown', { message: 'Server is shutting down' });
-
                 // Stop any active RTMP streams
                 if (room.isRtmpFileStreamerActive()) {
                     await room.stopRTMP();
@@ -6048,16 +6055,9 @@ async function gracefulShutdown(signal) {
             }
         }
 
-        // 4. Disconnect all Socket.IO clients
-        log.debug('Disconnecting all Socket.IO clients...');
-        const sockets = await io.fetchSockets();
-        for (const socket of sockets) {
-            socket.disconnect(true);
-        }
-
-        // 5. Close Socket.IO server
+        // Close transports without sending a namespace disconnect, which disables retries.
         log.debug('Closing Socket.IO server...');
-        io.close();
+        await io.close();
 
         // 6. Close all mediasoup workers
         log.debug(`Closing ${workers.length} mediasoup workers...`);

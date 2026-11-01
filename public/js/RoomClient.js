@@ -275,6 +275,12 @@ class RoomClient {
         this.reconnectInterval = Number(this.socket?.io?.opts?.reconnectionDelay) || 3000;
         this.maxReconnectInterval = Number(this.socket?.io?.opts?.reconnectionDelayMax) || 15000;
         this.serverAwayShown = false;
+        this.serverRestarting = false;
+        this.signalingDisconnected = false;
+        this.reloadPending = false;
+        this.reconnectAuthenticationFailed = false;
+        this.reconnectReloadTimer = null;
+        this.reconnectMediaState = null;
         this.silentReconnect = false; // If true, no popup will be shown on reconnect
 
         this.cacheReconnectBannerElements();
@@ -1287,6 +1293,8 @@ class RoomClient {
         const isCurrent = () =>
             transport &&
             !transport.closed &&
+            !this.serverRestarting &&
+            !this.reloadPending &&
             transport === (kind === 'producer' ? this.producerTransport : this.consumerTransport);
 
         if (!isCurrent()) return false;
@@ -1385,7 +1393,7 @@ class RoomClient {
 
         console.warn('SocketOn transport closed by the server', { transport_id, kind });
 
-        if (!this._isConnected) {
+        if (!this._isConnected || this.serverRestarting || this.reloadPending) {
             const transport = kind === 'producer' ? this.producerTransport : this.consumerTransport;
             if (!transport.closed) transport.close();
             return;
@@ -1403,7 +1411,7 @@ class RoomClient {
         // Never recover when we are leaving the room or the server closed it (e.g. meeting
         // ended via API, server shutdown): the socket is gone and recovery attempts would
         // only end in a pointless "Unable to restore media connection" popup.
-        if (!this._isConnected) {
+        if (!this._isConnected || this.serverRestarting || this.reloadPending) {
             console.warn(`↩️ ${kind} transport lost while not connected, skipping recovery`);
             return;
         }
@@ -1426,12 +1434,18 @@ class RoomClient {
         };
 
         console.warn(`🔄 ${kind} transport lost, attempting recovery...`);
+        await new Promise((resolve) => setTimeout(resolve, initialDelay));
+        if (!this._isConnected || this.serverRestarting || this.reloadPending) {
+            releaseProducerSnapshot();
+            this[recoveringFlag] = false;
+            return;
+        }
         this.userLog('warning', `${icons.refresh} Media connection lost, reconnecting...`, 'top-end', 8000);
 
         let delay = initialDelay;
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             // abort if the room was exited / closed / the socket dropped while recovering
-            if (!this._isConnected) {
+            if (!this._isConnected || this.serverRestarting || this.reloadPending) {
                 console.warn(`↩️ ${kind} recovery aborted: no longer connected`);
                 releaseProducerSnapshot();
                 this[recoveringFlag] = false;
@@ -1443,11 +1457,21 @@ class RoomClient {
                 } else {
                     await this.recoverConsumerTransport();
                 }
+                if (!this._isConnected || this.serverRestarting || this.reloadPending) {
+                    releaseProducerSnapshot();
+                    this[recoveringFlag] = false;
+                    return;
+                }
                 console.info(`✅ ${kind} transport recovered on attempt ${attempt}`);
                 this.userLog('info', 'Media reconnected', 'top-end', 4000);
                 this[recoveringFlag] = false;
                 return;
             } catch (error) {
+                if (!this._isConnected || this.serverRestarting || this.reloadPending) {
+                    releaseProducerSnapshot();
+                    this[recoveringFlag] = false;
+                    return;
+                }
                 console.error(`❌ ${kind} transport recovery attempt ${attempt} failed`, error);
                 if (attempt < maxAttempts) {
                     await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1458,7 +1482,7 @@ class RoomClient {
 
         releaseProducerSnapshot();
         this[recoveringFlag] = false;
-        if (!this._isConnected) return;
+        if (!this._isConnected || this.serverRestarting || this.reloadPending) return;
         popupHtmlMessage(
             null,
             image.network,
@@ -1545,11 +1569,19 @@ class RoomClient {
         if (!transport || transport === deadTransport || transport.id === deadTransport?.id) {
             throw new Error('Producer transport creation failed');
         }
+        if (this._isConnected === false || this.serverRestarting || this.reloadPending) {
+            transport.close();
+            throw new Error('Media recovery cancelled');
+        }
 
         const snapshot = this.producerRecoverySnapshot;
 
         // Re-establish the media we had before the transport died, including muted state
         for (const item of snapshot) {
+            if (this._isConnected === false || this.serverRestarting || this.reloadPending) {
+                transport.close();
+                throw new Error('Media recovery cancelled');
+            }
             if (item.track.readyState === 'ended') throw new Error(`Recovery track ended: ${item.type}`);
             try {
                 if (item.type === mediaType.audioTab) {
@@ -1571,7 +1603,7 @@ class RoomClient {
         }
 
         // The chat DataProducer lived on the dead transport too
-        if (!this.chatDataProducer || this.chatDataProducer.closed) {
+        if (!this.serverRestarting && !this.reloadPending && (!this.chatDataProducer || this.chatDataProducer.closed)) {
             await this.initChatDataProducer();
         }
 
@@ -1603,11 +1635,17 @@ class RoomClient {
         if (!transport || transport === deadTransport) {
             throw new Error('Consumer transport creation failed');
         }
+        if (this._isConnected === false || this.serverRestarting || this.reloadPending) {
+            transport.close();
+            throw new Error('Media recovery cancelled');
+        }
 
         // Re-consume everyone using the existing reconcile logic (getProducers +
         // handleNewProducers(reconcile=true)), which also keeps working with the periodic
         // consumer reconcile already in place
         await this.reconcileConsumers();
+
+        if (this._isConnected === false || this.serverRestarting || this.reloadPending) return;
 
         // Re-consume the chat DataProducers of the other peers on the new transport
         this.socket.emit('getDataProducers');
@@ -1624,6 +1662,7 @@ class RoomClient {
         this.socket.on('connect', this.handleSocketConnect);
         this.socket.on('connect_error', this.handleSocketConnectionError);
         this.socket.on('disconnect', this.handleSocketDisconnect);
+        this.socket.on('serverShutdown', this.handleServerShutdown);
         this.socket.on('transportClosed', this.handleTransportClosed);
         this.socket.on('consumerClosed', this.handleConsumerClosed);
         this.socket.on('setVideoOff', this.handleSetVideoOff);
@@ -1689,7 +1728,11 @@ class RoomClient {
 
     handleSocketConnect = () => {
         console.log('SocketOn Connected to signaling server!');
+        // Namespace connect follows authentication; Manager reconnect does not.
+        if (this.signalingDisconnected) this.handleReconnect();
     };
+
+    handleServerShutdown = () => this.handleServerRestart();
 
     handleSocketDisconnect = (reason) => {
         console.log(`SocketOn Disconnect Reason: ${reason}`);
@@ -1697,6 +1740,7 @@ class RoomClient {
     };
 
     handleSocketConnectionError = (err) => {
+        if (err.message === 'Authentication required') this.stopReconnectForAuthentication();
         console.log(`SocketOn Disconnect Error: ${err.message}`);
     };
 
@@ -1707,7 +1751,6 @@ class RoomClient {
 
     handleSocketReconnect = () => {
         console.log('SocketOn Reconnected to signaling server!');
-        this.handleReconnect();
     };
 
     handleSocketReconnectFailed = () => {
@@ -2263,6 +2306,11 @@ class RoomClient {
     }
 
     handleDisconnect(reason) {
+        this.saveReconnectMediaState();
+        this.signalingDisconnected = true;
+        clearTimeout(this.reconnectReloadTimer);
+        this.reconnectReloadTimer = null;
+        this.reloadPending = false;
         endRoomSession();
 
         window.localStorage.isReconnected = true;
@@ -2276,7 +2324,54 @@ class RoomClient {
         this.serverAwayShown = false;
         this._isConnected = false;
 
-        this.showReconnectAlert(reason);
+        if (this.reconnectAuthenticationFailed) return;
+        if (this.serverRestarting) {
+            this.showServerRestartAlert();
+            if (reason === 'io server disconnect') this.socket.connect();
+        } else {
+            this.showReconnectAlert(reason);
+        }
+    }
+
+    handleServerRestart() {
+        if (this.serverRestarting || this.reconnectAuthenticationFailed) return;
+        this.saveReconnectMediaState();
+        this.serverRestarting = true;
+        this.signalingDisconnected = true;
+        this._isConnected = false;
+        this.maxReconnectAttempts = 120;
+        this.socket.io.reconnectionAttempts(120);
+        this.showServerRestartAlert();
+    }
+
+    showServerRestartAlert() {
+        const t = (key) => window.i18n?.t(key, 'dialogs') || key;
+        this.renderReconnectBanner({
+            title: t('Server restarting'),
+            message: t('Waiting for the server. You may need to sign in again.'),
+            meta: '',
+            state: 'reconnecting',
+            showSpinner: true,
+        });
+    }
+
+    stopReconnectForAuthentication() {
+        this.reconnectAuthenticationFailed = true;
+        this._isConnected = false;
+        clearTimeout(this.reconnectReloadTimer);
+        this.reconnectReloadTimer = null;
+        this.reconnectMediaState = null;
+        this.socket.io.reconnection(false);
+        try { window.sessionStorage.removeItem('kaigi_reconnect_media'); } catch {}
+        // The page's authentication-error listener performs logout/navigation.
+    }
+
+    saveReconnectMediaState() {
+        if (this.reconnectMediaState || !this.peer_info) return;
+        this.reconnectMediaState = {
+            audio: this.peer_info.peer_audio === true,
+            video: this.peer_info.peer_video === true,
+        };
     }
 
     handleReconnectAttempt(attempt) {
@@ -2285,9 +2380,15 @@ class RoomClient {
     }
 
     handleReconnect() {
+        if (!this.signalingDisconnected || this.reloadPending || this.reconnectAuthenticationFailed || !this.socket.connected) return;
         this._isConnected = true;
+        this.reloadPending = true;
         this.closeReconnectAlert(true);
-        setTimeout(() => this.refreshBrowser(), 1400);
+        this.reconnectReloadTimer = setTimeout(() => {
+            this.reconnectReloadTimer = null;
+            if (this.socket.connected && !this.reconnectAuthenticationFailed) this.refreshBrowser();
+            else this.reloadPending = false;
+        }, 1400);
     }
 
     handleReconnectFailed() {
@@ -2298,6 +2399,7 @@ class RoomClient {
     }
 
     updateReconnectAlert(delay, attempt = 1) {
+        if (this.serverRestarting) return this.showServerRestartAlert();
         const seconds = Math.max(1, Math.round(delay / 1000));
 
         this.renderReconnectBanner({
@@ -2360,50 +2462,55 @@ class RoomClient {
         });
     }
 
-    removePeerInfoFromLocalStorage() {
+    static consumeReconnectMediaState() {
         try {
-            localStorage.removeItem('sfu_peer_info');
-        } catch (e) {
-            console.warn('Unable to remove sfu_peer_info from localStorage:', e);
-        }
-    }
-
-    updatePeerInfoInLocalStorage() {
-        try {
-            localStorage.setItem('sfu_peer_info', JSON.stringify(this.peer_info));
-        } catch (e) {
-            console.warn('Unable to save peer_info to localStorage:', e);
-        }
-    }
-
-    getPeerInfoFromLocalStorage() {
-        try {
-            const sfu_peer_info = localStorage.getItem('sfu_peer_info');
-            return sfu_peer_info ? JSON.parse(sfu_peer_info) : null;
-        } catch (e) {
-            console.warn('Unable to get sfu_peer_info from localStorage:', e);
-            return null;
-        }
+            const raw = window.sessionStorage.getItem('kaigi_reconnect_media');
+            window.sessionStorage.removeItem('kaigi_reconnect_media');
+            if (!raw || raw.length > 1024) return null;
+            const saved = JSON.parse(raw);
+            if (!saved || saved.sessionStartedAt !== window.sessionStorage.mirotalk_auth_session_started_at ||
+                !saved.sessionStartedAt || saved.navigation !== window.location.pathname + window.location.search ||
+                !Number.isFinite(saved.expires) || saved.expires < Date.now() || saved.expires > Date.now() + 120000 ||
+                typeof saved.audio !== 'boolean' || typeof saved.video !== 'boolean') return null;
+            return { audio: saved.audio, video: saved.video };
+        } catch { return null; }
     }
 
     refreshBrowser() {
-        this.updatePeerInfoInLocalStorage();
+        if (this.reconnectAuthenticationFailed) return;
         const reconnectDirectJoinURL = this.getReconnectDirectJoinURL();
         setTimeout(() => {
             runRoomExit(() => {
+                if (this.reconnectAuthenticationFailed || (typeof authSessionLogoutStarted !== 'undefined' && authSessionLogoutStarted)) return;
+                try {
+                    const sessionStartedAt = window.sessionStorage.mirotalk_auth_session_started_at;
+                    if (this.reconnectMediaState && sessionStartedAt) {
+                        window.sessionStorage.setItem('kaigi_reconnect_media', JSON.stringify({
+                            ...this.reconnectMediaState,
+                            sessionStartedAt,
+                            navigation: reconnectDirectJoinURL,
+                            expires: Date.now() + 120000,
+                        }));
+                    }
+                    // Discard the legacy whole-peer snapshot, which could contain tokens.
+                    localStorage.removeItem('sfu_peer_info');
+                } catch {}
                 isExiting = true;
                 endRoomSession();
                 this.exit(true);
                 openURL(reconnectDirectJoinURL);
-                this.removePeerInfoFromLocalStorage();
             });
         }, 100);
     }
 
     getReconnectDirectJoinURL() {
-        const sfu_peer_info = this.getPeerInfoFromLocalStorage();
-        const { peer_audio, peer_video, peer_screen, peer_token } = sfu_peer_info ? sfu_peer_info : this.peer_info;
-        window.location.replace('/login?select=1');
+        const query = new URLSearchParams(window.location.search);
+        const selection = query.get('selection');
+        if (this.socket?.connected && window.location.pathname === '/meeting' &&
+            Array.from(query.keys()).length === 1 && /^[a-f0-9-]{36}$/.test(selection || '')) {
+            return '/meeting?selection=' + selection;
+        }
+        return '/login?select=1';
     }
 
     // ####################################################
@@ -5199,6 +5306,7 @@ class RoomClient {
 
         const clean = () => {
             this._isConnected = false;
+            clearTimeout(this.reconnectReloadTimer);
             this.teardownAudioUnlock();
             this.stopConsumerReconcile();
             this.stopNetworkMonitor(true);
@@ -5206,6 +5314,7 @@ class RoomClient {
             if (this.producerTransport) this.producerTransport.close();
             if (this.socket) {
                 this.socket.off('disconnect');
+                this.socket.off('serverShutdown');
                 this.socket.off('transportClosed');
                 this.socket.off('newProducers');
                 this.socket.off('consumerClosed');

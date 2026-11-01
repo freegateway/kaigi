@@ -1086,6 +1086,8 @@
         "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
+        "Server restarting": "Server restarting",
+        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "จำเป็นต้องมีผู้นำเสนอเพื่อเริ่มการประชุม โปรดลองเข้าร่วมอีกครั้งในภายหลัง",
         "Add to board": "เพิ่มลงในบอร์ด",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "ผู้เข้าร่วมทั้งหมดจะถูกตัดการเชื่อมต่อ เหตุผล (ถ้ามี) จะแสดงให้พวกเขาเห็น",

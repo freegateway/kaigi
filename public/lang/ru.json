@@ -1086,6 +1086,8 @@
         "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
+        "Server restarting": "Server restarting",
+        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "Для начала встречи требуется ведущий. Попробуйте войти снова позже.",
         "Add to board": "Добавить на доску",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "Все участники будут отключены. Причина, если указана, будет им показана.",

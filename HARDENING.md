@@ -106,6 +106,21 @@ the chosen network topology. The port does not claim end-to-end encryption
 against the conferencing server or guarantee that every deployment has no
 third-party traffic.
 
+## Reconnection
+
+A temporary signaling interruption can return to the same opaque meeting
+selection only after a successful authenticated Socket.IO handshake. The page
+rechecks the live session and exact meeting grants and shows the pre-meeting
+controls again; attendees confirm Join meeting. Muted/off choices are retained
+for that browser tab without restoring credentials, identities or presenter flags
+from browser storage. Screen sharing requires a new explicit action. Supported
+locally saved background settings are restored before camera production.
+
+A daemon restart invalidates server sessions and requires a new sign-in.
+The restart notice and extended connection retries do not extend a session's
+lifetime, restore revoked access or bypass meeting selection. Recording-save
+confirmation still precedes reconnect navigation.
+
 ## Verification and updates
 
 Validate changes against the exact Kaigi source selected for deployment and

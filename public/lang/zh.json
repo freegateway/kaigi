@@ -1086,6 +1086,8 @@
         "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
+        "Server restarting": "Server restarting",
+        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "需要主持人先开始会议. 请稍后再尝试加入. ",
         "Add to board": "添加到白板",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "所有参与者都将被断开连接。如填写了原因，将向他们显示。",
