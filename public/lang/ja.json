@@ -199,6 +199,7 @@
         "Yellow annotation color": "黄色の注釈色"
     },
     "buttons": {
+        "Help": "ヘルプ",
         "Abort": "中止",
         "About": "情報",
         "Accept": "受け入れる",

@@ -199,6 +199,7 @@
         "Yellow annotation color": "Sárga jegyzetszín"
     },
     "buttons": {
+        "Help": "Help",
         "Abort": "Megszakítás",
         "About": "Névjegy",
         "Accept": "Elfogadás",

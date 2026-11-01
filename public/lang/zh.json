@@ -199,6 +199,7 @@
         "Yellow annotation color": "批注颜色：黄色"
     },
     "buttons": {
+        "Help": "Help",
         "Abort": "中止",
         "About": "关于",
         "Accept": "接受",

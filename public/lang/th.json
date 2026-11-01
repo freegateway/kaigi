@@ -199,6 +199,7 @@
         "Yellow annotation color": "สีคำอธิบายประกอบสีเหลือง"
     },
     "buttons": {
+        "Help": "Help",
         "Abort": "ยกเลิก",
         "About": "เกี่ยวกับ",
         "Accept": "ยอมรับ",

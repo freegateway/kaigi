@@ -199,6 +199,7 @@
         "Yellow annotation color": "لون التعليق التوضيحي الأصفر"
     },
     "buttons": {
+        "Help": "Help",
         "Abort": "إلغاء",
         "About": "حول",
         "Accept": "يقبل",

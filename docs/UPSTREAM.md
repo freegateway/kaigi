@@ -1,5 +1,25 @@
 # Upstream intake
 
+## Integrated help prototype (2026-11-01)
+
+Kaigi 0.4.0 adds public `/help` and a `/manual` alias, linked from the login and
+meeting-selection footer. Server-rendered English/en-CA, Japanese and fr-CA
+instructions illustrate these two tasks with fictional, inert controls styled
+using the real local login CSS and administrator site CSS. Only allowlisted
+public branding is projected, using the application's localization overlay
+order. No login scripts, sockets, device access or real meeting data are used.
+Independent restrictive CSP and Permissions Policy enforce the help boundary.
+Stacked narrow-screen and print layouts retain a normal-flow footer.
+
+Also remove the repeated project heading inside the meeting About popup while
+retaining its dialog title and the standalone About heading. This is local
+Kaigi documentation/UI work, not an upstream merge or dependency update.
+
+Validation: 498 Mocha tests and 23 security tests passed on Linux. New DOM/CSS
+and loopback HTTP checks cover branding precedence, escaping, fictional data,
+inert markup, local styles, visible chooser and restrictive response headers.
+These are not actual browser, 150% display-scaling or FreeBSD/Poudriere tests.
+
 ## Local screen-preview choice (2026-10-27)
 
 Kaigi's administrator option `HIDE_LOCAL_SCREEN_SHARE_PREVIEW` defaults to

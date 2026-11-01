@@ -41,6 +41,14 @@ model, deployment requirements and limits of the privacy protections.
 Administrator-selected external services and user-opened links can still
 contact third parties.
 
+## User help
+
+Open `/help` on your installation, or follow **Help** from the sign-in and
+meeting-selection page. The initial English, Japanese and Canadian French guide
+uses your public site branding and local styles to illustrate those two tasks.
+The example controls are non-interactive and contain no real account or meeting
+information. `/manual` redirects to the same guide; a print layout is included.
+
 ## Development
 
 Use Node.js 24 and npm:
