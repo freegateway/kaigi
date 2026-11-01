@@ -33,7 +33,119 @@ const brand = {
     about: { html: 'private-unrelated-brand-data' },
 };
 
-describe('public inert help prototype', () => {
+describe('public help guide and inert illustrations', () => {
+    it('quotes resolved control labels in headings and instructions in every guide language', () => {
+        for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
+            const configured = {
+                ...brand,
+                app: { ...brand.app, joinButtonLabel: 'Enter <approved> meeting' },
+                login: { buttonLabel: 'Login [[SCREEN_ON]] <literal>' },
+            };
+            const dom = new JSDOM(help.renderHelp(configured, language));
+            const document = dom.window.document;
+            const login = document.getElementById('loginButton').textContent.trim();
+            assert(document.getElementById('help-login-title').textContent.includes(login));
+            assert(document.querySelector('.help-instructions ol').textContent.includes(login));
+            assert(
+                document
+                    .querySelectorAll('.help-instructions ol')[1]
+                    .textContent.includes(document.getElementById('joinSelectRoomButton').textContent.trim())
+            );
+            assert.equal(document.querySelector('.help-instructions img'), null);
+            dom.window.close();
+        }
+    });
+
+    it('matches landing language control markup, classes and flag/native-name labels', () => {
+        const source = read('public/js/I18n.js');
+        const start = source.indexOf('const LANG_DISPLAY = '),
+            end = source.indexOf('\n    };', start) + 7;
+        const display = vm.runInNewContext(source.slice(start, end) + '; LANG_DISPLAY');
+        const landing = new JSDOM(read('public/views/login.html')).window.document;
+        const document = new JSDOM(help.renderHelp(brand, 'ja')).window.document;
+        assert.equal(
+            document.querySelector('#preMeetingLanguage label').htmlFor,
+            landing.querySelector('#preMeetingLanguage label').htmlFor
+        );
+        assert(document.querySelector('#preMeetingLanguage label .fa-globe'));
+        assert.equal(document.querySelector('select').className, 'form-select text-light bg-dark notranslate');
+        for (const option of document.querySelectorAll('option'))
+            assert.equal(option.textContent, `${display[option.value].flag} ${display[option.value].name}`);
+        assert.equal(document.querySelector('select').value, 'ja');
+    });
+
+    it('restricts guide locales to supported configured choices and explains an unsupported-only list', () => {
+        const input = { app: { language: 'ja', languages: ['fr-CA', 'ja', 'fr-CA', 'de'] } };
+        const document = new JSDOM(help.renderHelp(input, 'en')).window.document;
+        assert.deepEqual(
+            [...document.querySelectorAll('option')].map((option) => option.value),
+            ['fr-CA', 'ja']
+        );
+        assert.equal(document.documentElement.lang, 'ja');
+        const fallback = new JSDOM(help.renderHelp({ app: { languages: ['de'] } }, 'ja')).window.document;
+        assert.equal(fallback.documentElement.lang, 'en');
+        assert.match(fallback.body.textContent, /none of these languages is enabled/);
+    });
+
+    it('provides matching section targets, keyboard-friendly navigation and complete localized topics', () => {
+        const translations = require('../app/src/templates/HelpTopics.json');
+        for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
+            const document = new JSDOM(help.renderHelp(brand, language)).window.document;
+            const links = [...document.querySelectorAll('.help-sidebar a')];
+            assert.equal(links.length, 8);
+            assert.equal(new Set(links.map((link) => link.hash)).size, 8);
+            for (const link of links) assert(document.getElementById(link.hash.slice(1)));
+            assert(document.querySelector('.help-sidebar details summary'));
+            assert.equal(document.querySelectorAll('.help-text-topic').length, 6);
+            const ids = translations[language === 'en-CA' ? 'en' : language].sections.map((section) => section.id);
+            assert.deepEqual(
+                ids,
+                translations.en.sections.map((section) => section.id)
+            );
+            assert(!document.body.textContent.includes('[[PREJOIN_LABEL]]'));
+        }
+    });
+
+    it('permits only the integrity-pinned navigation script and only same-origin language navigation', () => {
+        const crypto = require('node:crypto');
+        const source = read('public/js/Help.js');
+        const document = new JSDOM(help.renderHelp(brand, 'ja')).window.document;
+        const hash = crypto.createHash('sha256').update(source).digest('base64');
+        assert.equal(document.querySelector('script').getAttribute('integrity'), `sha256-${hash}`);
+        let listener, destination;
+        const picker = {
+            value: 'fr-CA',
+            options: [{ value: 'ja' }, { value: 'fr-CA' }],
+            addEventListener: (event, handler) => {
+                assert.equal(event, 'change');
+                listener = handler;
+            },
+        };
+        vm.runInNewContext(source, {
+            URL,
+            document: { getElementById: () => picker },
+            window: {
+                location: {
+                    origin: 'https://meeting.example',
+                    hash: '#help-screen',
+                    assign: (value) => {
+                        destination = value;
+                    },
+                },
+            },
+        });
+        listener();
+        assert.equal(destination, 'https://meeting.example/help?lang=fr-CA#help-screen');
+        destination = null;
+        picker.value = 'https://outside.example';
+        listener();
+        assert.equal(destination, null);
+        assert.doesNotMatch(
+            source,
+            /fetch\(|XMLHttpRequest|WebSocket|socket\.io|getUserMedia|getDisplayMedia|localStorage|sessionStorage/
+        );
+    });
+
     it('renders the configured identity and localized text without projecting unrelated data', () => {
         for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
             const html = help.renderHelp(brand, language);
@@ -80,12 +192,21 @@ describe('public inert help prototype', () => {
     it('contains no executable application or real credential/meeting controls', () => {
         const dom = new JSDOM(help.renderHelp(brand, 'ja'), { url: 'https://meeting.example/help' });
         const document = dom.window.document;
-        assert.equal(document.querySelector('script, form, input, select, button, iframe, video, audio'), null);
+        assert.equal(document.querySelector('input, iframe, video, audio'), null);
+        assert.equal(document.querySelectorAll('script').length, 1);
+        assert.equal(document.querySelector('script').getAttribute('src'), '/js/Help.js');
+        assert.equal(document.querySelectorAll('form').length, 1);
+        assert.equal(document.querySelector('form').getAttribute('action'), '/help');
+        assert.equal(document.querySelectorAll('select').length, 1);
+        assert.equal(
+            document.querySelector('[inert] script, [inert] form, [inert] input, [inert] select, [inert] button'),
+            null
+        );
         for (const element of document.querySelectorAll('*')) {
             for (const attribute of element.attributes) assert.equal(/^on/i.test(attribute.name), false);
         }
-        assert.equal(document.querySelectorAll('[inert]').length, 2);
-        assert.equal(document.querySelectorAll('[role="img"][aria-label]').length, 2);
+        assert.equal(document.querySelectorAll('[inert]').length, 6);
+        assert.equal(document.querySelectorAll('[role="img"][aria-label]').length, 6);
         assert.equal(document.querySelector('[inert] a'), null);
         assert.equal(document.getElementById('username').textContent, 'example.user');
         assert.equal(document.getElementById('selectRoom').textContent, 'サンプル会議');
@@ -109,7 +230,7 @@ describe('public inert help prototype', () => {
         };
         const dom = new JSDOM(help.renderHelp(hostile));
         assert.match(dom.window.document.querySelector('.help-identity').textContent, /<img/);
-        assert.equal(dom.window.document.querySelector('script, [onerror]'), null);
+        assert.equal(dom.window.document.querySelector('script:not([src="/js/Help.js"]), [onerror]'), null);
         for (const image of dom.window.document.images) assert.equal(image.getAttribute('src'), '/images/logo.svg');
         for (const logo of [
             'javascript:alert(1)',
@@ -210,9 +331,10 @@ describe('public inert help prototype', () => {
         try {
             const response = await request('/help?lang=ja&meeting=private-query-meeting');
             assert.equal(response.status, 200);
-            assert.match(response.headers['content-security-policy'], /script-src 'none'/);
+            assert.match(response.headers['content-security-policy'], /script-src 'sha256-[A-Za-z0-9+/=]+'/);
+            assert.match(response.headers['content-security-policy'], /script-src-attr 'none'/);
             assert.match(response.headers['content-security-policy'], /connect-src 'none'/);
-            assert.match(response.headers['content-security-policy'], /form-action 'none'/);
+            assert.match(response.headers['content-security-policy'], /form-action 'self'/);
             assert.match(response.headers['content-security-policy'], /, /); // Separate intersecting policies, not duplicate directives.
             assert.match(response.headers['permissions-policy'], /camera=\(\), microphone=\(\), display-capture=\(\)/);
             assert.equal(response.headers['cache-control'], 'no-store');

@@ -4,11 +4,22 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { version } = require('../../package.json');
 const strings = require('./templates/HelpStrings.json');
+const topics = require('./templates/HelpTopics.json');
+const crypto = require('node:crypto');
+const scriptHash = crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(path.join(__dirname, '../../public/js/Help.js')))
+    .digest('base64');
 const template = fs.readFileSync(path.join(__dirname, 'templates/Help.html'), 'utf8');
 const languages = ['en', 'en-CA', 'fr-CA', 'ja'];
 const dictionaries = Object.fromEntries(languages.map((code) => [code, require(`../../public/lang/${code}.json`)]));
-const policy =
-    "default-src 'none'; script-src 'none'; connect-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
+const policy = `default-src 'none'; script-src 'sha256-${scriptHash}'; script-src-attr 'none'; connect-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; form-action 'self'; base-uri 'none'`;
+const languageNames = {
+    en: '🇬🇧 English',
+    'en-CA': '🇨🇦 English (Canada)',
+    ja: '🇯🇵 日本語',
+    'fr-CA': '🇨🇦 Français (Canada)',
+};
 
 function escape(value) {
     return String(value ?? '').replace(
@@ -33,15 +44,19 @@ function localLogo(value) {
 
 function renderHelp(input = {}, requested) {
     const brand = input.htmlInjection === false ? {} : input;
-    const language = languages.includes(requested)
+    const permitted = Array.isArray(input.app?.languages)
+        ? [...new Set(input.app.languages.filter((code) => languages.includes(code)))]
+        : languages;
+    const available = permitted.length ? permitted : ['en'];
+    const language = available.includes(requested)
         ? requested
-        : languages.includes(brand.app?.language)
-          ? brand.app.language
-          : 'en';
+        : available.includes(input.app?.language)
+          ? input.app.language
+          : available[0];
     const copy = strings[language] || strings.en;
     const dictionary = dictionaries[language];
     const ui = (key) => {
-        for (const section of ['labels', 'buttons', 'dialogs', 'tooltips']) {
+        for (const section of ['tooltips', 'buttons', 'labels', 'dialogs', 'toasts']) {
             if (typeof dictionary[section]?.[key] === 'string') return dictionary[section][key];
         }
         return key;
@@ -74,8 +89,76 @@ function renderHelp(input = {}, requested) {
         USERNAME_LABEL: ui('Username'),
         PASSWORD_LABEL: ui('Password'),
         LOGOUT_LABEL: ui('Logout'),
+        LANGUAGE_LABEL: ui('Language'),
+        APPLY_LABEL: ui('Apply'),
+        PREJOIN_LABEL: ui('Join meeting'),
+        LEAVE_LABEL: ui('Leave meeting'),
+        AUDIO_ON: ui('Start the audio'),
+        AUDIO_OFF: ui('Stop the audio'),
+        VIDEO_ON: ui('Start the video'),
+        VIDEO_OFF: ui('Stop the video'),
+        SCREEN_ON: ui('Start screen share'),
+        SCREEN_OFF: ui('Stop screen share'),
+        CHAT_LABEL: ui('Chat'),
+        SETTINGS_LABEL: ui('Toggle the settings'),
+        WHITEBOARD_LABEL: ui('Whiteboard'),
+        CONTENTS: topics[language]?.contents || topics.en.contents,
     };
-    return template.replace(/{{([A-Z_]+)}}/g, (_match, key) => escape(data[key]));
+    const expand = (text) => String(text).replace(/\[\[([A-Z_]+)\]\]/g, (_match, key) => String(data[key] ?? ''));
+    const sections = topics[language]?.sections || topics.en.sections;
+    const controls = {
+        'help-media': [
+            ['microphone-slash', 'AUDIO_ON'],
+            ['microphone', 'AUDIO_OFF'],
+            ['video-slash', 'VIDEO_ON'],
+            ['video', 'VIDEO_OFF'],
+            ['cogs', 'SETTINGS_LABEL'],
+        ],
+        'help-screen': [
+            ['desktop', 'SCREEN_ON'],
+            ['stop-circle', 'SCREEN_OFF'],
+        ],
+        'help-collaboration': [
+            ['comment', 'CHAT_LABEL'],
+            ['chalkboard', 'WHITEBOARD_LABEL'],
+        ],
+        'help-leave': [
+            ['sign-out-alt', 'LEAVE_LABEL'],
+            ['power-off', 'LOGOUT_LABEL'],
+        ],
+    };
+    const illustrate = (section) => {
+        const items = controls[section.id];
+        if (!items) return '';
+        const alt = `${section.title}: ${items.map(([, key]) => data[key]).join('; ')}`;
+        return `<figure class="help-control-reference"><div role="img" aria-label="${escape(alt)}"><div class="help-icon-list" inert aria-hidden="true">${items.map(([icon, key]) => `<div><i class="fas fa-${icon}"></i><span>${escape(data[key])}</span></div>`).join('')}</div></div><figcaption>${escape(copy.ILLUSTRATION)}</figcaption></figure>`;
+    };
+    const nav = [
+        ['help-login-title', expand(copy.LOGIN_TITLE)],
+        ['help-choice-title', expand(copy.CHOICE_TITLE)],
+        ...sections.map((section) => [section.id, section.title]),
+    ];
+    const html = {
+        LANGUAGE_OPTIONS: available
+            .map(
+                (code) =>
+                    `<option value="${code}"${code === language ? ' selected' : ''}>${escape(languageNames[code])}</option>`
+            )
+            .join(''),
+        HELP_NAV: nav.map(([id, title]) => `<li><a href="#${id}">${escape(title)}</a></li>`).join(''),
+        HELP_TOPICS: sections
+            .map(
+                (section) =>
+                    `<section class="help-text-topic" aria-labelledby="${section.id}"><h2 id="${section.id}" tabindex="-1">${escape(section.title)}</h2>${illustrate(section)}${section.paragraphs.map((text) => `<p>${escape(expand(text))}</p>`).join('')}</section>`
+            )
+            .join(''),
+        SCRIPT_INTEGRITY: `sha256-${scriptHash}`,
+        LANGUAGE_NOTE: permitted.length ? '' : escape(topics.en.fallback),
+    };
+    // Expand instruction placeholders once, then escape. Configured values stay literal.
+    return template.replace(/{{([A-Z_]+)}}/g, (_match, key) =>
+        Object.hasOwn(html, key) ? html[key] : escape(Object.hasOwn(copy, key) ? expand(copy[key]) : data[key])
+    );
 }
 
 function helpHandler(brand) {

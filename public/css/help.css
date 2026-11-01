@@ -1,3 +1,111 @@
+.help-layout {
+    width: min(1440px, 100%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: start;
+}
+.help-sidebar {
+    position: sticky;
+    top: 16px;
+    padding: 24px;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    overflow-wrap: anywhere;
+}
+.help-sidebar summary {
+    cursor: pointer;
+    font-weight: 700;
+}
+.help-sidebar ol {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+}
+.help-sidebar a {
+    display: block;
+    padding: 10px 0;
+}
+.help-main {
+    min-width: 0;
+}
+.help-main h2 {
+    scroll-margin-top: 24px;
+}
+.help-text-topic {
+    margin: 48px 0;
+    max-width: 75ch;
+}
+.help-text-topic p {
+    overflow-wrap: anywhere;
+}
+.help-page a:focus-visible,
+.help-page summary:focus-visible,
+.help-page select:focus-visible {
+    outline: 3px solid #ffc857;
+    outline-offset: 4px;
+}
+.help-header #preMeetingLanguage {
+    flex-wrap: wrap;
+    margin-left: 0;
+}
+.help-header #preMeetingLanguage select {
+    margin-top: 4px;
+}
+@media (max-width: 1200px) {
+    .help-page .help-topic {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 900px) {
+    .help-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .help-sidebar {
+        position: static;
+        max-height: none;
+        padding-bottom: 0;
+    }
+}
+@media print {
+    .help-layout {
+        display: block;
+    }
+    .help-sidebar,
+    .help-header #preMeetingLanguage {
+        display: none;
+    }
+}
+.help-control-reference {
+    margin: 24px 0;
+    padding: 20px;
+    border: 1px solid #354156;
+    border-radius: 12px;
+}
+.help-icon-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    pointer-events: none;
+}
+.help-icon-list > div {
+    flex: 1 1 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.help-icon-list i {
+    font-size: 26px;
+}
+.help-control-reference figcaption {
+    font-size: 14px;
+    text-align: center;
+    margin-top: 20px;
+}
 .help-page {
     min-height: 100vh;
     display: flex;
