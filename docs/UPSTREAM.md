@@ -281,3 +281,48 @@ transport-request handler. Six mobile/Firefox cases fail against the previous
 source and bundle. No actual browser capture, native worker or FreeBSD application
 test was performed here. The FreeBSD port must update its application pin and
 dependency manifest and require mediasoup 3.32.1 after this change is merged.
+
+## Authenticated reconnection (2026-11-01)
+
+Kaigi 0.3.0 adapts selected lifecycle fixes from
+[8e0c21ee4deb13c9840192336a1961a0324fea0f](https://github.com/miroslavpejic85/mirotalksfu/commit/8e0c21ee4deb13c9840192336a1961a0324fea0f) and
+[1be77b265b3252ae0515b4ed1261ef468d8a6d7b](https://github.com/miroslavpejic85/mirotalksfu/commit/1be77b265b3252ae0515b4ed1261ef468d8a6d7b).
+
+Notify connected clients before media teardown, allow a brief flush interval,
+drop transports without disabling automatic retries and ignore closely repeated
+shutdown signals. The existing forced-shutdown deadline remains. Planned
+restarts get a localized notice and at most 120 retries. Media recovery stops
+while signaling is disconnected, restart is announced or navigation is pending.
+
+Unlike upstream, Manager reconnect never authorizes a reload. Wait for the
+authenticated namespace connect, schedule navigation once and cancel it on
+authentication rejection, another disconnect, exit or logout. Authentication
+rejections now flush CONNECT_ERROR before transport closure; immediate closure
+previously discarded that notification. Failed transports remain subject to
+the existing bounded authentication deadline.
+
+Return only to the current opaque selection, with full HTTP session and exact
+grant revalidation, or the login chooser. Do not adopt upstream meeting-name
+URLs or bypass the pre-meeting Join confirmation. Daemon restarts invalidate
+sessions and require sign-in; retries cannot recover revoked sessions.
+
+Snapshot only microphone/camera booleans before teardown. Store them in per-tab
+session storage for at most two minutes, scoped to the selection and session
+start, and consume once. Remove the legacy whole-peer snapshot path, never
+persist identity, tokens or presenter authority for reconnection. Restore off
+choices conservatively without enabling failed devices. Screen capture always
+requires an explicit action. Restore only supported local background settings.
+
+Japanese, en-CA and fr-CA restart messages are maintained; other catalogues have
+English fallback entries. Existing responsive banner layout is retained.
+
+Validation: 486 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
+Real loopback HTTP requests exercise opaque-selection session/grant revalidation;
+real WebSocket/Socket.IO connections exercise rejected authentication delivery
+and shutdown notification ordering. Sessions and media resources are fixtures.
+VM/DOM tests cover authentication-before-navigation, duplicate events, logout
+and disconnect races, recording waits, late media allocations, minimal per-tab
+storage, muted/off preferences, local backgrounds and localized text rendering.
+The attempted headless Chromium viewport/150% scale check was blocked by process
+socket permissions; no browser rendering, capture or FreeBSD application test
+is claimed. No dependency or native-worker changes are part of this intake.

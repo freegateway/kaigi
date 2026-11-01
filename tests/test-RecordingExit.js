@@ -436,9 +436,7 @@ describe('recording finalization before room exit', () => {
         const h = createHarness();
         const download = deferred();
         h.client.handleLocalRecordingStop = () => download.promise;
-        h.client.updatePeerInfoInLocalStorage = () => {};
-        h.client.removePeerInfoFromLocalStorage = () => {};
-        h.client.getReconnectDirectJoinURL = () => 'https://meet.example/join?room=test';
+        h.client.getReconnectDirectJoinURL = () => '/meeting?selection=12345678-1234-1234-1234-123456789abc';
         h.client.exit = () => h.events.push('offline-exit');
         h.client.refreshBrowser();
         h.timers.shift()();
@@ -446,7 +444,7 @@ describe('recording finalization before room exit', () => {
         h.stopEvent();
         download.resolve();
         await tick();
-        assert.deepEqual(h.events.at(-1), ['navigate', 'https://meet.example/join?room=test']);
+        assert.deepEqual(h.events.at(-1), ['navigate', '/meeting?selection=12345678-1234-1234-1234-123456789abc']);
     });
 
     it('keeps navigation local after saving even in an embedded context', async () => {

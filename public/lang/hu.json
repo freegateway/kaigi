@@ -1086,6 +1086,8 @@
         "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
+        "Server restarting": "Server restarting",
+        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "A megbeszélés indításához előadó szükséges. Próbálj meg később újra csatlakozni.",
         "Add to board": "Hozzáadás a táblához",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "Minden résztvevő kapcsolata megszakad. Az esetleges indoklást látni fogják.",

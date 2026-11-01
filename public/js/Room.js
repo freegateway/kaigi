@@ -336,6 +336,7 @@ socket.on('connect_error', (error) => {
 });
 
 function clearAuthenticatedSession() {
+    window.sessionStorage.removeItem('kaigi_reconnect_media');
     window.sessionStorage.removeItem('peer_token');
     window.sessionStorage.removeItem('mirotalk_allowed_rooms');
     window.sessionStorage.removeItem('mirotalk_displayname');
@@ -349,6 +350,7 @@ function clearAuthenticatedSession() {
 async function terminateAuthenticatedSession(expired = true) {
     if (authSessionLogoutStarted) return;
     authSessionLogoutStarted = true;
+    rc?.stopReconnectForAuthentication?.();
     const token = window.sessionStorage.peer_token;
     if (token) {
         try {
@@ -1820,6 +1822,15 @@ async function whoAreYou() {
     }
 
     applyNoiseSuppressionDefault();
+    const reconnectMedia = RoomClient.consumeReconnectMediaState();
+    if (reconnectMedia) {
+        // Restore muted/off choices without enabling a device that failed initialization.
+        if (!reconnectMedia.audio && isAudioAllowed) handleAudio();
+        if (!reconnectMedia.video && isVideoAllowed) handleVideo();
+        isScreenAllowed = false;
+        joinRoomWithScreen = false;
+        restoreVirtualBackgroundState();
+    }
 
     if (navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia) {
         BUTTONS.main.startScreenButton && show(initStartScreenButton);
@@ -9914,6 +9925,19 @@ function initSettingsNav() {
         e.preventDefault();
         next.focus();
     });
+}
+
+function restoreVirtualBackgroundState() {
+    if (!isVirtualBackgroundAvailable()) return;
+    try {
+        const saved = JSON.parse(localStorage.getItem('virtualBackgroundSettings') || 'null');
+        if (!saved || typeof saved !== 'object') return;
+        virtualBackgroundBlurLevel = Number.isFinite(saved.blurLevel) && saved.blurLevel > 0 && saved.blurLevel <= 100 ? saved.blurLevel : null;
+        virtualBackgroundSelectedImage = !virtualBackgroundBlurLevel && VirtualBackground.isLocalImageSource(saved.imageUrl) ? saved.imageUrl : null;
+        virtualBackgroundTransparent = !virtualBackgroundBlurLevel && !virtualBackgroundSelectedImage && saved.transparent === true ? true : null;
+    } catch {
+        virtualBackgroundBlurLevel = virtualBackgroundSelectedImage = virtualBackgroundTransparent = null;
+    }
 }
 
 async function loadVirtualBackgroundSettings() {
