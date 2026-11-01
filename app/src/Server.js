@@ -2782,6 +2782,10 @@ function startServer() {
         });
 
         socket.on('createWebRtcTransport', async (_, callback) => {
+            if (isShuttingDown) {
+                return callback({ error: 'Server is shutting down' });
+            }
+
             if (!roomExists(socket)) {
                 return callback({ error: 'Room not found' });
             }
@@ -2800,7 +2804,11 @@ function startServer() {
                 const createWebRtcTransport = await room.createWebRtcTransport(socket.id);
                 callback(createWebRtcTransport);
             } catch (err) {
-                log.warn('Create WebRTC Transport warning', { error: err.message, peerInfo });
+                if (err.name === 'WorkerClosedError' || isShuttingDown) {
+                    log.debug('Create WebRTC transport skipped, media server unavailable');
+                } else {
+                    log.warn('Create WebRTC Transport warning', { error: err.message, peerInfo });
+                }
                 callback({ error: err.message });
             }
         });

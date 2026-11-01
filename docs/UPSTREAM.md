@@ -244,3 +244,40 @@ Validation: 453 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
 New regressions exercise real HTTP rate-limit windows, redirect credential
 stripping with cross-realm arrays, query parsing, and Joi validation. OpenID
 Connect middleware configuration also initialized successfully with the override.
+
+## Media maintenance (2026-11-01)
+
+Kaigi 0.2.3 selectively adopts:
+
+- [267da2901a4e3104639335c17d5b634e7d327237](https://github.com/miroslavpejic85/mirotalksfu/commit/267da2901a4e3104639335c17d5b634e7d327237):
+  mediasoup-client 3.26.0, rebuilt locally with the locked esbuild tool. The
+  [primary client diff](https://github.com/versatica/mediasoup-client/compare/3.25.3...3.26.0)
+  enables Firefox ICE-server updates through getConfiguration/setConfiguration.
+- mediasoup 3.32.1, aligning the application lock with the maintainer's separately
+  built FreeBSD worker port. The
+  [primary worker diff](https://github.com/versatica/mediasoup/compare/3.32.0...3.32.1)
+  includes packet-size checks, SCTP receiver-window validation and RTCP changes.
+  Existing BWE/bitrate settings and screen inactivity handling are retained.
+- [0d8f86607f82f23943132e9ede15178c6980cdd2](https://github.com/miroslavpejic85/mirotalksfu/commit/0d8f86607f82f23943132e9ede15178c6980cdd2):
+  default mobile cameras to VGA/20fps with two simulcast layers and lower bitrate
+  caps. Explicit quality/FPS choices and desktop profiles remain unchanged.
+  Screen-capture settings and both local screen-preview modes are unchanged.
+- [a89e552ec3f6fce5673a92f0c3a5122f7528efce](https://github.com/miroslavpejic85/mirotalksfu/commit/a89e552ec3f6fce5673a92f0c3a5122f7528efce):
+  reject transport allocations during shutdown and distinguish closed-worker
+  failures from unexpected allocation errors. Expected failures receive a
+  callback error and debug-only logging; unexpected failures retain diagnostics.
+  Authentication, admission and session revocation are unchanged.
+
+Automatic restart/rejoin and background/media restoration from upstream
+8e0c21ee4deb13c9840192336a1961a0324fea0f and
+1be77b265b3252ae0515b4ed1261ef468d8a6d7b remain deferred for separate reconciliation
+with revoked sessions and opaque meeting selection. No cloud integrations,
+meeting-name URLs, presenter controls or upstream public version footers are added.
+
+Validation: 467 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
+New tests exercise production camera-profile methods, the shipped Firefox client
+with a mock RTCPeerConnection, Room error classification and the production
+transport-request handler. Six mobile/Firefox cases fail against the previous
+source and bundle. No actual browser capture, native worker or FreeBSD application
+test was performed here. The FreeBSD port must update its application pin and
+dependency manifest and require mediasoup 3.32.1 after this change is merged.

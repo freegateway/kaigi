@@ -679,6 +679,12 @@ module.exports = class Room {
                 throw new Error('Failed to create WebRTC Transport');
             }
         } catch (error) {
+            if (error?.name === 'WorkerClosedError' || this.router?.closed) {
+                log.debug('WebRTC transport unavailable, media worker closed');
+                const unavailable = new Error('Media server unavailable');
+                unavailable.name = 'WorkerClosedError';
+                throw unavailable;
+            }
             log.error('Error creating WebRTC Transport', { error: error.message, socket_id });
             throw new Error('Error creating WebRTC Transport');
         }
