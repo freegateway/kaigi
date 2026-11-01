@@ -74,6 +74,7 @@ describe('protected peer info over Socket.IO', function () {
             };
             const context = vm.createContext({
                 socket,
+                isShuttingDown: false,
                 roomList: new Map([['meeting', room]]),
                 securityEvent: emitSecurity,
                 requireAuthSession: (id) => assert.equal(id, 'live'),
