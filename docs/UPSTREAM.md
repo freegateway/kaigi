@@ -326,3 +326,27 @@ storage, muted/off preferences, local backgrounds and localized text rendering.
 The attempted headless Chromium viewport/150% scale check was blocked by process
 socket permissions; no browser rendering, capture or FreeBSD application test
 is claimed. No dependency or native-worker changes are part of this intake.
+
+## Consistent About information (2026-11-01)
+
+Kaigi 0.3.1 uses one server-rendered About content template for the public page,
+configured meeting popup and branding-disabled popup fallback. Lead with Kaigi's
+purpose and application version from package.json, followed by explicit MiroTalk
+SFU/Miroslav Pejic and mediasoup attribution, licensing and the configured
+installation Corresponding Source link. Remove the inherited promotional/social
+block and mixed identity footer, not upstream authorship or copyright notices.
+The popup links to the full page; the page retains administrator site identity,
+description, contact and artwork copyright, and optional popup artwork remains.
+
+Reuse stable About translation keys and add the version label in Japanese,
+en-CA and fr-CA, with English fallback entries in other catalogues. The version
+is not translated or confused with the FreeBSD port revision. No browser assets
+or third-party requests are added. Insert request-specific meeting JSON only
+after trusted template substitutions so meeting keys cannot become placeholders.
+
+Validation: 490 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
+DOM and injection tests cover shared text/order, package version without script
+execution, branding-disabled fallback, localizations, operator identity/artwork,
+source links, literal translated text, escaped links and meeting-placeholder
+separation. Browser rendering, short viewports/150% scaling and FreeBSD testing
+were not performed for this change.

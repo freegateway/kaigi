@@ -1484,6 +1484,7 @@
         "Recording is disabled for this meeting": "L’enregistrement est désactivé pour cette réunion"
     },
     "about": {
+        "versionLabel": "Version de Kaigi",
         "privacyTitle": "Informations sur la confidentialité de Kaigi",
         "privacyOperator": "Cette page décrit le logiciel Kaigi. L’organisation qui exploite cette installation est responsable de sa politique de confidentialité, de ses coordonnées, de la journalisation et des règles de conservation. Demandez à cette organisation la politique qui s’applique à vos réunions.",
         "privacyAccessTitle": "Comptes et accès aux réunions",

@@ -10062,7 +10062,14 @@ function showAbout() {
     sound('open');
 
     const content = document.createElement('div');
-    content.innerHTML = BRAND.about?.html || '';
+    content.innerHTML = BRAND.about?.html || document.getElementById('kaigiAboutFallback')?.innerHTML || '';
+    const fullPage = document.createElement('a');
+    fullPage.href = '/about';
+    fullPage.target = '_blank';
+    fullPage.rel = 'noopener noreferrer';
+    fullPage.dataset.aboutKey = 'creditsTitle';
+    fullPage.textContent = 'Credits & Open Source Software';
+    content.appendChild(fullPage);
     for (const element of content.querySelectorAll('[data-about-key]')) {
         element.textContent = window.i18n?.tKey(element.dataset.aboutKey, element.textContent) || element.textContent;
     }
