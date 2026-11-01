@@ -8,18 +8,25 @@ decisions are recorded separately in `docs/BASELINE.md` and `docs/UPSTREAM.md`.
 
 ## Network and privacy behavior
 
-### Public help prototype
+### Public user help
 
-`/help` (also reachable through `/manual`) illustrates login and meeting
-selection in English, Japanese and Canadian French. It uses resolved public
+`/help` (also reachable through `/manual`) covers login, meeting selection,
+device preparation, media controls, screen sharing, collaboration, logout and
+common problems in English, Japanese and Canadian French. It uses resolved public
 branding, local login styles and `/site-assets/site.css`; it does not read or
 expose configuration files, accounts or meeting grants. Examples are fictional.
-The page has no scripts, forms or live controls. An additional Content Security
-Policy blocks scripts, connections, forms and embedded media; Permissions Policy
+Only the language selector, section links and collapsible navigation work;
+illustrated meeting controls remain inert. The selector uses the landing-page
+markup and styles with the supported subset of configured languages. A GET form
+provides a no-script fallback. An additional Content Security Policy allows only
+the integrity-pinned local language-navigation script, blocks inline handlers,
+connections and embedded media, and restricts form submission to this site.
+No application scripts, credentials, session storage or media are used. Permissions Policy
 denies camera, microphone and screen capture. Local logos under `/images/` or
 `/site-assets/` are supported; remote logos are not loaded. The page includes a
 print layout for locally branded printouts. Administrator CSS can affect its
-appearance, as it does the live interface.
+appearance, as it does the live interface. A sticky section list moves into normal
+flow on narrow screens; both it and the footer avoid covering the guide text.
 
 ### Application resources
 

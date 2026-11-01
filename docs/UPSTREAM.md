@@ -1,5 +1,31 @@
 # Upstream intake
 
+## Navigable user guide (2026-11-01)
+
+Kaigi 0.5.0 expands local user help in English/en-CA, Japanese and fr-CA.
+Instructions quote resolved login/join labels and local control translations,
+including administrator text. Add preparation, media, screen sharing,
+collaboration, leaving/logout and troubleshooting sections, with inert icon
+references for meeting controls. These document Kaigi policy rather than
+upstream presenter or cloud features.
+
+Reuse landing-page language-control markup, styling and native-name/flag labels;
+offer the supported subset of configured languages, with an explicit English
+fallback if no manual language is enabled. Its small local script navigates only
+to `/help`, preserving the section hash and carrying no session or meeting data.
+Pin it with SRI and a CSP hash; preserve connection/device denial and restrict the
+no-script GET form to same-origin submission. No application/media code loads.
+
+Add sticky, scrollable section navigation that moves above the content at narrow
+widths, using a native collapsible details element. Retain normal-flow footers
+and print layout. No dependency or native-worker changes.
+
+Validation: 503 Mocha tests and 23 security tests passed on Linux. DOM, local CSS,
+VM and loopback HTTP tests cover resolved literal labels, locale restrictions,
+landing-control parity, navigation targets, translated section parity, SRI/CSP,
+same-origin navigation and inert illustrations. Actual browser rendering, 150%
+display scaling and FreeBSD testing were not performed.
+
 ## Integrated help prototype (2026-11-01)
 
 Kaigi 0.4.0 adds public `/help` and a `/manual` alias, linked from the login and

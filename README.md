@@ -43,9 +43,11 @@ contact third parties.
 
 ## User help
 
-Open `/help` on your installation, or follow **Help** from the sign-in and
-meeting-selection page. The initial English, Japanese and Canadian French guide
-uses your public site branding and local styles to illustrate those two tasks.
+Open `/help` on your installation, or follow **Help** from the login and
+meeting-selection page. The English, Japanese and Canadian French guide covers
+joining, devices, meeting controls, screen sharing, collaboration, logout and
+common problems. It uses your public branding, configured control labels and
+local styles, with a language selector and collapsible section navigation.
 The example controls are non-interactive and contain no real account or meeting
 information. `/manual` redirects to the same guide; a print layout is included.
 
