@@ -268,7 +268,7 @@ ldap/group-meetings.json consolidates default groups and group grants,
 including shared meetings and union-based grants.
 
 The locked dependency set pins proxy-addr 2.0.8, source-map-js 1.2.2 and
-joi 17.13.8 through npm overrides. LDAP_ENABLED remains off by default.
+joi 17.13.9 through npm overrides. LDAP_ENABLED remains off by default.
 LDAP improvements do not add ldapi support.
 
 ## Private meeting selection and invitations
