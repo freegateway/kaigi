@@ -37,6 +37,23 @@ function translator(language) {
 }
 
 describe('Kaigi project information', () => {
+    it('centres only the meeting popup logo without changing standalone About alignment', () => {
+        const css = read('public/css/Room.css');
+        const rule = css.match(/\.swal2-popup \.swal2-image\.img-about\s*\{[^}]+\}/)?.[0];
+        assert.ok(rule);
+        const dom = new JSDOM(
+            `<style>${rule}</style><div class="swal2-popup"><img id="popupLogo" class="swal2-image img-about"></div><main class="about-local"><img id="pageLogo" class="about-local-logo"></main>`
+        );
+        const popup = dom.window.getComputedStyle(dom.window.document.getElementById('popupLogo'));
+        assert.equal(popup.marginLeft, 'auto');
+        assert.equal(popup.marginRight, 'auto');
+        assert.equal(popup.justifySelf, 'center');
+        const page = dom.window.getComputedStyle(dom.window.document.getElementById('pageLogo'));
+        assert.notEqual(page.marginLeft, 'auto');
+        assert.notEqual(page.justifySelf, 'center');
+        assert.equal(read('public/views/about.html').includes('img-about'), false);
+        dom.window.close();
+    });
     it('shares Kaigi-first core content and the package version between the page and popup', () => {
         const about = require('../app/src/config.template').ui.brand.about;
         const page = new JSDOM(render('about', { site: { sourceCodeUrl: '/source/exact.tar.xz' } }));

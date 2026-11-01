@@ -350,3 +350,14 @@ execution, branding-disabled fallback, localizations, operator identity/artwork,
 source links, literal translated text, escaped links and meeting-placeholder
 separation. Browser rendering, short viewports/150% scaling and FreeBSD testing
 were not performed for this change.
+
+## About popup logo alignment (2026-11-01)
+
+Kaigi 0.3.2 centres the custom logo using a selector limited to the meeting
+About popup's SweetAlert image. Retain zero vertical margins and leave the
+standalone /about page and its left alignment unchanged.
+
+Validation: 491 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
+A CSS/DOM regression checks automatic horizontal margins, grid centring and
+isolation from the standalone logo. Actual browser rendering, 150% scaling and
+FreeBSD testing remain unverified.

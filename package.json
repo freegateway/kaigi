@@ -1,6 +1,6 @@
 {
     "name": "kaigi",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "description": "FreeGateway Kaigi: privacy-hardened FreeBSD video conferencing",
     "main": "Server.js",
     "scripts": {
