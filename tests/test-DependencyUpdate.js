@@ -206,8 +206,13 @@ describe('updated media and mail dependencies', () => {
         assert.doesNotMatch(JSON.stringify(messages), /secret-test-password|"password"/);
     });
 
-    for (const arrayHeaders of [false, true]) {
-        it(`strips credentials on cross-origin redirects with ${arrayHeaders ? 'array' : 'object'} headers`, async () => {
+    for (const [arrayHeaders, crossRealm] of [
+        [false, false],
+        [true, false],
+        [false, true],
+        [true, true],
+    ]) {
+        it(`strips credentials on cross-origin redirects with ${arrayHeaders ? 'array' : 'object'} headers${crossRealm ? ' and cross-realm sensitiveHeaders' : ''}`, async () => {
             const target = http.createServer((req, res) => res.end(JSON.stringify(req.headers)));
             const origin = http.createServer((req, res) => {
                 res.writeHead(302, { Location: `http://127.0.0.1:${target.address().port}/` });
@@ -229,7 +234,9 @@ describe('updated media and mail dependencies', () => {
                             port: origin.address().port,
                             path: '/',
                             headers: arrayHeaders ? Object.entries(fields).flat() : fields,
-                            sensitiveHeaders: ['X-Api^Key', 'X-Token|Secret'],
+                            sensitiveHeaders: crossRealm
+                                ? vm.runInNewContext("['X-Api^Key', 'X-Token|Secret']")
+                                : ['X-Api^Key', 'X-Token|Secret'],
                         },
                         (response) => {
                             let body = '';

@@ -218,3 +218,29 @@ translation observer and supports live language changes.
 Regression coverage checks hidden media, unchanged source tracks, stop delegation,
 normal cleanup/recreation and live localization. Actual browser capture, short
 viewports, 150% scaling and FreeBSD media testing remain separate checks.
+
+## Security dependency maintenance (2026-11-01)
+
+Kaigi 0.2.2 selectively updates retained server dependencies:
+
+- express-rate-limit 8.7.2 prevents an earlier-window successful response from
+  decrementing the current window's failed-request count.
+- qs 6.17.1 includes prototype-key filtering and sparse-array parsing corrections.
+- joi 17.13.9 is pinned through overrides for prototype-key and multiple-email
+  validation fixes in the retained OpenID Connect dependency chain.
+- follow-redirects 1.16.2 is pinned through overrides to recognize cross-realm
+  sensitive-header arrays. This is compatibility/defence-in-depth maintenance,
+  not a claim of a newly verified Kaigi vulnerability.
+
+The rate-limit update also appears in upstream commit
+[569c5c2e2490acc20849a65d705e6df97d06c581](https://github.com/miroslavpejic85/mirotalksfu/commit/569c5c2e2490acc20849a65d705e6df97d06c581).
+Primary dependency comparisons:
+[qs](https://github.com/ljharb/qs/compare/v6.16.1...v6.17.1),
+[joi](https://github.com/hapijs/joi/compare/v17.13.8...v17.13.9), and
+[follow-redirects](https://github.com/follow-redirects/follow-redirects/compare/v1.16.1...v1.16.2).
+Media behavior and browser bundles are unchanged.
+
+Validation: 453 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
+New regressions exercise real HTTP rate-limit windows, redirect credential
+stripping with cross-realm arrays, query parsing, and Joi validation. OpenID
+Connect middleware configuration also initialized successfully with the override.
