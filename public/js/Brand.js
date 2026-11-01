@@ -112,65 +112,7 @@ let BRAND = {
     about: {
         imageUrl: '',
         title: 'About Kaigi',
-        html: `
-            <div class="about-content">
-                <h3 data-about-key="upstreamCredits" data-i18n-skip>MiroTalk SFU credits</h3>
-                <p class="about-description">
-                    Self-hosted group video meetings with scalable WebRTC conferencing.
-                </p>
-                <a
-                    class="about-primary-action"
-                    data-umami-event="About button"
-                    href="https://docs.mirotalk.com/sites/sfu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <i class="fas fa-info-circle" aria-hidden="true"></i>
-                    <span>About</span>
-                </a>
-                <dl class="about-details">
-                    <div>
-                        <dt>Author</dt>
-                        <dd>
-                            <a
-                                id="linkedin-button"
-                                data-umami-event="Linkedin button"
-                                href="https://www.linkedin.com/in/miroslav-pejic-976a07101/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >Miroslav Pejic</a>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>Email</dt>
-                        <dd>
-                            <a
-                                id="email-button"
-                                data-umami-event="Email button"
-                                href="mailto:miroslav.pejic.85@gmail.com?subject=MiroTalk SFU info"
-                            >miroslav.pejic.85@gmail.com</a>
-                        </dd>
-                    </div>
-                </dl>
-                <footer class="about-footer">
-                    &copy; ${new Date().getFullYear()} MiroTalk SFU · GNU AGPLv3
-                </footer>
-                <section class="about-build-info">
-                    <h3 data-about-key="projectTitle" data-i18n-skip>About Kaigi</h3>
-                    <p data-about-key="intro" data-i18n-skip>Kaigi is the FreeGateway Project’s self-hosted video conferencing system for FreeBSD. It is developed independently as a fork of MiroTalk SFU and uses mediasoup for WebRTC media.</p>
-                    <p data-about-key="projectPurpose" data-i18n-skip>Kaigi puts privacy, authenticated meeting access and administrator control first. Browser resources are hosted locally, without third-party tracking or translation services.</p>
-                    <p><a href="https://github.com/freegateway/kaigi" target="_blank" rel="noopener noreferrer" data-about-key="kaigiProject" data-i18n-skip>Kaigi source project</a></p>
-                    <p><a href="https://www.freegateway.org/" target="_blank" rel="noopener noreferrer" data-about-key="freeGatewayProject" data-i18n-skip>FreeGateway Digital Sovereignty Project</a></p>
-                    <p><strong>mediasoup</strong> <span data-about-key="mediasoupNotice" data-i18n-skip>is the open-source WebRTC Selective Forwarding Unit (SFU) that handles conference media in Kaigi.</span></p>
-                    <p><a href="https://mediasoup.org/" target="_blank" rel="noopener noreferrer" data-about-key="mediasoupProject" data-i18n-skip>mediasoup upstream project</a></p>
-                    <p data-about-key="licenseNotice" data-i18n-skip>Kaigi is distributed under GNU AGPLv3, without warranty.</p>
-                    <p><a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" data-about-key="licenseLink" data-i18n-skip>GNU AGPLv3</a></p>
-                    <p data-about-key="sourceNotice" data-i18n-skip>For this installation’s Corresponding Source, including its changes and build material, use the link below.</p>
-                    <p><a href="/about" target="_blank" rel="noopener noreferrer" data-about-key="correspondingSource" data-i18n-skip>Corresponding Source for this Kaigi installation</a></p>
-                    <p><a href="/about" target="_blank" rel="noopener noreferrer" data-about-key="creditsTitle" data-i18n-skip>Credits &amp; Open Source Software</a></p>
-                </section>
-            </div>
-        `,
+        html: '',
     },
     widget: {
         enabled: false,

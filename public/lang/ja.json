@@ -1484,6 +1484,7 @@
         "Recording is disabled for this meeting": "この会議では録画が無効になっています"
     },
     "about": {
+        "versionLabel": "Kaigi のバージョン",
         "privacyTitle": "Kaigiのプライバシー情報",
         "privacyOperator": "このページはKaigiソフトウェアについて説明しています。この環境を運営する組織が、プライバシーポリシー、連絡先、ログ記録および保存期間の規則を定めます。会議に適用されるポリシーは、その組織にお問い合わせください。",
         "privacyAccessTitle": "アカウントと会議へのアクセス",

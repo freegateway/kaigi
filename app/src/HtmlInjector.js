@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { siteMetadata } = require('./SiteMetadata');
+const { renderAbout } = require('./AboutContent');
 
 const chokidar = require('chokidar');
 
@@ -81,11 +82,6 @@ class HtmlInjector {
     // Function to inject dynamic data (e.g., OG, TITLE, etc.) into a given file
     injectHtml(filePath, res, context = {}) {
         let html = this.cache[filePath];
-        if (context.meeting && html) {
-            const data = JSON.stringify({ meeting: context.meeting }).replace(/</g, '\\u003c');
-            html = html.replace('</head>', `<script type="application/json" id="authorizedMeeting">${data}</script></head>`);
-        }
-
         if (!html) {
             log.error(`File not cached: ${filePath}`);
             if (!res.headersSent) {
@@ -98,6 +94,7 @@ class HtmlInjector {
             const escape = value => String(value ?? '').replace(/[&<>"']/g, character =>
                 ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
             const data = this.getInjectData();
+            html = html.replaceAll('{{KAIGI_ABOUT}}', () => renderAbout(this.config?.site?.sourceCodeUrl));
             html = html.replace(/{{(APP_NAME|OG_[A-Z_]+)}}/g, (_, key) => escape(data[key]));
             // Only rewrite metadata inside the trusted template's head. Cached
             // templates remain unchanged; no request fields enter public previews.
@@ -119,6 +116,11 @@ class HtmlInjector {
                 }
                 return `<head>${head}\n</head>`;
             });
+            // Request data must never be interpreted as a template placeholder.
+            if (context.meeting) {
+                const meeting = JSON.stringify({ meeting: context.meeting }).replace(/</g, '\\u003c');
+                html = html.replace('</head>', () => `<script type="application/json" id="authorizedMeeting">${meeting}</script></head>`);
+            }
             if (!res.headersSent) {
                 res.send(html);
             }
