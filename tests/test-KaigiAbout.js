@@ -225,6 +225,8 @@ describe('Kaigi project information', () => {
             assert.equal(popup.title, dictionary('ja').projectTitle);
             assert.equal(popup.imageUrl, undefined);
             const content = new JSDOM(popup.html).window.document;
+            assert.equal(content.querySelector('#kaigiProjectTitle'), null);
+            assert.equal(content.querySelector('[aria-labelledby="kaigiProjectTitle"]'), null);
             assert.equal(
                 content.querySelector('[data-about-key="projectPurpose"]').textContent,
                 '<img src="https://untrusted.example/tracker">'

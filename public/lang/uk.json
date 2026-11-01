@@ -199,6 +199,7 @@
         "Yellow annotation color": "Жовтий колір анотації"
     },
     "buttons": {
+        "Help": "Help",
         "Abort": "Перервати",
         "About": "Про програму",
         "Accept": "прийняти",

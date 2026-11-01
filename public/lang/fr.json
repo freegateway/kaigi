@@ -199,6 +199,7 @@
         "Yellow annotation color": "Couleur d’annotation jaune"
     },
     "buttons": {
+        "Help": "Help",
         "Abort": "Abandonner",
         "About": "À propos",
         "Accept": "Accepter",

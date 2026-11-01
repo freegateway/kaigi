@@ -10063,6 +10063,11 @@ function showAbout() {
 
     const content = document.createElement('div');
     content.innerHTML = BRAND.about?.html || document.getElementById('kaigiAboutFallback')?.innerHTML || '';
+    const repeatedTitle = content.querySelector('#kaigiProjectTitle');
+    if (repeatedTitle) {
+        repeatedTitle.parentElement.removeAttribute('aria-labelledby');
+        repeatedTitle.remove();
+    }
     const fullPage = document.createElement('a');
     fullPage.href = '/about';
     fullPage.target = '_blank';

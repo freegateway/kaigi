@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="{{LANGUAGE}}">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{TITLE}} - {{SITE_NAME}}</title>
+        <meta name="description" content="{{INTRO}}" />
+        <link rel="stylesheet" href="/css/landing.css" />
+        <link rel="stylesheet" href="/css/login.css" />
+        <link rel="stylesheet" href="/vendor/@fortawesome/fontawesome-free/css/all.min.css" />
+        <link rel="stylesheet" href="/css/help.css" />
+        <link rel="stylesheet" href="/site-assets/site.css" />
+    </head>
+    <body class="help-page">
+        <header class="help-header">
+            <a href="/" class="help-identity"><img src="{{LOGO}}" alt="" /><span>{{SITE_NAME}}</span></a>
+            <nav aria-label="{{LANGUAGES}}">
+                <a href="/help?lang=en-CA" lang="en-CA">English</a><a href="/help?lang=ja" lang="ja">日本語</a
+                ><a href="/help?lang=fr-CA" lang="fr-CA">Français (Canada)</a>
+            </nav>
+        </header>
+        <main class="help-main">
+            <p class="help-kicker">{{PROTOTYPE}}</p>
+            <h1>{{TITLE}}</h1>
+            <p class="help-site-description">{{SITE_DESCRIPTION}}</p>
+            <p>{{INTRO}}</p>
+            <p class="help-notice">{{EXAMPLES}}</p>
+            <section class="help-topic" aria-labelledby="help-login-title">
+                <div class="help-instructions">
+                    <h2 id="help-login-title">{{LOGIN_TITLE}}</h2>
+                    <ol>
+                        <li>{{LOGIN_STEP_A}}</li>
+                        <li>{{LOGIN_STEP_B}}</li>
+                        <li>{{LOGIN_STEP_C}}</li>
+                    </ol>
+                </div>
+                <figure class="help-figure">
+                    <div class="help-illustration" role="img" aria-label="{{LOGIN_ALT}}">
+                        <div inert aria-hidden="true">
+                            <div class="help-demo-brand"><img src="{{LOGO}}" alt="" /><span>{{SITE_NAME}}</span></div>
+                            <div class="login-card">
+                                <div id="loginForm" class="login-form-section">
+                                    <div class="login-icon"><i class="fa-solid fa-lock"></i></div>
+                                    <h2 id="loginHeading" class="login-title">{{LOGIN_HEADING}}</h2>
+                                    <p id="loginDescription" class="login-description">{{LOGIN_INSTRUCTIONS}}</p>
+                                    <div class="help-target">
+                                        <span class="help-callout">1</span>
+                                        <div class="login-input-group">
+                                            <i class="fa-solid fa-user"></i
+                                            ><span id="username" class="form-input help-field">example.user</span>
+                                        </div>
+                                    </div>
+                                    <div class="help-target">
+                                        <span class="help-callout">2</span>
+                                        <div class="login-input-group">
+                                            <i class="fa-solid fa-key"></i
+                                            ><span id="password" class="form-input help-field">••••••••</span>
+                                        </div>
+                                    </div>
+                                    <div class="help-target">
+                                        <span class="help-callout">3</span
+                                        ><span id="loginButton" class="login-btn help-control">{{LOGIN_LABEL}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <figcaption>{{ILLUSTRATION}}</figcaption>
+                </figure>
+            </section>
+            <section class="help-topic" aria-labelledby="help-choice-title">
+                <div class="help-instructions">
+                    <h2 id="help-choice-title">{{CHOICE_TITLE}}</h2>
+                    <ol>
+                        <li>{{CHOICE_STEP_A}}</li>
+                        <li>{{CHOICE_STEP_B}}</li>
+                        <li>{{CHOICE_STEP_C}}</li>
+                    </ol>
+                </div>
+                <figure class="help-figure">
+                    <div class="help-illustration" role="img" aria-label="{{CHOICE_ALT}}">
+                        <div inert aria-hidden="true">
+                            <div class="help-demo-brand"><img src="{{LOGO}}" alt="" /><span>{{SITE_NAME}}</span></div>
+                            <div class="login-card">
+                                <div id="joinRoomForm" class="login-form-section show">
+                                    <div class="login-icon login-icon-success"><i class="fa-solid fa-video"></i></div>
+                                    <h2 id="loginNewRoomTitle" class="join-room-title">{{CHOOSE_HEADING}}</h2>
+                                    <p id="loginNewRoomDescription" class="login-description">
+                                        {{CHOOSE_INSTRUCTIONS}}
+                                    </p>
+                                    <div class="help-logout help-target">
+                                        <span class="help-callout">3</span
+                                        ><span id="logoutButton" class="logout-icon-btn"
+                                            ><i class="fa-solid fa-power-off"></i
+                                        ></span>
+                                    </div>
+                                    <div class="help-target">
+                                        <span class="help-callout">1</span>
+                                        <div class="login-input-group">
+                                            <i class="fa-solid fa-door-open"></i
+                                            ><span id="selectRoom" class="form-input help-field"
+                                                >{{EXAMPLE_MEETING}}</span
+                                            ><i class="fa-solid fa-chevron-down help-chevron"></i>
+                                        </div>
+                                    </div>
+                                    <div class="help-target">
+                                        <span class="help-callout">2</span
+                                        ><span id="joinSelectRoomButton" class="join-room-btn help-control"
+                                            ><i class="fa-solid fa-right-to-bracket"></i> {{JOIN_LABEL}}</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <figcaption>{{ILLUSTRATION}}</figcaption>
+                </figure>
+            </section>
+            <aside class="help-notice">
+                <h2>{{NO_ACCESS_TITLE}}</h2>
+                <p>{{NO_ACCESS}}</p>
+            </aside>
+            <p>{{SCOPE}}</p>
+            <p><a href="/login">{{BACK}}</a></p>
+        </main>
+        <footer class="help-footer">
+            <a href="/about">{{ABOUT}}</a><span>{{VERSION_LABEL}} {{VERSION}}</span><span>{{SITE_COPYRIGHT}}</span>
+        </footer>
+    </body>
+</html>

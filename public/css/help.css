@@ -1,0 +1,240 @@
+.help-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.help-header,
+.help-main,
+.help-footer {
+    width: min(1200px, 100%);
+    margin: 0 auto;
+    padding: 24px;
+    box-sizing: border-box;
+}
+.help-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+.help-identity,
+.help-demo-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow-wrap: anywhere;
+}
+.help-identity {
+    font-size: 24px;
+    font-weight: 700;
+}
+.help-identity img,
+.help-demo-brand img {
+    max-width: 100px;
+    max-height: 64px;
+    object-fit: contain;
+}
+.help-header nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.help-main {
+    flex: 1;
+}
+.help-kicker,
+.help-figure figcaption,
+.help-footer {
+    font-size: 14px;
+}
+.help-topic {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 32px;
+    margin: 48px 0;
+    align-items: start;
+}
+.help-instructions li {
+    padding: 0 0 18px 8px;
+    overflow-wrap: anywhere;
+}
+.help-notice {
+    border-left: 4px solid #4678f9;
+    background: rgba(70, 120, 249, 0.08);
+    padding: 18px 24px;
+}
+.help-notice h2 {
+    font-size: 22px;
+    margin-top: 0;
+}
+.help-notice p {
+    margin-bottom: 0;
+}
+.help-figure {
+    min-width: 0;
+    margin: 0;
+}
+.help-figure figcaption {
+    margin-top: 12px;
+    text-align: center;
+}
+.help-illustration {
+    padding: 24px;
+    background: #151719;
+    border: 1px solid #354156;
+    border-radius: 12px;
+}
+.help-illustration [inert] {
+    pointer-events: none;
+    user-select: none;
+}
+.help-demo-brand {
+    margin-bottom: 24px;
+    color: #fff;
+}
+.help-demo-brand img {
+    max-width: 72px;
+    max-height: 48px;
+}
+.help-demo-brand span,
+.help-illustration h2,
+.help-control,
+.help-field {
+    overflow-wrap: anywhere;
+}
+.help-illustration .login-card {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    padding: 32px;
+}
+.help-illustration #joinRoomForm {
+    margin: 0;
+    padding: 0;
+    background: none;
+}
+.help-illustration .help-field {
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 0;
+    text-align: left;
+    color: #fff;
+}
+.help-control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 48px;
+    cursor: default;
+}
+.help-target {
+    position: relative;
+}
+.help-callout {
+    position: absolute;
+    right: -14px;
+    top: 8px;
+    z-index: 1;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #ffc857;
+    color: #14283e;
+    font: 700 14px/1 sans-serif;
+}
+.help-logout {
+    width: 40px;
+    margin-left: auto;
+    margin-bottom: 16px;
+    height: 40px;
+}
+.help-illustration .logout-icon-btn {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+.help-illustration .help-chevron {
+    position: static;
+    margin-left: auto;
+    font-size: 12px;
+    color: #fff;
+}
+.help-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    border-top: 1px solid #354156;
+}
+.help-site-description {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+    .help-topic {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+}
+@media (max-width: 480px) {
+    .help-header,
+    .help-main,
+    .help-footer {
+        padding: 16px;
+    }
+    .help-illustration {
+        padding: 16px;
+    }
+    .help-illustration .login-card {
+        padding: 24px;
+    }
+}
+@media print {
+    .help-page {
+        display: block;
+        background: #fff;
+        color: #111;
+    }
+    .help-header nav {
+        display: none;
+    }
+    .help-topic {
+        display: block;
+        break-before: page;
+    }
+    .help-figure {
+        break-inside: avoid;
+    }
+    .help-main,
+    .help-header,
+    .help-footer {
+        width: 100%;
+        padding: 0;
+    }
+    .help-notice {
+        background: transparent;
+    }
+    .help-illustration {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+    .help-page a {
+        color: inherit;
+    }
+}
+@page {
+    margin: 16mm;
+}

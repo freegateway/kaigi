@@ -1280,6 +1280,10 @@ function startServer() {
         htmlInjector.injectHtml(views.privacy, res);
     });
 
+    // Public, inert help uses an allowlisted projection of resolved branding only.
+    app.get('/help', require('./Help')(config.ui?.brand || {}));
+    app.get('/manual', (_req, res) => res.redirect('/help'));
+
     // local site and open-source information
     app.get('/about', (req, res) => {
         htmlInjector.injectHtml(views.about, res);
