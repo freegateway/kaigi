@@ -101,6 +101,34 @@
 .help-icon-list i {
     font-size: 26px;
 }
+.help-icon-list > .help-layout-examples {
+    display: block;
+    flex-basis: 100%;
+    width: 100%;
+}
+.help-layout-examples > div {
+    margin-top: 16px;
+    width: 100%;
+}
+.help-mini-tiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    min-height: 100px;
+    margin-top: 8px;
+}
+.help-mini-tiles span {
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    border: 1px solid #6991fa;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+.help-mini-pinned {
+    grid-template-columns: 3fr 1fr;
+}
 .help-control-reference figcaption {
     font-size: 14px;
     text-align: center;

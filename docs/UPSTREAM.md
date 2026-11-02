@@ -1,5 +1,31 @@
 # Upstream intake
 
+## Short viewports and video arrangement help (2026-11-02)
+
+Kaigi 0.5.2 compacts decoration and vertical spacing on login/meeting selection
+at viewport heights up to 760 CSS pixels. Scope rules to login-page; retain
+readable text, input/button sizes, proportional logos, scrolling and normal-flow
+footers. Match chooser negative margins to reduced card padding. Long operator
+branding can still require scrolling; do not force every deployment into a screen.
+
+Correct inherited static video-tile pin labels in shared control code. Synchronize
+source/proxy buttons, captions, tooltips, accessible names and pressed state after
+pin/unpin and cleanup. Keep translation source keys current for live language
+changes. The original media-producer body remains byte-for-byte unchanged;
+the generic tooltip helper resolves its pin action label from current state.
+No media, screen-preview policy, signaling, session or dependency changes.
+
+Add a navigable video-arrangement help section in English/en-CA, Japanese and
+fr-CA. Explain pinning the remote participant, participant layouts, local self-view
+visibility versus stopping the camera, and browser-managed Picture in Picture.
+Include inert pin/layout icon references and schematic grid-versus-pinned tile
+comparisons, not functioning conference controls or real attendee information.
+
+Validation: 518 application tests and 23 security tests passed on Linux. DOM tests
+exercise source/proxy pin/unpin clicks, cleanup and maintained translations;
+CSS/source checks verify scoped short-height rules and help coverage. Actual
+browser rendering, Windows 150% scaling and FreeBSD/Poudriere were not tested.
+
 ## Participant identity and editor boundaries (2026-11-02)
 
 Kaigi 0.5.1 adapts upstream chat identity

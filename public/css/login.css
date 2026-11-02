@@ -522,4 +522,52 @@
     }
 }
 
-.landing-with-footer .center-card-section { min-height: 0; padding: 24px 0 !important; align-items: flex-start; }
+.landing-with-footer .center-card-section {
+    min-height: 0;
+    padding: 24px 0 !important;
+    align-items: flex-start;
+}
+
+@media (max-height: 760px) {
+    .login-page .site-header {
+        padding: 8px 0;
+    }
+    .login-page #headerLogo {
+        max-height: 56px;
+        max-width: min(280px, 65vw);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+    .login-page .landing-with-footer .center-card-section {
+        padding: 8px 0 !important;
+    }
+    .login-page .login-card {
+        padding: 24px;
+    }
+    .login-page #joinRoomForm {
+        padding: 24px;
+        margin: -24px;
+    }
+    .login-page .login-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+    }
+    .login-page .login-icon i {
+        font-size: 24px;
+    }
+    .login-page .login-description {
+        margin-bottom: 16px;
+    }
+    .login-page .join-room-title {
+        margin-bottom: 12px;
+    }
+    .login-page .login-input-group {
+        margin-bottom: 12px;
+    }
+    .login-page .site-footer-inner {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+}
