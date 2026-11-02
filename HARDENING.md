@@ -51,6 +51,22 @@ flow on narrow screens; both it and the footer avoid covering the guide text.
 
 ## Authentication and secrets
 
+### Participant message boundaries
+
+DataChannel chat uses the server-announced producer owner's identity, not the
+message body's author fields. File announcements, chunks and aborts are tied to
+the sending socket and the announced recipients in its current meeting. Receiver
+cancellation removes that receiver only; it does not terminate a broadcast for
+other attendees. Simultaneous incoming offers do not overwrite an active transfer.
+
+Participants cannot lock/unlock or remotely open/close the shared editor, nor
+broadcast full-document replacements. Collaborative changes and clearing remain
+available. A new member can receive a one-time, server-directed snapshot from
+an existing member; requests expire after ten seconds and cannot target other
+participants. Shared editor state is not a persistent document store. Private
+notes are not included in snapshots. These checks supplement, not replace,
+live-session and admission checks.
+
 - Local accounts and allowed meetings are configured in the root-only
   `etc/kaigi/users` file. The rc script reads it at startup. It creates a
   persistent random JWT signing secret in `etc/kaigi/jwt-secret` on first

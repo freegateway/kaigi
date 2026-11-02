@@ -3867,56 +3867,7 @@ function startServer() {
             cb(room.toJson());
         });
 
-        socket.on('fileInfo', (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            const data = checkXSS(dataObject);
-
-            if (!Validator.isValidData(data)) return;
-
-            if (!isValidFileName(data.fileName)) {
-                log.debug('File name not valid', data);
-                return;
-            }
-
-            log.debug('Send File Info', data);
-
-            const room = getRoom(socket);
-
-            data.broadcast ? room.broadCast(socket.id, 'fileInfo', data) : room.sendTo(data.peer_id, 'fileInfo', data);
-        });
-
-        socket.on('file', (data) => {
-            if (!roomExists(socket)) return;
-
-            const room = getRoom(socket);
-
-            data.broadcast ? room.broadCast(socket.id, 'file', data) : room.sendTo(data.peer_id, 'file', data);
-        });
-
-        socket.on('fileAbort', (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            const data = checkXSS(dataObject);
-
-            if (!Validator.isValidData(data)) return;
-
-            const room = getRoom(socket);
-
-            room.broadCast(socket.id, 'fileAbort', data);
-        });
-
-        socket.on('receiveFileAbort', (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            const data = checkXSS(dataObject);
-
-            if (!Validator.isValidData(data)) return;
-
-            const room = getRoom(socket);
-
-            room.broadCast(socket.id, 'receiveFileAbort', data);
-        });
+        require('./ParticipantMessages')(socket, { getRoom, getPeer, securityEvent, checkXSS, isValidFileName });
 
         socket.on('shareVideoAction', (dataObject) => {
             if (!roomExists(socket)) return;
@@ -5191,39 +5142,7 @@ function startServer() {
 
         // Room collaborative editor
 
-        socket.on('editorChange', (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            //const data = checkXSS(dataObject);
-            const data = dataObject;
-
-            const room = getRoom(socket);
-
-            room.broadCast(socket.id, 'editorChange', data);
-        });
-
-        socket.on('editorActions', (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            const data = checkXSS(dataObject);
-
-            const room = getRoom(socket);
-
-            log.debug('editorActions', data);
-
-            room.broadCast(socket.id, 'editorActions', data);
-        });
-
-        socket.on('editorUpdate', (dataObject) => {
-            if (!roomExists(socket)) return;
-
-            //const data = checkXSS(dataObject);
-            const data = dataObject;
-
-            const room = getRoom(socket);
-
-            room.broadCast(socket.id, 'editorUpdate', data);
-        });
+        // File/editor authorization lives in ParticipantMessages above.
 
         socket.on('disconnect', (reason) => {
             releaseWhiteboardSnapshotSocket(socket.id);

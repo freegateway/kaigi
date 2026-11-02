@@ -610,6 +610,7 @@ class RoomClient {
             };
             await this.join(data);
             this.initSockets();
+            this.socket.emit('editorReady');
             this._isConnected = true;
             successCallback();
         }).catch((error) => {
@@ -1656,6 +1657,11 @@ class RoomClient {
     // ####################################################
 
     initSockets() {
+        this.socket.on('editorSnapshotRequest', ({ requestId }) => {
+            if (!requestId) return;
+            const content = this.isEditorPrivate ? (this.collabEditorDelta || { ops: [] }) : quill.getContents();
+            this.socket.emit('editorUpdate', { requestId, content });
+        });
         this.socket.io.on('reconnect_attempt', this.handleSocketReconnectAttempt);
         this.socket.io.on('reconnect', this.handleSocketReconnect);
         this.socket.io.on('reconnect_failed', this.handleSocketReconnectFailed);
@@ -1863,7 +1869,7 @@ class RoomClient {
     handleNewDataProducer = async (data) => {
         console.log('SocketOn New data producer:', data);
         if (data.peer_id === this.peer_id) return;
-        await this.consumeData(data.dataProducerId);
+        await this.consumeData(data.dataProducerId, { peer_id: data.peer_id, peer_name: data.peer_name, peer_avatar: data.peer_info?.peer_avatar });
     };
 
     handleDataConsumerClosed = (data) => {
@@ -1937,11 +1943,13 @@ class RoomClient {
     };
 
     handleFileInfoData = (data) => {
+        if (this.receiveInProgress) return;
         console.log('SocketOn File info:', data);
         this.handleFileInfo(data);
     };
 
     handleFileData = (data) => {
+        if (!this.receiveInProgress || data?.sender_id !== this.incomingFileInfo?.sender_id) return;
         this.handleFile(data);
     };
 
@@ -1950,11 +1958,12 @@ class RoomClient {
     };
 
     handleFileAbortData = (data) => {
+        if (!this.receiveInProgress || data?.sender_id !== this.incomingFileInfo?.sender_id) return;
         this.handleFileAbort(data);
     };
 
     handleReceiveFileAbortData = (data) => {
-        this.handleReceiveFileAbort(data);
+        // Receiver cancellation is local; the server removes just that recipient.
     };
 
     handleWbCanvasToJson = (data) => {
@@ -4516,7 +4525,8 @@ class RoomClient {
         }
     }
 
-    async consumeData(dataProducerId) {
+    async consumeData(dataProducerId, producerIdentity) {
+        if (!producerIdentity?.peer_id || !producerIdentity?.peer_name) return;
         const transport = this.consumerTransport;
         if (!transport) {
             console.warn('Consumer transport not available, skipping DataConsumer creation');
@@ -4551,7 +4561,8 @@ class RoomClient {
 
             dataConsumer.on('message', (data) => {
                 try {
-                    const msg = JSON.parse(data);
+                    const parsed = JSON.parse(data);
+                    const msg = { ...parsed, peer_id: producerIdentity.peer_id, peer_name: producerIdentity.peer_name, peer_avatar: producerIdentity.peer_avatar };
                     if (msg.type === 'chat') {
                         console.log('DataChannel chat message received', msg);
                         // Drop messages that violate current moderator restrictions
@@ -5353,6 +5364,7 @@ class RoomClient {
                 this.socket.off('editorChange');
                 this.socket.off('editorActions');
                 this.socket.off('editorUpdate');
+                this.socket.off('editorSnapshotRequest');
                 this.socket.off('breakoutRoom');
                 this.socket.io.off('reconnect_attempt');
                 this.socket.io.off('reconnect');
@@ -9432,15 +9444,9 @@ class RoomClient {
     }
 
     editorUpdate() {
-        if (this.isEditorPrivate) return;
-        if (this.isEditorOpen && (!isRulesActive || isPresenter)) {
-            console.log('IsPresenter: update editor content to the participants in the room');
-            const content = quill.getContents(); // Get content in Delta format
-            this.socket.emit('editorUpdate', content);
-            const action = this.isEditorLocked ? 'lock' : 'unlock';
-            this.editorSendAction(action);
-        }
+        // Full snapshots are sent only in response to a server-scoped request.
     }
+
 
     handleEditorUpdateData(data) {
         if (this.isEditorPrivate) {
@@ -10802,7 +10808,7 @@ class RoomClient {
             ' File size: ' +
             this.bytesToSize(this.incomingFileInfo.fileSize);
         const isPrivateFile = !this.incomingFileInfo.broadcast;
-        const fileSenderId = this.incomingFileInfo.sender_id || this.incomingFileInfo.peer_id;
+        const fileSenderId = this.incomingFileInfo.sender_id;
         const fileToId = isPrivateFile ? fileSenderId : 'all';
         const fileToName = isPrivateFile ? this.incomingFileInfo.peer_name : 'all';
 
@@ -10897,11 +10903,9 @@ class RoomClient {
     }
 
     abortReceiveFileTransfer() {
-        const data = { peer_name: this.peer_name };
+        const data = { peer_id: this.incomingFileInfo?.sender_id, peer_name: this.peer_name };
         this.socket.emit('receiveFileAbort', data);
-        setTimeout(() => {
-            this.handleFileAbort(data);
-        }, 1000);
+        this.handleFileAbort(data);
     }
 
     hideFileTransfer() {
