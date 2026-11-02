@@ -117,11 +117,14 @@ describe('public help guide and inert illustrations', () => {
         for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
             const document = new JSDOM(help.renderHelp(brand, language)).window.document;
             const links = [...document.querySelectorAll('.help-sidebar a')];
-            assert.equal(links.length, 9);
-            assert.equal(new Set(links.map((link) => link.hash)).size, 9);
+            assert.equal(links.length, 10);
+            assert.equal(new Set(links.map((link) => link.hash)).size, 10);
             for (const link of links) assert(document.getElementById(link.hash.slice(1)));
             assert(document.querySelector('.help-sidebar details summary'));
-            assert.equal(document.querySelectorAll('.help-text-topic').length, 7);
+            assert.equal(document.querySelectorAll('.help-text-topic').length, 8);
+            assert(document.getElementById('help-chat'));
+            assert(document.getElementById('help-whiteboard'));
+            assert.equal(document.getElementById('help-collaboration'), null);
             const ids = translations[language === 'en-CA' ? 'en' : language].sections.map((section) => section.id);
             assert.deepEqual(
                 ids,
@@ -129,6 +132,22 @@ describe('public help guide and inert illustrations', () => {
             );
             assert(!document.body.textContent.includes('[[PREJOIN_LABEL]]'));
         }
+    });
+
+    it('keeps revised help terminology and separate collaboration sections aligned across locales', () => {
+        const strings = require('../app/src/templates/HelpStrings.json');
+        const topics = require('../app/src/templates/HelpTopics.json');
+        const tokens = (value) => [...JSON.stringify(value).matchAll(/\[\[([A-Z_]+)\]\]/g)].map((match) => match[1]).sort();
+        for (const language of ['en', 'ja', 'fr-CA']) {
+            assert.deepEqual(Object.keys(strings[language]), Object.keys(strings.en));
+            assert.deepEqual(tokens(strings[language]), tokens(strings.en));
+            for (const topic of topics[language].sections) {
+                const english = topics.en.sections.find((candidate) => candidate.id === topic.id);
+                assert.equal(topic.paragraphs.length, english.paragraphs.length);
+                assert.deepEqual(tokens(topic), tokens(english));
+            }
+        }
+        assert.doesNotMatch(JSON.stringify([strings, topics]), /sign[ -]?(?:in|out)|presenter|control|présentateur|発表者|操作部品|commande/i);
     });
 
     it('permits only the integrity-pinned navigation script and only same-origin language navigation', () => {
@@ -230,8 +249,8 @@ describe('public help guide and inert illustrations', () => {
         for (const element of document.querySelectorAll('*')) {
             for (const attribute of element.attributes) assert.equal(/^on/i.test(attribute.name), false);
         }
-        assert.equal(document.querySelectorAll('[inert]').length, 7);
-        assert.equal(document.querySelectorAll('[role="img"][aria-label]').length, 7);
+        assert.equal(document.querySelectorAll('[inert]').length, 8);
+        assert.equal(document.querySelectorAll('[role="img"][aria-label]').length, 8);
         assert.equal(document.querySelector('[inert] a'), null);
         assert.equal(document.getElementById('username').textContent, 'example.user');
         assert.equal(document.getElementById('selectRoom').textContent, 'サンプル会議');

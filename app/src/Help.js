@@ -133,8 +133,10 @@ function renderHelp(input = {}, requested) {
             ['desktop', 'SCREEN_ON'],
             ['stop-circle', 'SCREEN_OFF'],
         ],
-        'help-collaboration': [
+        'help-chat': [
             ['comment', 'CHAT_LABEL'],
+        ],
+        'help-whiteboard': [
             ['chalkboard', 'WHITEBOARD_LABEL'],
         ],
         'help-leave': [

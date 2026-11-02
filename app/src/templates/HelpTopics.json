@@ -16,18 +16,18 @@
                 "id": "help-media",
                 "title": "Microphone, camera and settings",
                 "paragraphs": [
-                    "Inside the meeting, the microphone control offers “[[AUDIO_OFF]]” while sending audio and “[[AUDIO_ON]]” while muted. The camera similarly offers “[[VIDEO_OFF]]” or “[[VIDEO_ON]]”. On desktop, hover over an icon to read its tooltip; the displayed action describes what selecting it will do.",
-                    "“[[SETTINGS_LABEL]]” opens or closes settings. Select the correct input/output devices and adjust only your own media. Available controls depend on the administrator's configuration and your browser.",
-                    "Muting yourself does not mute other participants. Nobody in the meeting gains presenter authority or the ability to turn another attendee's camera or microphone on or off."
+                    "Inside the meeting, the microphone button offers “[[AUDIO_OFF]]” while sending audio and “[[AUDIO_ON]]” while muted. The camera similarly offers “[[VIDEO_OFF]]” or “[[VIDEO_ON]]”. On desktop, hover over an icon to read its tooltip; the displayed action describes what selecting it will do.",
+                    "“[[SETTINGS_LABEL]]” opens or closes settings. Select the correct input/output devices and adjust only your own media. Available buttons depend on the administrator's configuration and your browser.",
+                    "Muting yourself does not mute other participants. Nobody in the meeting has the ability to turn another attendee's camera or microphone on or off."
                 ]
             },
             {
                 "id": "help-video-layout",
                 "title": "Arrange participant videos and your self-view",
                 "paragraphs": [
-                    "In a two-person meeting, the default “[[GRID_LABEL]]” layout gives both videos similar space. To make the other person larger, open that person's video-tile menu and select “[[PIN_LABEL]]” (pushpin icon). Do not pin your own tile. Your own video remains a smaller tile; this does not change what others see.",
-                    "The pinned tile's action becomes “[[UNPIN_LABEL]]”. Select it to return to the grid. The bottom-toolbar “[[VIEW_LABEL]]” menu also offers layouts such as “[[SPEAKER_LABEL]]” and “[[GRID_LABEL]]”. Pinning is a local viewing choice, not presenter authority. These desktop controls are not available on mobile in the same form.",
-                    "“[[HIDE_SELF_LABEL]]”: The self-view visibility control hides your own tile locally; it does not stop your camera or hide you from other participants. Use the camera control if you want to stop sending video.",
+                    "In a two-person meeting, the default “[[GRID_LABEL]]” layout gives both videos similar space. To make the other person larger, open that person's video-tile menu (indicated by the three vertical dots in the upper right corner of their window) and select “[[PIN_LABEL]]” (pushpin icon). Do not pin your own tile. Your own video remains a smaller tile; this does not change what others see.",
+                    "The pinned tile's action becomes “[[UNPIN_LABEL]]”. Select it to return to the grid. The bottom-toolbar “[[VIEW_LABEL]]” menu also offers layouts such as “[[SPEAKER_LABEL]]” and “[[GRID_LABEL]]”. Pinning only affects the local user's view. These desktop buttons are not available on mobile in the same form.",
+                    "“[[HIDE_SELF_LABEL]]”: The self-view visibility button hides your own tile locally; it does not stop your camera or hide you from other participants. Use the camera button if you want to stop sending video.",
                     "“[[PIP_LABEL]]” is different: it opens a browser-managed floating video window when supported. Pinning rearranges the meeting page and does not itself turn your self-view into an overlapping picture-in-picture window."
                 ]
             },
@@ -37,16 +37,22 @@
                 "paragraphs": [
                     "Use “[[SCREEN_ON]]”, then choose a window, screen or browser tab in the browser's capture picker. Only share material everyone in the meeting may see. A single window usually exposes less information than an entire screen.",
                     "Sharing a screen that contains the meeting window can create an infinite mirror effect. Move or minimize the meeting window, or share a different window. Depending on the site configuration, your own preview may instead show a screen-sharing notice. That setting affects your local preview, not what others receive.",
-                    "Use “[[SCREEN_OFF]]” or the browser's stop-sharing control to finish. Sharing system/tab audio depends on the browser and capture choice. Camera and microphone permissions do not automatically grant screen capture permission."
+                    "Use “[[SCREEN_OFF]]” or the browser's stop-sharing button to finish. Sharing system/tab audio depends on the browser and capture choice. Camera and microphone permissions do not automatically grant screen capture permission."
                 ]
             },
             {
-                "id": "help-collaboration",
-                "title": "Chat and whiteboard",
+                "id": "help-chat",
+                "title": "Chat",
                 "paragraphs": [
                     "Use “[[CHAT_LABEL]]” to open chat when enabled. Before sending a message or file, check its intended recipients. Closing the panel does not retract something you already sent.",
-                    "Use “[[WHITEBOARD_LABEL]]” when available to draw and collaborate. The shared board belongs to the current meeting and is not a persistent document store. Do not rely on it to preserve notes after the meeting ends; save permitted material yourself before leaving.",
                     "Features such as file sharing, recording and annotations may be disabled by the administrator or meeting policy. Follow your organization's rules and obtain any required consent before recording or sharing material."
+                ]
+            },
+            {
+                "id": "help-whiteboard",
+                "title": "Whiteboard",
+                "paragraphs": [
+                    "Use “[[WHITEBOARD_LABEL]]” when available to draw and collaborate. The shared board belongs to the current meeting and is not a persistent document store. Do not rely on it to preserve notes after the meeting ends; save permitted material yourself before leaving."
                 ]
             },
             {
@@ -54,7 +60,7 @@
                 "title": "Leave a meeting and log out",
                 "paragraphs": [
                     "“[[LEAVE_LABEL]]” leaves your current meeting. It does not end the meeting for everybody else and is not the same as logging out.",
-                    "Return to meeting selection and use “[[LOGOUT_LABEL]]” (the power icon) when finished, particularly on a shared computer. Another browser session is separate; logging out here does not sign out all your other sessions.",
+                    "Return to meeting selection and use “[[LOGOUT_LABEL]]” (the power icon) when finished, particularly on a shared computer. Another browser session is separate; logging out here does not log out all your other sessions.",
                     "If the service restarts or your session expires, you may need to log in again. Reconnection does not bypass authentication or meeting permissions, and screen sharing always requires a new explicit capture action."
                 ]
             },
@@ -63,8 +69,8 @@
                 "title": "Common problems",
                 "paragraphs": [
                     "Cannot log in or find a meeting? Check the account details with your administrator. Successful login grants access only to your authorized meetings. Do not put passwords or invitation tokens into a support message.",
-                    "No sound or video? Check the browser's site permissions, selected devices, mute controls and speaker volume. Close other applications using the device. Try headphones if you hear echo. Ask the administrator about connectivity if media still fails.",
-                    "Controls obscured or missing? Try maximizing the window and resetting browser zoom, or zoom out temporarily. Display scaling reduces the usable space even on a high-resolution screen. The help page's section list moves above the text on narrow windows; expand it to navigate."
+                    "No sound or video? Check the browser's site permissions, selected devices, mute buttons and speaker volume. Close other applications using the device. Try headphones if you hear echo. Ask the administrator about connectivity if media still fails.",
+                    "Buttons or menus obscured or missing? Try maximizing the window and resetting browser zoom, or zoom out temporarily. Display scaling reduces the usable space even on a high-resolution screen. The help page's section list moves above the text on narrow windows; expand it to navigate."
                 ]
             }
         ]
@@ -85,18 +91,18 @@
                 "id": "help-media",
                 "title": "マイク・カメラ・設定",
                 "paragraphs": [
-                    "会議中、音声の送信中は「[[AUDIO_OFF]]」、ミュート中は「[[AUDIO_ON]]」を使います。カメラも「[[VIDEO_OFF]]」または「[[VIDEO_ON]]」で切り替えます。パソコンではアイコンにポインターを重ねると、選択時の動作を示す説明が表示されます。",
-                    "「[[SETTINGS_LABEL]]」で設定を開閉できます。入出力機器を確認し、自分の音声や映像を調整してください。利用できる操作は管理者の設定やブラウザーによって異なります。",
-                    "自分をミュートにしても、ほかの参加者はミュートになりません。参加者に発表者権限はなく、ほかの人のカメラやマイクを操作することもできません。"
+                    "会議中、音声を送信しているときはマイクボタンに「[[AUDIO_OFF]]」、ミュート中は「[[AUDIO_ON]]」が表示されます。カメラボタンも同様に「[[VIDEO_OFF]]」または「[[VIDEO_ON]]」が表示されます。パソコンではアイコンにポインターを重ねると説明が表示されます。表示される動作名は、そのボタンを選ぶと何が起こるかを示します。",
+                    "「[[SETTINGS_LABEL]]」で設定を開閉できます。使う入出力機器を選び、自分の音声と映像を調整してください。利用できるボタンは管理者の設定やブラウザーによって異なります。",
+                    "自分をミュートにしても、ほかの参加者はミュートになりません。会議の参加者は、ほかの人のカメラやマイクをオン・オフにすることはできません。"
                 ]
             },
             {
                 "id": "help-video-layout",
                 "title": "参加者の映像と自分の表示を整える",
                 "paragraphs": [
-                    "二人の会議では、標準の「[[GRID_LABEL]]」で映像がほぼ同じ大きさになります。相手を大きく表示するには、相手の映像のメニューを開き、画びょうの「[[PIN_LABEL]]」を選んでください。自分の映像はピン留めしません。自分の映像は小さい枠に残り、相手側の表示は変わりません。",
-                    "ピン留めした映像の操作名は「[[UNPIN_LABEL]]」に変わります。これを選ぶとグリッドに戻ります。下部ツールバーの「[[VIEW_LABEL]]」から「[[SPEAKER_LABEL]]」や「[[GRID_LABEL]]」なども選べます。ピン留めは自分の表示だけの操作で、発表者権限ではありません。モバイルでは同じ形式の操作は使えません。",
-                    "「[[HIDE_SELF_LABEL]]」：自分の表示を隠す操作は、自分の画面から自分の映像を隠すだけです。カメラの送信は止まらず、相手には引き続き見えます。映像の送信を止めるにはカメラの操作を使ってください。",
+                    "二人の会議では、標準の「[[GRID_LABEL]]」で両方の映像がほぼ同じ大きさになります。相手を大きく表示するには、相手の映像の右上にある縦三点のメニューを開き、画びょうアイコンの「[[PIN_LABEL]]」を選びます。自分の映像はピン留めしません。自分の映像は小さい枠に残ります。ほかの人の画面の表示は変わりません。",
+                    "ピン留めした映像のボタン名は「[[UNPIN_LABEL]]」に変わります。これを選ぶとグリッドに戻ります。下部ツールバーの「[[VIEW_LABEL]]」メニューから「[[SPEAKER_LABEL]]」や「[[GRID_LABEL]]」などの配置も選べます。ピン留めは自分の画面の表示だけを変更します。モバイルでは、これらのパソコン用ボタンは同じ形式では利用できません。",
+                    "「[[HIDE_SELF_LABEL]]」：自分の映像の表示・非表示を切り替えるボタンは、自分の画面から自分の映像を隠すだけです。カメラの送信は止まらず、ほかの参加者には引き続き見えます。映像の送信を止めるにはカメラボタンを使ってください。",
                     "「[[PIP_LABEL]]」は別の機能で、対応するブラウザーが独立した小さい映像ウィンドウを開きます。ピン留めは会議ページ内の配置を変更する操作であり、自分の映像を重ね合わせた小窓にする操作ではありません。"
                 ]
             },
@@ -106,16 +112,22 @@
                 "paragraphs": [
                     "「[[SCREEN_ON]]」を選び、ブラウザーの選択画面でウィンドウ・画面・タブを選びます。全員に見せてよい内容だけを共有してください。通常、画面全体よりも一つのウィンドウを共有する方が、不要な情報の公開を防げます。",
                     "会議のウィンドウを含む画面を共有すると、合わせ鏡のように画面が繰り返し映る場合があります。会議のウィンドウを移動・最小化するか、別のウィンドウを共有してください。サイトの設定によっては、自分のプレビューの代わりに共有中の案内が表示されます。この設定は自分の表示だけに影響し、ほかの人が受信する画面は変わりません。",
-                    "終了するには「[[SCREEN_OFF]]」またはブラウザーの共有停止を使います。システム音声やタブの音声を共有できるかどうかは、ブラウザーと選択内容によって異なります。画面共有には、カメラ・マイクとは別の許可が必要です。"
+                    "終了するには「[[SCREEN_OFF]]」またはブラウザーの共有停止ボタンを使います。システム音声やタブの音声を共有できるかどうかは、ブラウザーと選択内容によって異なります。画面共有には、カメラ・マイクとは別の許可が必要です。"
                 ]
             },
             {
-                "id": "help-collaboration",
-                "title": "チャットとホワイトボード",
+                "id": "help-chat",
+                "title": "チャット",
                 "paragraphs": [
                     "有効になっている場合は「[[CHAT_LABEL]]」でチャットを開きます。メッセージやファイルを送る前に宛先を確認してください。パネルを閉じても、送信済みの内容は取り消されません。",
-                    "「[[WHITEBOARD_LABEL]]」が使える場合は、参加者と一緒に書き込めます。共有ボードは現在の会議のためのもので、文書の永続保存場所ではありません。必要な内容は、保存が許可されていることを確認してから、退出前に自分で保存してください。",
                     "ファイル共有・録画・注釈などは、管理者や会議の方針によって無効になっている場合があります。録画や資料の共有は組織の規則に従い、必要な同意を得て行ってください。"
+                ]
+            },
+            {
+                "id": "help-whiteboard",
+                "title": "ホワイトボード",
+                "paragraphs": [
+                    "「[[WHITEBOARD_LABEL]]」が使える場合は、参加者と一緒に書き込めます。共有ボードは現在の会議のためのもので、文書の永続保存場所ではありません。必要な内容は、保存が許可されていることを確認してから、退出前に自分で保存してください。"
                 ]
             },
             {
@@ -133,7 +145,7 @@
                 "paragraphs": [
                     "ログインできない、または会議が見つからない場合は、管理者にアカウント情報を確認してください。ログイン後も参加できるのは許可された会議だけです。問い合わせにパスワードや招待トークンを含めないでください。",
                     "音声や映像が出ない場合は、ブラウザーのサイト権限・使用機器・ミュート・音量を確認してください。同じ機器を使うほかのアプリを閉じ、エコーがあればヘッドホンを試してください。改善しない場合は管理者に接続状況を相談してください。",
-                    "操作部品が隠れる場合は、ウィンドウを最大化し、ブラウザーのズームを標準に戻すか、一時的に縮小してください。高解像度の画面でも、表示倍率によって利用できる領域が小さくなります。幅の狭い画面では目次が本文の上に移動するので、開いて移動先を選んでください。"
+                    "ボタンやメニューが隠れる、または見つからない場合は、ウィンドウを最大化し、ブラウザーのズームを標準に戻すか、一時的に縮小してください。高解像度の画面でも、表示倍率によって利用できる領域が小さくなります。幅の狭い画面では目次が本文の上に移動するので、開いて移動先を選んでください。"
                 ]
             }
         ]
@@ -154,18 +166,18 @@
                 "id": "help-media",
                 "title": "Microphone, caméra et paramètres",
                 "paragraphs": [
-                    "Pendant la réunion, « [[AUDIO_OFF]] » coupe votre microphone et « [[AUDIO_ON]] » le réactive. La caméra offre de même « [[VIDEO_OFF]] » ou « [[VIDEO_ON]] ». Sur ordinateur, survolez une icône pour lire l’infobulle indiquant l’action qui sera effectuée.",
-                    "« [[SETTINGS_LABEL]] » ouvre ou ferme les paramètres. Vérifiez les appareils d’entrée et de sortie et réglez uniquement vos propres médias. Les commandes disponibles dépendent de la configuration et du navigateur.",
-                    "Couper votre microphone ne coupe pas celui des autres. Aucun participant ne reçoit d’autorité de présentateur ni le droit d’activer ou de désactiver la caméra ou le microphone d’un autre participant."
+                    "Pendant la réunion, le bouton du microphone affiche « [[AUDIO_OFF]] » lorsque vous transmettez du son et « [[AUDIO_ON]] » lorsque le microphone est en sourdine. Le bouton de la caméra affiche de même « [[VIDEO_OFF]] » ou « [[VIDEO_ON]] ». Sur ordinateur, survolez une icône pour lire son infobulle; le libellé indique ce qui se produira en choisissant ce bouton.",
+                    "« [[SETTINGS_LABEL]] » ouvre ou ferme les paramètres. Choisissez les bons appareils d’entrée et de sortie et réglez uniquement vos propres médias. Les boutons disponibles dépendent de la configuration de l’administrateur et de votre navigateur.",
+                    "Couper votre microphone ne coupe pas celui des autres participants. Personne dans la réunion ne peut activer ou désactiver la caméra ou le microphone d’un autre participant."
                 ]
             },
             {
                 "id": "help-video-layout",
                 "title": "Disposer les vidéos et votre aperçu",
                 "paragraphs": [
-                    "À deux, la disposition « [[GRID_LABEL]] » donne normalement une place semblable aux deux vidéos. Pour agrandir l’autre personne, ouvrez le menu de sa vignette et choisissez « [[PIN_LABEL]] » (punaise). N’épinglez pas votre propre vidéo. Votre aperçu reste dans une vignette plus petite; cela ne modifie pas l’affichage des autres.",
-                    "L’action de la vidéo épinglée devient « [[UNPIN_LABEL]] ». Choisissez-la pour revenir à la grille. Le menu « [[VIEW_LABEL]] » de la barre du bas offre aussi des dispositions comme « [[SPEAKER_LABEL]] » et « [[GRID_LABEL]] ». L’épinglage est un choix d’affichage local, sans autorité de présentateur. Ces commandes d’ordinateur ne sont pas disponibles sous la même forme sur mobile.",
-                    "« [[HIDE_SELF_LABEL]] » : La commande de visibilité de votre aperçu cache seulement votre vignette sur votre écran. Elle n’arrête pas la caméra et ne vous cache pas aux autres. Utilisez la commande de caméra pour cesser d’envoyer votre vidéo.",
+                    "À deux, la disposition par défaut « [[GRID_LABEL]] » donne une place semblable aux deux vidéos. Pour agrandir l’autre personne, ouvrez le menu de sa vignette (les trois points verticaux dans le coin supérieur droit) et choisissez « [[PIN_LABEL]] » (punaise). N’épinglez pas votre propre vidéo. Votre aperçu reste dans une vignette plus petite; cela ne modifie pas l’affichage des autres.",
+                    "Le bouton de la vidéo épinglée devient « [[UNPIN_LABEL]] ». Choisissez-le pour revenir à la grille. Le menu « [[VIEW_LABEL]] » de la barre du bas offre aussi des dispositions comme « [[SPEAKER_LABEL]] » et « [[GRID_LABEL]] ». L’épinglage modifie seulement votre affichage local. Ces boutons d’ordinateur ne sont pas disponibles sous la même forme sur mobile.",
+                    "« [[HIDE_SELF_LABEL]] » : Le bouton de visibilité de votre aperçu cache seulement votre vignette sur votre écran. Il n’arrête pas la caméra et ne vous cache pas aux autres participants. Utilisez le bouton de la caméra pour cesser d’envoyer votre vidéo.",
                     "« [[PIP_LABEL]] » est une autre fonction : elle ouvre une fenêtre vidéo flottante gérée par le navigateur, si celui-ci la prend en charge. L’épinglage réorganise la page de réunion; il ne transforme pas votre aperçu en petite fenêtre superposée."
                 ]
             },
@@ -175,23 +187,29 @@
                 "paragraphs": [
                     "Choisissez « [[SCREEN_ON]] », puis une fenêtre, un écran ou un onglet dans le sélecteur du navigateur. Partagez seulement ce que tous les participants peuvent voir. Une seule fenêtre expose généralement moins d’information qu’un écran entier.",
                     "Un écran contenant la fenêtre de réunion peut produire un effet de miroirs à l’infini. Déplacez ou réduisez cette fenêtre, ou partagez une autre fenêtre. Selon la configuration, votre aperçu peut être remplacé par un avis de partage. Cela ne modifie pas l’image reçue par les autres.",
-                    "Terminez avec « [[SCREEN_OFF]] » ou la commande d’arrêt du navigateur. Le partage du son du système ou d’un onglet dépend du navigateur et de la source choisie. L’autorisation de capturer l’écran est distincte de celles de la caméra et du microphone."
+                    "Terminez avec « [[SCREEN_OFF]] » ou le bouton d’arrêt du navigateur. Le partage du son du système ou d’un onglet dépend du navigateur et de la source choisie. L’autorisation de capturer l’écran est distincte de celles de la caméra et du microphone."
                 ]
             },
             {
-                "id": "help-collaboration",
-                "title": "Clavardage et tableau blanc",
+                "id": "help-chat",
+                "title": "Clavardage",
                 "paragraphs": [
                     "Ouvrez « [[CHAT_LABEL]] » si cette fonction est activée. Vérifiez les destinataires avant d’envoyer un message ou un fichier. Fermer le panneau n’annule pas un envoi.",
-                    "Utilisez « [[WHITEBOARD_LABEL]] », s’il est disponible, pour dessiner et collaborer. Le tableau partagé appartient à la réunion en cours; ce n’est pas un espace de stockage permanent. Sauvegardez vous-même les notes permises avant de partir.",
                     "Le partage de fichiers, l’enregistrement et les annotations peuvent être désactivés par l’administrateur ou les règles de la réunion. Respectez les règles de votre organisation et obtenez le consentement nécessaire avant tout enregistrement ou partage."
+                ]
+            },
+            {
+                "id": "help-whiteboard",
+                "title": "Tableau blanc",
+                "paragraphs": [
+                    "Utilisez « [[WHITEBOARD_LABEL]] », s’il est disponible, pour dessiner et collaborer. Le tableau partagé appartient à la réunion en cours; ce n’est pas un espace de stockage permanent. Sauvegardez vous-même les notes permises avant de partir."
                 ]
             },
             {
                 "id": "help-leave",
                 "title": "Quitter et fermer la session",
                 "paragraphs": [
-                    "« [[LEAVE_LABEL]] » vous fait quitter la réunion actuelle. Cette commande ne termine pas la réunion pour les autres et ne ferme pas votre session.",
+                    "« [[LEAVE_LABEL]] » vous fait quitter la réunion actuelle. Ce bouton ne termine pas la réunion pour les autres et ne ferme pas votre session.",
                     "Revenez au choix des réunions et utilisez « [[LOGOUT_LABEL]] » (l’icône d’alimentation) lorsque vous avez terminé, surtout sur un ordinateur partagé. Les autres sessions de navigateur sont distinctes et ne sont pas toutes fermées par cette action.",
                     "Après un redémarrage du service ou l’expiration de la session, vous pourriez devoir vous connecter de nouveau. La reconnexion ne contourne ni l’authentification ni les autorisations. Un nouveau partage d’écran exige toujours une action explicite."
                 ]
@@ -201,8 +219,8 @@
                 "title": "Problèmes courants",
                 "paragraphs": [
                     "Connexion impossible ou réunion absente? Vérifiez votre compte auprès de l’administrateur. La connexion donne seulement accès aux réunions autorisées. N’incluez aucun mot de passe ni jeton d’invitation dans une demande d’aide.",
-                    "Aucun son ou aucune image? Vérifiez les autorisations du navigateur, les appareils sélectionnés, les commandes de sourdine et le volume. Fermez les autres applications utilisant l’appareil. Essayez un casque en cas d’écho. Si le problème persiste, consultez l’administrateur au sujet de la connectivité.",
-                    "Commandes cachées? Agrandissez la fenêtre et rétablissez le zoom normal, ou réduisez-le temporairement. La mise à l’échelle réduit l’espace utilisable, même sur un écran haute résolution. Dans une fenêtre étroite, la liste des sections se trouve au-dessus du texte; ouvrez-la pour naviguer."
+                    "Aucun son ou aucune image? Vérifiez les autorisations du navigateur, les appareils sélectionnés, les boutons de sourdine et le volume. Fermez les autres applications utilisant l’appareil. Essayez un casque en cas d’écho. Si le problème persiste, consultez l’administrateur au sujet de la connectivité.",
+                    "Boutons ou menus cachés ou absents? Agrandissez la fenêtre et rétablissez le zoom normal, ou réduisez-le temporairement. La mise à l’échelle réduit l’espace utilisable, même sur un écran haute résolution. Dans une fenêtre étroite, la liste des sections se trouve au-dessus du texte; ouvrez-la pour naviguer."
                 ]
             }
         ]
