@@ -103,11 +103,25 @@ function renderHelp(input = {}, requested) {
         CHAT_LABEL: ui('Chat'),
         SETTINGS_LABEL: ui('Toggle the settings'),
         WHITEBOARD_LABEL: ui('Whiteboard'),
+        PIN_LABEL: ui('Pin video'),
+        UNPIN_LABEL: ui('Unpin video'),
+        VIEW_LABEL: ui('Change participant view'),
+        GRID_LABEL: ui('Grid'),
+        SPEAKER_LABEL: ui('Speaker left'),
+        PIP_LABEL: ui('Picture in Picture'),
+        HIDE_SELF_LABEL: ui('Hide Me'),
+        SELF_LABEL: language === 'ja' ? '自分' : language === 'fr-CA' ? 'Vous' : 'You',
+        OTHER_LABEL:
+            language === 'ja' ? 'ほかの参加者' : language === 'fr-CA' ? 'Autre participant' : 'Other participant',
         CONTENTS: topics[language]?.contents || topics.en.contents,
     };
     const expand = (text) => String(text).replace(/\[\[([A-Z_]+)\]\]/g, (_match, key) => String(data[key] ?? ''));
     const sections = topics[language]?.sections || topics.en.sections;
     const controls = {
+        'help-video-layout': [
+            ['thumbtack', 'PIN_LABEL'],
+            ['table-columns', 'VIEW_LABEL'],
+        ],
         'help-media': [
             ['microphone-slash', 'AUDIO_ON'],
             ['microphone', 'AUDIO_OFF'],
@@ -132,7 +146,11 @@ function renderHelp(input = {}, requested) {
         const items = controls[section.id];
         if (!items) return '';
         const alt = `${section.title}: ${items.map(([, key]) => data[key]).join('; ')}`;
-        return `<figure class="help-control-reference"><div role="img" aria-label="${escape(alt)}"><div class="help-icon-list" inert aria-hidden="true">${items.map(([icon, key]) => `<div><i class="fas fa-${icon}"></i><span>${escape(data[key])}</span></div>`).join('')}</div></div><figcaption>${escape(copy.ILLUSTRATION)}</figcaption></figure>`;
+        const layouts =
+            section.id === 'help-video-layout'
+                ? `<div class="help-layout-examples"><div><strong>${escape(data.GRID_LABEL)}</strong><div class="help-mini-tiles"><span>${escape(data.OTHER_LABEL)}</span><span>${escape(data.SELF_LABEL)}</span></div></div><div><strong>${escape(data.PIN_LABEL)}</strong><div class="help-mini-tiles help-mini-pinned"><span>${escape(data.OTHER_LABEL)}</span><span>${escape(data.SELF_LABEL)}</span></div></div></div>`
+                : '';
+        return `<figure class="help-control-reference"><div role="img" aria-label="${escape(alt)}"><div class="help-icon-list" inert aria-hidden="true">${items.map(([icon, key]) => `<div><i class="fas fa-${icon}"></i><span>${escape(data[key])}</span></div>`).join('')}${layouts}</div></div><figcaption>${escape(copy.ILLUSTRATION)}</figcaption></figure>`;
     };
     const nav = [
         ['help-login-title', expand(copy.LOGIN_TITLE).replace(/^\d+\.\s*/, '')],

@@ -4894,7 +4894,7 @@ class RoomClient {
                 if (typeof applyParticipantGridVisibility === 'function') applyParticipantGridVisibility();
 
                 if (!this.isMobileDevice) {
-                    this.setTippy(pn.id, 'Toggle Pin', 'bottom');
+                    this.refreshPinLabels();
                     this.setTippy(ha.id, 'Toggle Focus mode', 'bottom');
                     this.setTippy(pip.id, 'Toggle picture in picture', 'bottom');
                     this.setTippy(ts.id, 'Snapshot', 'bottom');
@@ -5227,7 +5227,7 @@ class RoomClient {
             this.setTippy(sv.id, 'Send video', 'bottom');
             this.setTippy(au.id, 'Mute', 'bottom');
             this.setTippy(pv.id, '🔊 Volume', 'bottom');
-            this.setTippy(pn.id, 'Pin', 'bottom');
+            this.refreshPinLabels();
             this.setTippy(ban.id, 'Ban', 'bottom');
             this.setTippy(ko.id, 'Eject', 'bottom');
             this.setTippy(hg.id, 'Hide from grid', 'bottom');
@@ -5676,6 +5676,7 @@ class RoomClient {
 
     setTippy(elem, content, placement, allowHTML = false) {
         const element = this.getId(elem);
+        if (element?.dataset.pinTarget) content = this.isVideoPinned && this.pinnedVideoPlayerId === element.dataset.pinTarget ? 'Unpin video' : 'Pin video';
         if (element && typeof syncTooltipAriaLabel === 'function') {
             syncTooltipAriaLabel(element, content, allowHTML);
         }
@@ -6522,11 +6523,39 @@ class RoomClient {
         }
     }
 
+    refreshPinLabels() {
+        for (const button of document.querySelectorAll('[data-pin-target]')) {
+            const pinned = this.isVideoPinned && this.pinnedVideoPlayerId === button.dataset.pinTarget;
+            const label = pinned ? 'Unpin video' : 'Pin video';
+            const text = window.i18n?.t(label, 'buttons') || label;
+            button.setAttribute('aria-label', text);
+            button.setAttribute('aria-pressed', String(!!pinned));
+            if (button._tippy) button._tippy.setContent(text);
+            else this.setTippy(button.id, label, 'bottom');
+            if (button._tippy) button._tippy.__i18nSrc = label;
+            button['__i18nAttr_aria-label'] = label;
+            for (const item of document.querySelectorAll('[data-pin-source]')) {
+                if (item.dataset.pinSource !== button.id) continue;
+                const caption = item.querySelector('span');
+                if (caption) {
+                    caption.textContent = text;
+                    caption.firstChild.__i18nSrc = label;
+                }
+                const proxy = item.querySelector('button');
+                proxy?.setAttribute('aria-label', text);
+                proxy?.setAttribute('aria-pressed', String(!!pinned));
+                if (proxy) proxy['__i18nAttr_aria-label'] = label;
+            }
+        }
+    }
+
     handlePN(elemId, pnId, camId, isScreen = false, isAvatar = false) {
         let videoPlayer = this.getId(elemId);
         let btnPn = this.getId(pnId);
         let cam = this.getId(camId);
         if (btnPn && videoPlayer && cam) {
+            btnPn.dataset.pinTarget = elemId;
+            this.refreshPinLabels();
             btnPn.addEventListener('click', () => {
                 if (this.isMobileDevice) return;
                 this.sound('click');
@@ -6561,6 +6590,7 @@ class RoomClient {
                         setParticipantViewMode('grid', true, false);
                     }
                 }
+                this.refreshPinLabels();
                 this.resizeVideoMenuBar();
                 handleAspectRatio();
                 if (this.isFollowMeActive && isPresenter && !this.isApplyingDominantSpeaker) {
@@ -6765,8 +6795,11 @@ class RoomClient {
         const proxyButton = sourceButton.cloneNode(false);
         proxyButton.removeAttribute('id');
         proxyButton.removeAttribute('style');
+        proxyButton.removeAttribute('data-pin-target');
         proxyButton.addEventListener('click', () => sourceButton.click());
-        return this.createDropdownItem(proxyButton, label);
+        const item = this.createDropdownItem(proxyButton, label);
+        if (['Pin Video', 'Pin'].includes(label)) item.dataset.pinSource = sourceButton.id;
+        return item;
     }
 
     createResponsiveDropdownRangeItem(sourceRange, label, iconClass) {
@@ -6937,6 +6970,7 @@ class RoomClient {
         this.videoMediaContainerUnpin();
         this.pinnedVideoPlayerId = null;
         this.isVideoPinned = false;
+        this.refreshPinLabels();
         if (this.isChatPinned) {
             this.chatPin();
         }
@@ -11345,7 +11379,7 @@ class RoomClient {
 
         this.handlePN(video.id, pn.id, d.id);
         if (!this.isMobileDevice) {
-            this.setTippy(pn.id, 'Toggle Pin video player', 'bottom');
+            this.refreshPinLabels();
             this.setTippy(e.id, 'Close video player', 'bottom');
             this.setTippy(fsBtn.id, 'Full screen', 'bottom');
         }

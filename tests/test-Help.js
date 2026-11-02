@@ -117,11 +117,11 @@ describe('public help guide and inert illustrations', () => {
         for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
             const document = new JSDOM(help.renderHelp(brand, language)).window.document;
             const links = [...document.querySelectorAll('.help-sidebar a')];
-            assert.equal(links.length, 8);
-            assert.equal(new Set(links.map((link) => link.hash)).size, 8);
+            assert.equal(links.length, 9);
+            assert.equal(new Set(links.map((link) => link.hash)).size, 9);
             for (const link of links) assert(document.getElementById(link.hash.slice(1)));
             assert(document.querySelector('.help-sidebar details summary'));
-            assert.equal(document.querySelectorAll('.help-text-topic').length, 6);
+            assert.equal(document.querySelectorAll('.help-text-topic').length, 7);
             const ids = translations[language === 'en-CA' ? 'en' : language].sections.map((section) => section.id);
             assert.deepEqual(
                 ids,
@@ -230,8 +230,8 @@ describe('public help guide and inert illustrations', () => {
         for (const element of document.querySelectorAll('*')) {
             for (const attribute of element.attributes) assert.equal(/^on/i.test(attribute.name), false);
         }
-        assert.equal(document.querySelectorAll('[inert]').length, 6);
-        assert.equal(document.querySelectorAll('[role="img"][aria-label]').length, 6);
+        assert.equal(document.querySelectorAll('[inert]').length, 7);
+        assert.equal(document.querySelectorAll('[role="img"][aria-label]').length, 7);
         assert.equal(document.querySelector('[inert] a'), null);
         assert.equal(document.getElementById('username').textContent, 'example.user');
         assert.equal(document.getElementById('selectRoom').textContent, 'サンプル会議');

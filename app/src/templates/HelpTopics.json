@@ -22,6 +22,16 @@
                 ]
             },
             {
+                "id": "help-video-layout",
+                "title": "Arrange participant videos and your self-view",
+                "paragraphs": [
+                    "In a two-person meeting, the default “[[GRID_LABEL]]” layout gives both videos similar space. To make the other person larger, open that person's video-tile menu and select “[[PIN_LABEL]]” (pushpin icon). Do not pin your own tile. Your own video remains a smaller tile; this does not change what others see.",
+                    "The pinned tile's action becomes “[[UNPIN_LABEL]]”. Select it to return to the grid. The bottom-toolbar “[[VIEW_LABEL]]” menu also offers layouts such as “[[SPEAKER_LABEL]]” and “[[GRID_LABEL]]”. Pinning is a local viewing choice, not presenter authority. These desktop controls are not available on mobile in the same form.",
+                    "“[[HIDE_SELF_LABEL]]”: The self-view visibility control hides your own tile locally; it does not stop your camera or hide you from other participants. Use the camera control if you want to stop sending video.",
+                    "“[[PIP_LABEL]]” is different: it opens a browser-managed floating video window when supported. Pinning rearranges the meeting page and does not itself turn your self-view into an overlapping picture-in-picture window."
+                ]
+            },
+            {
                 "id": "help-screen",
                 "title": "Share a screen or window",
                 "paragraphs": [
@@ -81,6 +91,16 @@
                 ]
             },
             {
+                "id": "help-video-layout",
+                "title": "参加者の映像と自分の表示を整える",
+                "paragraphs": [
+                    "二人の会議では、標準の「[[GRID_LABEL]]」で映像がほぼ同じ大きさになります。相手を大きく表示するには、相手の映像のメニューを開き、画びょうの「[[PIN_LABEL]]」を選んでください。自分の映像はピン留めしません。自分の映像は小さい枠に残り、相手側の表示は変わりません。",
+                    "ピン留めした映像の操作名は「[[UNPIN_LABEL]]」に変わります。これを選ぶとグリッドに戻ります。下部ツールバーの「[[VIEW_LABEL]]」から「[[SPEAKER_LABEL]]」や「[[GRID_LABEL]]」なども選べます。ピン留めは自分の表示だけの操作で、発表者権限ではありません。モバイルでは同じ形式の操作は使えません。",
+                    "「[[HIDE_SELF_LABEL]]」：自分の表示を隠す操作は、自分の画面から自分の映像を隠すだけです。カメラの送信は止まらず、相手には引き続き見えます。映像の送信を止めるにはカメラの操作を使ってください。",
+                    "「[[PIP_LABEL]]」は別の機能で、対応するブラウザーが独立した小さい映像ウィンドウを開きます。ピン留めは会議ページ内の配置を変更する操作であり、自分の映像を重ね合わせた小窓にする操作ではありません。"
+                ]
+            },
+            {
                 "id": "help-screen",
                 "title": "画面・ウィンドウの共有",
                 "paragraphs": [
@@ -137,6 +157,16 @@
                     "Pendant la réunion, « [[AUDIO_OFF]] » coupe votre microphone et « [[AUDIO_ON]] » le réactive. La caméra offre de même « [[VIDEO_OFF]] » ou « [[VIDEO_ON]] ». Sur ordinateur, survolez une icône pour lire l’infobulle indiquant l’action qui sera effectuée.",
                     "« [[SETTINGS_LABEL]] » ouvre ou ferme les paramètres. Vérifiez les appareils d’entrée et de sortie et réglez uniquement vos propres médias. Les commandes disponibles dépendent de la configuration et du navigateur.",
                     "Couper votre microphone ne coupe pas celui des autres. Aucun participant ne reçoit d’autorité de présentateur ni le droit d’activer ou de désactiver la caméra ou le microphone d’un autre participant."
+                ]
+            },
+            {
+                "id": "help-video-layout",
+                "title": "Disposer les vidéos et votre aperçu",
+                "paragraphs": [
+                    "À deux, la disposition « [[GRID_LABEL]] » donne normalement une place semblable aux deux vidéos. Pour agrandir l’autre personne, ouvrez le menu de sa vignette et choisissez « [[PIN_LABEL]] » (punaise). N’épinglez pas votre propre vidéo. Votre aperçu reste dans une vignette plus petite; cela ne modifie pas l’affichage des autres.",
+                    "L’action de la vidéo épinglée devient « [[UNPIN_LABEL]] ». Choisissez-la pour revenir à la grille. Le menu « [[VIEW_LABEL]] » de la barre du bas offre aussi des dispositions comme « [[SPEAKER_LABEL]] » et « [[GRID_LABEL]] ». L’épinglage est un choix d’affichage local, sans autorité de présentateur. Ces commandes d’ordinateur ne sont pas disponibles sous la même forme sur mobile.",
+                    "« [[HIDE_SELF_LABEL]] » : La commande de visibilité de votre aperçu cache seulement votre vignette sur votre écran. Elle n’arrête pas la caméra et ne vous cache pas aux autres. Utilisez la commande de caméra pour cesser d’envoyer votre vidéo.",
+                    "« [[PIP_LABEL]] » est une autre fonction : elle ouvre une fenêtre vidéo flottante gérée par le navigateur, si celui-ci la prend en charge. L’épinglage réorganise la page de réunion; il ne transforme pas votre aperçu en petite fenêtre superposée."
                 ]
             },
             {
