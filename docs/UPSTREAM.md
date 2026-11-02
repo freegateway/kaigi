@@ -1,5 +1,21 @@
 # Upstream intake
 
+## Pre-meeting layout and revised help (2026-11-02)
+
+Kaigi 0.5.3 compacts the pre-meeting dialog on short viewports. Limit the camera
+preview height, reduce spacing, and retain readable buttons and selectors.
+Use two columns when at least 700 CSS pixels wide, including the no-camera
+state; retain stacked content on narrow screens and scroll access for long
+identity values, device warnings and optional backgrounds. Login and meeting
+selection layouts, authentication and media behavior are unchanged.
+
+Update Japanese and Canadian French help to match the revised English copy.
+Separate Chat and Whiteboard into independently navigable illustrated sections.
+Use button/menu terminology and remove presenter and sign-in/sign-out wording.
+This is Kaigi-specific work, not an upstream rebase or dependency update.
+Validation includes automated CSSOM, DOM, translation and application tests;
+actual Windows scaling, browser media and FreeBSD testing are separate.
+
 ## Short viewports and video arrangement help (2026-11-02)
 
 Kaigi 0.5.2 compacts decoration and vertical spacing on login/meeting selection

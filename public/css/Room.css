@@ -9771,3 +9771,71 @@ z-index:
     white-space: normal;
     overflow-wrap: anywhere;
 }
+
+/* Compact only the pre-meeting dialog on short viewports; retain readable inputs. */
+@media (max-height: 760px) {
+    .swal2-popup.init-modal-size {
+        box-sizing: border-box;
+        max-height: calc(100vh - 24px);
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
+        padding-bottom: 12px;
+    }
+    .init-modal-size .swal2-title {
+        padding-top: 12px;
+    }
+    .init-modal-size .swal2-html-container {
+        margin: 12px 20px 0;
+        padding: 0;
+        overflow: visible;
+    }
+    .init-modal-size .init-user {
+        gap: 10px;
+        min-width: 0;
+    }
+    .init-modal-size .init-video-container {
+        min-width: 0;
+        padding: 0;
+        align-self: start;
+    }
+    .init-modal-size .init-video-container video {
+        height: clamp(100px, 28vh, 180px);
+        height: clamp(100px, 28dvh, 180px);
+        object-fit: contain;
+    }
+    .init-modal-size .initComands {
+        min-width: 0;
+        gap: 6px;
+    }
+    .init-modal-size .init-user select {
+        min-width: 0;
+    }
+    .init-modal-size .init-user select:first-of-type {
+        margin-top: 0;
+    }
+    .init-modal-size .init-identity-panel {
+        margin: 12px 20px 0;
+        gap: 4px 12px;
+    }
+    .init-modal-size .init-identity-panel #usernameInput {
+        height: auto;
+        margin-top: 0;
+    }
+    .swal2-popup.init-modal-size .swal2-actions {
+        margin-top: 12px;
+    }
+}
+
+@media (max-height: 760px) and (min-width: 700px) {
+    .swal2-popup.init-modal-size {
+        width: min(900px, calc(100vw - 32px)) !important;
+    }
+    .init-modal-size .init-user,
+    .init-modal-size .init-user.no-camera {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .init-modal-size .init-user > .mic-guidance {
+        grid-column: 1 / -1;
+    }
+}
