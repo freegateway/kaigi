@@ -68,6 +68,7 @@ function renderHelp(input = {}, requested) {
     const configured = (name, fallback) => (Object.hasOwn(values, name) ? String(values[name]) : ui(String(fallback)));
     const data = {
         ...copy,
+        LOGIN_STEP_A: values.HELP_LOGIN_INSTRUCTIONS ?? copy.LOGIN_STEP_A,
         LANGUAGE: language,
         VERSION: version,
         SITE_NAME: String(values.SITE_NAME ?? (brand.site?.name || brand.app?.name || 'Kaigi')),
@@ -134,8 +135,8 @@ function renderHelp(input = {}, requested) {
         return `<figure class="help-control-reference"><div role="img" aria-label="${escape(alt)}"><div class="help-icon-list" inert aria-hidden="true">${items.map(([icon, key]) => `<div><i class="fas fa-${icon}"></i><span>${escape(data[key])}</span></div>`).join('')}</div></div><figcaption>${escape(copy.ILLUSTRATION)}</figcaption></figure>`;
     };
     const nav = [
-        ['help-login-title', expand(copy.LOGIN_TITLE)],
-        ['help-choice-title', expand(copy.CHOICE_TITLE)],
+        ['help-login-title', expand(copy.LOGIN_TITLE).replace(/^\d+\.\s*/, '')],
+        ['help-choice-title', expand(copy.CHOICE_TITLE).replace(/^\d+\.\s*/, '')],
         ...sections.map((section) => [section.id, section.title]),
     ];
     const html = {
@@ -157,7 +158,11 @@ function renderHelp(input = {}, requested) {
     };
     // Expand instruction placeholders once, then escape. Configured values stay literal.
     return template.replace(/{{([A-Z_]+)}}/g, (_match, key) =>
-        Object.hasOwn(html, key) ? html[key] : escape(Object.hasOwn(copy, key) ? expand(copy[key]) : data[key])
+        Object.hasOwn(html, key)
+            ? html[key]
+            : escape(
+                  key === 'LOGIN_STEP_A' ? data.LOGIN_STEP_A : Object.hasOwn(copy, key) ? expand(copy[key]) : data[key]
+              )
     );
 }
 

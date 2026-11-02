@@ -107,7 +107,7 @@ if (freeBSDConfig.LDAP_ENABLED === 'true') {
 }
 
 // Administrator-owned public text only; never publish the deployment config.
-const siteTextSettings = Object.freeze(["SITE_NAME", "SITE_DESCRIPTION", "SITE_COPYRIGHT", "PAGE_TITLE", "META_DESCRIPTION", "OG_TITLE", "OG_DESCRIPTION", "JOIN_DESCRIPTION", "JOIN_BUTTON_LABEL", "CUSTOMIZE_BUTTON_LABEL", "JOIN_LAST_LABEL", "NEW_ROOM_TITLE", "NEW_ROOM_DESCRIPTION", "LOGIN_HEADING", "LOGIN_INSTRUCTIONS", "LOGIN_BUTTON_LABEL"]);
+const siteTextSettings = Object.freeze(["SITE_NAME", "SITE_DESCRIPTION", "SITE_COPYRIGHT", "PAGE_TITLE", "META_DESCRIPTION", "OG_TITLE", "OG_DESCRIPTION", "JOIN_DESCRIPTION", "JOIN_BUTTON_LABEL", "CUSTOMIZE_BUTTON_LABEL", "JOIN_LAST_LABEL", "NEW_ROOM_TITLE", "NEW_ROOM_DESCRIPTION", "LOGIN_HEADING", "LOGIN_INSTRUCTIONS", "LOGIN_BUTTON_LABEL", "HELP_LOGIN_INSTRUCTIONS"]);
 const siteTranslationsPath = require('path').join(configDirectory, 'site-translations.json');
 const loadSiteTranslations = () => {
     let source;

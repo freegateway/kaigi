@@ -1,5 +1,35 @@
 # Upstream intake
 
+## Participant identity and editor boundaries (2026-11-02)
+
+Kaigi 0.5.1 adapts upstream chat identity
+`a0b9c4ce162eba293a5cd8eab4fab3b8ba370186`, file identity
+`b1caea4a99652e823983511d3b05faeea913f237`, and editor authorization
+`78ffe68c58b55b774e39428e32f8766ca4682f34` without presenter authority.
+Received DataChannel authorship comes from the server-announced producer owner.
+File announcements/chunks/aborts use socket-bound identity and room-scoped
+recipient sets; a receiver cancelling a broadcast does not stop other receivers.
+Receiving clients reject another sender's chunks/aborts and overlapping offers.
+
+Reject participant editor lock/unlock/open/close commands and unsolicited full
+document replacement. Preserve collaborative deltas and clear operations, with
+server-owned attribution. New members may request one snapshot, from a chosen
+existing member, using a single-use ten-second request scoped to that target.
+It cannot update other members. Private notes are never used as the shared
+snapshot. Disconnect removes related transfer and snapshot state. Rejections
+use fixed-field security events, without arbitrary client values.
+
+Also number every help navigation item using the ordered list and support the
+localized HELP_LOGIN_INSTRUCTIONS site-text override with the current default
+when absent. Maintain English/en-CA, Japanese and fr-CA samples. Dependencies,
+session policy, local resource restrictions and native media are unchanged.
+
+Validation: 515 Mocha tests and 23 security tests passed on Linux. Tests use
+real WebSocket/Socket.IO frames and binary attachments through production namespace,
+admission and session middleware with fixture sessions/meetings. VM tests run
+receiving browser code for chat and file guards; these are not actual browser,
+native media, 150% display-scaling or FreeBSD/Poudriere tests.
+
 ## Navigable user guide (2026-11-01)
 
 Kaigi 0.5.0 expands local user help in English/en-CA, Japanese and fr-CA.

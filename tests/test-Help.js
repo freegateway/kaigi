@@ -34,6 +34,31 @@ const brand = {
 };
 
 describe('public help guide and inert illustrations', () => {
+    it('supports a literal localized HELP_LOGIN_INSTRUCTIONS override and default fallback', () => {
+        const configured = {
+            siteTranslations: {
+                en: { HELP_LOGIN_INSTRUCTIONS: 'Use your email [[LOGIN_LABEL]] <literal>.' },
+                ja: { HELP_LOGIN_INSTRUCTIONS: 'メールアドレスを入力してください。' },
+            },
+        };
+        const en = new JSDOM(help.renderHelp(configured, 'en-CA')).window.document;
+        assert.equal(
+            en.querySelector('.help-instructions li').textContent,
+            'Use your email [[LOGIN_LABEL]] <literal>.'
+        );
+        assert.equal(en.querySelector('.help-instructions img'), null);
+        const ja = new JSDOM(help.renderHelp(configured, 'ja')).window.document;
+        assert.equal(ja.querySelector('.help-instructions li').textContent, 'メールアドレスを入力してください。');
+        const fallback = new JSDOM(help.renderHelp({}, 'en')).window.document;
+        assert.equal(
+            fallback.querySelector('.help-instructions li').textContent,
+            'Enter the username supplied by your administrator.'
+        );
+        const nav = [...en.querySelectorAll('.help-sidebar a')];
+        assert(nav.every((link) => !/^\d+\./.test(link.textContent)));
+        assert.match(read('public/css/help.css'), /list-style: decimal/);
+        assert(read('app/src/config.template.js').includes('"HELP_LOGIN_INSTRUCTIONS"'));
+    });
     it('quotes resolved control labels in headings and instructions in every guide language', () => {
         for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
             const configured = {

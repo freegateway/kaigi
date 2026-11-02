@@ -18,8 +18,8 @@
     font-weight: 700;
 }
 .help-sidebar ol {
-    list-style: none;
-    padding: 0;
+    list-style: decimal;
+    padding-left: 24px;
     margin: 16px 0;
 }
 .help-sidebar a {

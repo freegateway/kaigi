@@ -1,5 +1,6 @@
 {
     "en": {
+        "HELP_LOGIN_INSTRUCTIONS": "Enter the username supplied by your administrator.",
         "SITE_NAME": "Example Video Conferencing",
         "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
         "META_DESCRIPTION": "Sign in to Example Corporation's authorized meetings.",
@@ -18,6 +19,7 @@
         "LOGIN_BUTTON_LABEL": "Login"
     },
     "en-CA": {
+        "HELP_LOGIN_INSTRUCTIONS": "Enter the username supplied by your administrator.",
         "SITE_NAME": "Example Video Conferencing",
         "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
         "META_DESCRIPTION": "Sign in to Example Corporation's authorized meetings.",
@@ -36,6 +38,7 @@
         "LOGIN_BUTTON_LABEL": "Login"
     },
     "fr-CA": {
+        "HELP_LOGIN_INSTRUCTIONS": "Saisissez le nom d’utilisateur fourni par votre administrateur.",
         "SITE_NAME": "Vidéoconférence Exemple",
         "SITE_DESCRIPTION": "Vidéoconférence privée pour la société Exemple.",
         "META_DESCRIPTION": "Connectez-vous aux réunions autorisées de la société Exemple.",
@@ -54,6 +57,7 @@
         "LOGIN_BUTTON_LABEL": "Connexion"
     },
     "ja": {
+        "HELP_LOGIN_INSTRUCTIONS": "管理者から案内されたユーザー名を入力します。",
         "SITE_NAME": "ビデオ会議サービス",
         "SITE_DESCRIPTION": "社内向けのプライベートなビデオ会議。",
         "META_DESCRIPTION": "ログインして、参加が許可された会議に参加できます。",

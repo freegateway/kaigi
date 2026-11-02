@@ -46,12 +46,17 @@ SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE,
 META_DESCRIPTION, OG_TITLE, OG_DESCRIPTION,
 JOIN_DESCRIPTION, JOIN_BUTTON_LABEL, CUSTOMIZE_BUTTON_LABEL, JOIN_LAST_LABEL,
 NEW_ROOM_TITLE, NEW_ROOM_DESCRIPTION, LOGIN_HEADING, LOGIN_INSTRUCTIONS,
+HELP_LOGIN_INSTRUCTIONS,
 and LOGIN_BUTTON_LABEL.
 URLs, email addresses and asset paths remain in kaigi.conf.
 .Pp
 Browser text uses an exact language entry, then its base language, then en,
 then the existing deployment/environment or application default value.
 Configure language-specific text in site-translations.json.
+HELP_LOGIN_INSTRUCTIONS customizes the help guide's username-entry instruction,
+for example when login names are email addresses. It does not change the live
+login panel. Missing entries use the guide's localized default; all help-specific
+settings use the HELP_ prefix.
 If no translation is available, the configured text or application default is used.
 The selected language follows UI_LANGUAGE and the permitted UI_LANGUAGES menu.
 An empty translation is an explicit override, not a missing entry.
