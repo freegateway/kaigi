@@ -248,6 +248,11 @@ body {
     animation: disconnectBannerPulse 1.8s ease-in-out infinite;
 }
 
+.disconnect-banner.is-planned .disconnect-banner__inner {
+    border-color: rgba(106, 179, 255, 0.6);
+    background: #102840;
+}
+
 .disconnect-banner.is-restored .disconnect-banner__inner {
     border-color: rgba(89, 215, 165, 0.34);
     background:

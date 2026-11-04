@@ -2203,7 +2203,7 @@ class RoomClient {
 
         banner.root.style.display = 'flex';
         banner.root.setAttribute('aria-hidden', 'false');
-        banner.root.classList.remove('is-reconnecting', 'is-restored', 'is-failed', 'is-interactive');
+        banner.root.classList.remove('is-reconnecting', 'is-restored', 'is-failed', 'is-planned', 'is-interactive');
         banner.root.classList.add('is-visible', `is-${state}`);
 
         if (banner.overlay) {
@@ -2273,10 +2273,12 @@ class RoomClient {
     }
 
     showReconnectAlert(reason) {
+        const t = (key) => window.i18n?.t(key, 'dialogs') || key;
+        const message = reason === 'ping timeout' ? 'The network timed out. Trying to reconnect.' : 'Connection interrupted. Trying to reconnect.';
         this.renderReconnectBanner({
             title: 'Connection lost',
-            message: `${reason || 'Network issue'}.`,
-            meta: 'Retrying',
+            message: t(message),
+            meta: t('Reconnecting automatically'),
             icon: 'fa-solid fa-plug',
             state: 'reconnecting',
             showSpinner: true,
@@ -2291,7 +2293,7 @@ class RoomClient {
             icon: 'fa-solid fa-triangle-exclamation',
             state: 'failed',
             showSpinner: false,
-            actionLabel: 'Join meeting',
+            actionLabel: window.i18n?.t('Reconnect now', 'dialogs') || 'Reconnect now',
             onAction: () => this.refreshBrowser(),
         });
     }
@@ -2353,13 +2355,13 @@ class RoomClient {
         this.showServerRestartAlert();
     }
 
-    showServerRestartAlert() {
+    showServerRestartAlert(meta = '') {
         const t = (key) => window.i18n?.t(key, 'dialogs') || key;
         this.renderReconnectBanner({
             title: t('Server restarting'),
-            message: t('Waiting for the server. You may need to sign in again.'),
-            meta: '',
-            state: 'reconnecting',
+            message: t('Waiting for the server. You may need to login again.'),
+            meta,
+            state: 'planned',
             showSpinner: true,
         });
     }
@@ -2408,13 +2410,15 @@ class RoomClient {
     }
 
     updateReconnectAlert(delay, attempt = 1) {
-        if (this.serverRestarting) return this.showServerRestartAlert();
         const seconds = Math.max(1, Math.round(delay / 1000));
+        const t = (key) => window.i18n?.t(key, 'dialogs') || key;
+        const progress = t('Attempt {attempt}/{max} — retry in {seconds}s').replace('{attempt}', attempt).replace('{max}', this.maxReconnectAttempts).replace('{seconds}', seconds);
+        if (this.serverRestarting) return this.showServerRestartAlert(progress);
 
         this.renderReconnectBanner({
             title: 'Reconnecting',
-            message: `Attempt ${attempt} of ${this.maxReconnectAttempts}.`,
-            meta: `Retry in ${seconds}s`,
+            message: t('Reconnecting automatically'),
+            meta: progress,
             icon: 'fa-solid fa-rotate-right',
             state: 'reconnecting',
             showSpinner: true,

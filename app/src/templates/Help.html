@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{{TITLE}} - {{SITE_NAME}}</title>
         <meta name="description" content="{{INTRO}}" />
+        <meta name="robots" content="noindex, nofollow" />
         <link rel="stylesheet" href="/css/landing.css" />
         <link rel="stylesheet" href="/css/login.css" />
         <link rel="stylesheet" href="/vendor/@fortawesome/fontawesome-free/css/all.min.css" />
@@ -14,6 +15,7 @@
     </head>
     <body class="help-page">
         <header class="help-header">
+            <button id="helpPrint" type="button" hidden>{{HELP_PRINT_LABEL}}</button>
             <a href="/" class="help-identity"><img src="{{LOGO}}" alt="" /><span>{{SITE_NAME}}</span></a>
             <form action="/help" method="get" id="preMeetingLanguage">
                 <label for="i18nLanguageSelect"

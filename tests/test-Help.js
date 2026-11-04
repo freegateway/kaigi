@@ -156,7 +156,8 @@ describe('public help guide and inert illustrations', () => {
         const document = new JSDOM(help.renderHelp(brand, 'ja')).window.document;
         const hash = crypto.createHash('sha256').update(source).digest('base64');
         assert.equal(document.querySelector('script').getAttribute('integrity'), `sha256-${hash}`);
-        let listener, destination;
+        let listener, destination, printListener, printCalls = 0;
+        const printButton = { hidden: true, addEventListener: (event, handler) => { assert.equal(event, 'click'); printListener = handler; } };
         const picker = {
             value: 'fr-CA',
             options: [{ value: 'ja' }, { value: 'fr-CA' }],
@@ -167,8 +168,9 @@ describe('public help guide and inert illustrations', () => {
         };
         vm.runInNewContext(source, {
             URL,
-            document: { getElementById: () => picker },
+            document: { getElementById: (id) => id === 'helpPrint' ? printButton : picker },
             window: {
+                print: () => printCalls++,
                 location: {
                     origin: 'https://meeting.example',
                     hash: '#help-screen',
@@ -178,6 +180,9 @@ describe('public help guide and inert illustrations', () => {
                 },
             },
         });
+        assert.equal(printButton.hidden, false);
+        printListener();
+        assert.equal(printCalls, 1);
         listener();
         assert.equal(destination, 'https://meeting.example/help?lang=fr-CA#help-screen');
         destination = null;

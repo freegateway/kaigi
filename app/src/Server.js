@@ -761,6 +761,7 @@ function startServer() {
     app.use(applyEmbedHeaders); // Apply iframe embedding restrictions (CSP frame-ancestors / X-Frame-Options)
     // Compress local assets as well as application responses.
     app.use(compression());
+    app.use(require('./middleware/CrawlerPolicy'));
     // HTML views are served only by their guarded application routes.
     app.use((req, res, next) => {
         let pathname;
