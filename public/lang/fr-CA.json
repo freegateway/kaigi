@@ -1320,7 +1320,13 @@
         "Leave a feedback": "Laisser un avis",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte.",
+        "The network timed out. Trying to reconnect.": "Le délai réseau est dépassé. Tentative de reconnexion.",
+        "Connection interrupted. Trying to reconnect.": "La connexion a été interrompue. Tentative de reconnexion.",
+        "Reconnecting automatically": "Reconnexion automatique en cours",
+        "Reconnect now": "Se reconnecter maintenant",
+        "Waiting for the server. You may need to login again.": "En attente du serveur. Vous pourriez devoir vous connecter de nouveau.",
+        "Attempt {attempt}/{max} — retry in {seconds}s": "Tentative {attempt}/{max} — nouvel essai dans {seconds} s"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Verrou d’éveil désactivé",

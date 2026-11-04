@@ -1,5 +1,36 @@
 # Upstream intake
 
+## Safari blur, crawler privacy and help printing (2026-11-04)
+
+Kaigi 0.5.4 selectively adapts Safari-compatible background blur from upstream
+f457ee54585a34d286aca3b5ea6cec674090c123. Use downsampled three-pass box blur
+only when native canvas filters are unavailable; retain local segmentation
+assets and image-source restrictions.
+
+Adapt reconnect wording/progress from f0c432e56495c5d2083187f01a3432f82025b672
+without changing authenticated reconnection, opaque navigation or the explicit
+pre-meeting confirmation. Keep the login-again warning, maintained locales and
+unclipped text. Planned restarts have a distinct visual state.
+
+Adapt crawler exclusion from 3f7e193e34d971a90182b4d186aa9e243c0afdaa: emit
+noindex/nofollow headers, disallow crawling and return no sitemap. These hints
+are not authorization. Preserve ordinary, Open Graph and Twitter metadata.
+Do not import upstream promotional metadata, avatars, effects or AI translation.
+
+Update only express-rate-limit 8.7.2 to 8.7.3: await asynchronous handlers so
+errors reach Express middleware. Primary diff:
+https://github.com/express-rate-limit/express-rate-limit/compare/v8.7.2...v8.7.3
+No native mediasoup or browser-client update.
+
+Add a localized Help Print / Save as PDF button using the integrity-pinned local
+script and existing print layout, hiding print/language buttons from printouts.
+Preserve public branding and selected language. Caption illustrations as not
+screenshots in English, Japanese and Canadian French.
+
+Automated coverage includes filterless/native blur, real HTTP crawler headers
+and rate-limit errors, Help printing and script integrity, and reconnection.
+Actual Safari/media, Windows scaling and FreeBSD testing remain separate.
+
 ## Pre-meeting layout and revised help (2026-11-02)
 
 Kaigi 0.5.3 compacts the pre-meeting dialog on short viewports. Limit the camera

@@ -16,13 +16,14 @@
         "CHOICE_STEP_B": "Select “[[JOIN_LABEL]]” to open the pre-meeting screen. Check your identity, meeting name and audio/video devices, then confirm with “[[PREJOIN_LABEL]]”.",
         "CHOICE_STEP_C": "Use “[[LOGOUT_LABEL]]” (the power icon) to log out. “[[LEAVE_LABEL]]” leaves the meeting, not your login session.",
         "EXAMPLE_MEETING": "Example meeting",
-        "ILLUSTRATION": "Illustration - not interactive",
+        "ILLUSTRATION": "Illustration — not a screenshot",
         "NO_ACCESS_TITLE": "Cannot find your meeting?",
         "NO_ACCESS": "Ask your administrator to check your authorized meeting list. Logging in only grants access to your authorized meetings.",
         "SCOPE": "Illustrations are examples only. Available features depend on site configuration.",
         "BACK": "Go to the real login page",
         "ABOUT": "About, Credits & Open Source",
-        "VERSION_LABEL": "Kaigi version"
+        "VERSION_LABEL": "Kaigi version",
+        "HELP_PRINT_LABEL": "Print / Save as PDF"
     },
     "ja": {
         "TITLE": "ヘルプ",
@@ -41,13 +42,14 @@
         "CHOICE_STEP_B": "「[[JOIN_LABEL]]」を選ぶと参加前の画面が開きます。本人情報・会議名・音声と映像の機器を確認し、「[[PREJOIN_LABEL]]」で参加を確定します。",
         "CHOICE_STEP_C": "ログアウトするには「[[LOGOUT_LABEL]]」（電源アイコン）を使います。「[[LEAVE_LABEL]]」は会議から退出するだけで、ログインセッションは終了しません。",
         "EXAMPLE_MEETING": "サンプル会議",
-        "ILLUSTRATION": "説明用の図 - 操作できません",
+        "ILLUSTRATION": "説明用の図 — スクリーンショットではありません",
         "NO_ACCESS_TITLE": "会議が見つからない場合",
         "NO_ACCESS": "管理者に、参加を許可された会議の一覧を確認してもらってください。ログインしても、参加できるのは許可された会議だけです。",
         "SCOPE": "図は説明用の例です。利用できる機能はサイトの設定によって異なります。",
         "BACK": "実際のログインページへ",
         "ABOUT": "情報・クレジット・オープンソース",
-        "VERSION_LABEL": "Kaigi のバージョン"
+        "VERSION_LABEL": "Kaigi のバージョン",
+        "HELP_PRINT_LABEL": "印刷 / PDF として保存"
     },
     "fr-CA": {
         "TITLE": "Aide",
@@ -66,12 +68,13 @@
         "CHOICE_STEP_B": "Choisissez « [[JOIN_LABEL]] » pour ouvrir l’écran de préparation. Vérifiez votre identité, le nom de la réunion et vos appareils audio et vidéo, puis confirmez avec « [[PREJOIN_LABEL]] ». ",
         "CHOICE_STEP_C": "Utilisez « [[LOGOUT_LABEL]] » (l’icône d’alimentation) pour vous déconnecter. « [[LEAVE_LABEL]] » vous fait quitter la réunion sans fermer votre session.",
         "EXAMPLE_MEETING": "Réunion fictive",
-        "ILLUSTRATION": "Illustration non interactive",
+        "ILLUSTRATION": "Illustration — pas une capture d’écran",
         "NO_ACCESS_TITLE": "Vous ne trouvez pas votre réunion?",
         "NO_ACCESS": "Demandez à votre administrateur de vérifier la liste de vos réunions autorisées. La connexion donne seulement accès à ces réunions.",
         "SCOPE": "Les illustrations sont des exemples seulement. Les fonctions disponibles dépendent de la configuration du site.",
         "BACK": "Ouvrir la vraie page de connexion",
         "ABOUT": "À propos, crédits et logiciels libres",
-        "VERSION_LABEL": "Version de Kaigi"
+        "VERSION_LABEL": "Version de Kaigi",
+        "HELP_PRINT_LABEL": "Imprimer / Enregistrer en PDF"
     }
 }

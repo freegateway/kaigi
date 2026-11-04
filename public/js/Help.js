@@ -2,6 +2,11 @@
 
 // Help navigation only: no application configuration, authentication or media code.
 const helpLanguage = document.getElementById('i18nLanguageSelect');
+const helpPrint = document.getElementById('helpPrint');
+if (helpPrint) {
+    helpPrint.hidden = false;
+    helpPrint.addEventListener('click', () => window.print());
+}
 helpLanguage?.addEventListener('change', () => {
     const language = helpLanguage.value;
     if (![...helpLanguage.options].some((option) => option.value === language)) return;

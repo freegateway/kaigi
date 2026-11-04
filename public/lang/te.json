@@ -1087,6 +1087,12 @@
         "You are sharing your screen": "You are sharing your screen"
     },
     "dialogs": {
+        "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
+        "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
+        "Reconnecting automatically": "Reconnecting automatically",
+        "Reconnect now": "Reconnect now",
+        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
         "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "సమావేశాన్ని ప్రారంభించడానికి ప్రెజెంటర్ అవసరం. దయచేసి తర్వాత మళ్లీ చేరడానికి ప్రయత్నించండి.",

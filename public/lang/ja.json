@@ -1320,7 +1320,13 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "このログインIDは既にこの会議に接続しています。もう一方の接続で会議から退出するか、「ログアウト」をクリックして別のアカウントでログインしてください。"
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "このログインIDは既にこの会議に接続しています。もう一方の接続で会議から退出するか、「ログアウト」をクリックして別のアカウントでログインしてください。",
+        "The network timed out. Trying to reconnect.": "ネットワークがタイムアウトしました。再接続を試みています。",
+        "Connection interrupted. Trying to reconnect.": "接続が中断されました。再接続を試みています。",
+        "Reconnecting automatically": "自動再接続中",
+        "Reconnect now": "今すぐ再接続",
+        "Waiting for the server. You may need to login again.": "サーバーの復旧を待っています。再度ログインが必要な場合があります。",
+        "Attempt {attempt}/{max} — retry in {seconds}s": "試行 {attempt}/{max} — {seconds}秒後に再試行"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock を解除しました",
