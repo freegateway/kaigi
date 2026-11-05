@@ -1,5 +1,30 @@
 # Upstream intake
 
+## Help language consistency and mediasoup alignment (2026-11-05)
+
+Kaigi 0.5.5 aligns the mediasoup manifest and lock with 3.32.2, as in upstream
+5cf2d909b5166679ef75188bb8b06c56272a88ad. The separately maintained FreeBSD
+mediasoup port supplies the Node API and native worker. Retain mediasoup-client
+3.26.0 and its unchanged local browser bundle. Primary worker fixes:
+https://github.com/versatica/mediasoup/compare/3.32.1...3.32.2
+
+Help reads the existing uiLanguageOverride preference without writing it. Keep
+configured interface-language restrictions, support direct/new-tab visits, and
+honour explicit /help?lang= choices for that visit only. Unsupported guide
+languages show English with an explanation. Keep configured-language fallback
+when storage or JavaScript is unavailable, strict CSP/SRI and inert illustrations.
+Remove the separate Help selector and reuse About's return-to-login button classes
+and translation. Retain local branding, printing and section anchors.
+
+Upstream effects/custom remote pictures, cloud dependencies and cosmetic button
+changes are not adopted. The Kaigi port should raise its mediasoup minimum to
+3.32.2 and update its source pin after merge.
+
+Validation includes real HTTP Help responses, DOM/SRI and VM navigation tests,
+maintained return-button translations, explicit locale overrides, unsupported
+languages and denied storage. The Linux application/security suites pass;
+actual browser rendering, native media and FreeBSD tests remain separate.
+
 ## Safari blur, crawler privacy and help printing (2026-11-04)
 
 Kaigi 0.5.4 selectively adapts Safari-compatible background blur from upstream

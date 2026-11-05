@@ -1,5 +1,6 @@
 {
     "en": {
+        "HELP_LANGUAGE_FALLBACK": "This guide is available in English, Japanese and Canadian French. English is shown because the selected interface language is not supported by this guide.",
         "TITLE": "Help",
         "INTRO": "A guide to using this video conferencing site.",
         "PROTOTYPE": "Kaigi user guide",
@@ -26,6 +27,7 @@
         "HELP_PRINT_LABEL": "Print / Save as PDF"
     },
     "ja": {
+        "HELP_LANGUAGE_FALLBACK": "このガイドは英語、日本語、カナダフランス語でご利用いただけます。選択した画面表示言語には対応していないため、英語で表示しています。",
         "TITLE": "ヘルプ",
         "INTRO": "このビデオ会議サイトの使い方を説明します。",
         "PROTOTYPE": "Kaigi ユーザーガイド",
@@ -52,6 +54,7 @@
         "HELP_PRINT_LABEL": "印刷 / PDF として保存"
     },
     "fr-CA": {
+        "HELP_LANGUAGE_FALLBACK": "Ce guide est offert en anglais, en japonais et en français canadien. Il est affiché en anglais parce que la langue choisie pour l’interface n’est pas prise en charge par ce guide.",
         "TITLE": "Aide",
         "INTRO": "Guide d’utilisation de ce site de vidéoconférence.",
         "PROTOTYPE": "Guide d’utilisation de Kaigi",
