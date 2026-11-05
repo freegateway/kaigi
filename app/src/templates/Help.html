@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{LANGUAGE}}">
+<html lang="{{LANGUAGE}}" data-help-language="{{INTERFACE_LANGUAGE}}" data-help-languages="{{AVAILABLE_LANGUAGES}}">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -17,15 +17,6 @@
         <header class="help-header">
             <button id="helpPrint" type="button" hidden>{{HELP_PRINT_LABEL}}</button>
             <a href="/" class="help-identity"><img src="{{LOGO}}" alt="" /><span>{{SITE_NAME}}</span></a>
-            <form action="/help" method="get" id="preMeetingLanguage">
-                <label for="i18nLanguageSelect"
-                    ><i class="fa-solid fa-globe" aria-hidden="true"></i> {{LANGUAGE_LABEL}}</label
-                >
-                <select id="i18nLanguageSelect" name="lang" class="form-select text-light bg-dark notranslate">
-                    {{LANGUAGE_OPTIONS}}
-                </select>
-                <noscript><button type="submit">{{APPLY_LABEL}}</button></noscript>
-            </form>
         </header>
         <div class="help-layout">
             <aside class="help-sidebar">
@@ -150,7 +141,7 @@
                     <p>{{NO_ACCESS}}</p>
                 </aside>
                 <p>{{SCOPE}}</p>
-                <p><a href="/login">{{BACK}}</a></p>
+                <p><a class="button button-primary" href="/login">{{RETURN_TO_LOGIN}}</a></p>
             </main>
         </div>
         <footer class="help-footer">

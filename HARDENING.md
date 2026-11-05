@@ -15,10 +15,13 @@ device preparation, media controls, screen sharing, collaboration, logout and
 common problems in English, Japanese and Canadian French. It uses resolved public
 branding, local login styles and `/site-assets/site.css`; it does not read or
 expose configuration files, accounts or meeting grants. Examples are fictional.
-Only the language selector, section links and collapsible navigation work;
-illustrated meeting controls remain inert. The selector uses the landing-page
-markup and styles with the supported subset of configured languages. A GET form
-provides a no-script fallback. An additional Content Security Policy allows only
+Only printing, section links and collapsible navigation work;
+illustrated meeting controls remain inert. Help reads the shared browser language
+preference without changing it. An explicit /help?lang= choice applies only to
+that visit. Unsupported guide languages fall back to English with an explanation.
+Without JavaScript or browser storage, the configured site language applies.
+The return-to-login button shares About's styling and localized label.
+An additional Content Security Policy allows only
 the integrity-pinned local language-navigation script, blocks inline handlers,
 connections and embedded media, and restricts form submission to this site.
 No application scripts, credentials, session storage or media are used. Permissions Policy

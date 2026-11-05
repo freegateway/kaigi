@@ -81,35 +81,44 @@ describe('public help guide and inert illustrations', () => {
         }
     });
 
-    it('matches landing language control markup, classes and flag/native-name labels', () => {
-        const source = read('public/js/I18n.js');
-        const start = source.indexOf('const LANG_DISPLAY = '),
-            end = source.indexOf('\n    };', start) + 7;
-        const display = vm.runInNewContext(source.slice(start, end) + '; LANG_DISPLAY');
-        const landing = new JSDOM(read('public/views/login.html')).window.document;
+    it('uses About return-button classes and localized text without a separate language selector', () => {
+        const about = new JSDOM(read('public/views/about.html')).window.document;
         const document = new JSDOM(help.renderHelp(brand, 'ja')).window.document;
-        assert.equal(
-            document.querySelector('#preMeetingLanguage label').htmlFor,
-            landing.querySelector('#preMeetingLanguage label').htmlFor
-        );
-        assert(document.querySelector('#preMeetingLanguage label .fa-globe'));
-        assert.equal(document.querySelector('select').className, 'form-select text-light bg-dark notranslate');
-        for (const option of document.querySelectorAll('option'))
-            assert.equal(option.textContent, `${display[option.value].flag} ${display[option.value].name}`);
-        assert.equal(document.querySelector('select').value, 'ja');
+        assert.equal(document.querySelector('select, form, #preMeetingLanguage'), null);
+        const back = document.querySelector('a.button[href="/login"]');
+        assert.equal(back.className, about.querySelector('a[href="/login"]').className);
+        assert.equal(back.textContent, require('../public/lang/ja.json').about.returnToLogin);
     });
 
     it('restricts guide locales to supported configured choices and explains an unsupported-only list', () => {
         const input = { app: { language: 'ja', languages: ['fr-CA', 'ja', 'fr-CA', 'de'] } };
         const document = new JSDOM(help.renderHelp(input, 'en')).window.document;
-        assert.deepEqual(
-            [...document.querySelectorAll('option')].map((option) => option.value),
-            ['fr-CA', 'ja']
-        );
+        assert.deepEqual(JSON.parse(document.documentElement.dataset.helpLanguages), ['fr-CA', 'ja', 'de']);
         assert.equal(document.documentElement.lang, 'ja');
         const fallback = new JSDOM(help.renderHelp({ app: { languages: ['de'] } }, 'ja')).window.document;
         assert.equal(fallback.documentElement.lang, 'en');
-        assert.match(fallback.body.textContent, /none of these languages is enabled/);
+        assert.match(fallback.body.textContent, /selected interface language is not supported/);
+    });
+
+    it('renders maintained guide languages and About return labels with deterministic fallbacks', () => {
+        for (const language of ['en', 'en-CA', 'ja', 'fr-CA']) {
+            const document = new JSDOM(help.renderHelp({}, language)).window.document;
+            assert.equal(document.documentElement.lang, language);
+            assert.equal(document.documentElement.dataset.helpLanguage, language);
+            assert.equal(
+                document.querySelector('a.button[href="/login"]').textContent,
+                require('../public/lang/' + language + '.json').about.returnToLogin
+            );
+        }
+        const configured = { app: { language: 'fr-CA', languages: ['fr-CA', 'ja', 'de'] } };
+        for (const requested of [undefined, '', 'https://outside.example', ['ja'], 'en']) {
+            const document = new JSDOM(help.renderHelp(configured, requested)).window.document;
+            assert.equal(document.documentElement.lang, 'fr-CA');
+        }
+        const unsupported = new JSDOM(help.renderHelp(configured, 'de')).window.document;
+        assert.equal(unsupported.documentElement.lang, 'en');
+        assert.equal(unsupported.documentElement.dataset.helpLanguage, 'de');
+        assert.match(unsupported.body.textContent, /selected interface language is not supported/);
     });
 
     it('provides matching section targets, keyboard-friendly navigation and complete localized topics', () => {
@@ -137,7 +146,8 @@ describe('public help guide and inert illustrations', () => {
     it('keeps revised help terminology and separate collaboration sections aligned across locales', () => {
         const strings = require('../app/src/templates/HelpStrings.json');
         const topics = require('../app/src/templates/HelpTopics.json');
-        const tokens = (value) => [...JSON.stringify(value).matchAll(/\[\[([A-Z_]+)\]\]/g)].map((match) => match[1]).sort();
+        const tokens = (value) =>
+            [...JSON.stringify(value).matchAll(/\[\[([A-Z_]+)\]\]/g)].map((match) => match[1]).sort();
         for (const language of ['en', 'ja', 'fr-CA']) {
             assert.deepEqual(Object.keys(strings[language]), Object.keys(strings.en));
             assert.deepEqual(tokens(strings[language]), tokens(strings.en));
@@ -147,7 +157,10 @@ describe('public help guide and inert illustrations', () => {
                 assert.deepEqual(tokens(topic), tokens(english));
             }
         }
-        assert.doesNotMatch(JSON.stringify([strings, topics]), /sign[ -]?(?:in|out)|presenter|control|présentateur|発表者|操作部品|commande/i);
+        assert.doesNotMatch(
+            JSON.stringify([strings, topics]),
+            /sign[ -]?(?:in|out)|presenter|control|présentateur|発表者|操作部品|commande/i
+        );
     });
 
     it('permits only the integrity-pinned navigation script and only same-origin language navigation', () => {
@@ -156,42 +169,64 @@ describe('public help guide and inert illustrations', () => {
         const document = new JSDOM(help.renderHelp(brand, 'ja')).window.document;
         const hash = crypto.createHash('sha256').update(source).digest('base64');
         assert.equal(document.querySelector('script').getAttribute('integrity'), `sha256-${hash}`);
-        let listener, destination, printListener, printCalls = 0;
-        const printButton = { hidden: true, addEventListener: (event, handler) => { assert.equal(event, 'click'); printListener = handler; } };
-        const picker = {
-            value: 'fr-CA',
-            options: [{ value: 'ja' }, { value: 'fr-CA' }],
+        let destination,
+            printListener,
+            printCalls = 0;
+        const printButton = {
+            hidden: true,
             addEventListener: (event, handler) => {
-                assert.equal(event, 'change');
-                listener = handler;
+                assert.equal(event, 'click');
+                printListener = handler;
             },
         };
-        vm.runInNewContext(source, {
-            URL,
-            document: { getElementById: (id) => id === 'helpPrint' ? printButton : picker },
-            window: {
-                print: () => printCalls++,
-                location: {
-                    origin: 'https://meeting.example',
-                    hash: '#help-screen',
-                    assign: (value) => {
-                        destination = value;
+        const run = (stored, href = 'https://meeting.example/help#help-screen', throws = false) =>
+            vm.runInNewContext(source, {
+                URL,
+                localStorage: {
+                    getItem: (key) => {
+                        assert.equal(key, 'uiLanguageOverride');
+                        if (throws) throw Error('blocked');
+                        return stored;
                     },
                 },
-            },
-        });
+                document: {
+                    getElementById: () => printButton,
+                    documentElement: {
+                        dataset: { helpLanguage: 'en', helpLanguages: '["en","en-CA","fr-CA","ja","de"]' },
+                    },
+                },
+                window: {
+                    print: () => printCalls++,
+                    location: {
+                        href,
+                        replace: (value) => {
+                            destination = value;
+                        },
+                    },
+                },
+            });
+        run('fr-CA');
         assert.equal(printButton.hidden, false);
         printListener();
         assert.equal(printCalls, 1);
-        listener();
         assert.equal(destination, 'https://meeting.example/help?lang=fr-CA#help-screen');
-        destination = null;
-        picker.value = 'https://outside.example';
-        listener();
-        assert.equal(destination, null);
+        for (const [language, href, throws] of [
+            ['https://outside.example'],
+            ['en'],
+            [null],
+            ['ja', 'https://meeting.example/help?lang=fr-CA#help-chat'],
+            ['ja', undefined, true],
+        ]) {
+            destination = null;
+            run(language, href, throws);
+            assert.equal(destination, null);
+        }
+        run('de', 'https://meeting.example/manual#help-chat');
+        assert.equal(destination, 'https://meeting.example/help?lang=de#help-chat');
+        assert.equal(new JSDOM(help.renderHelp({}, 'de')).window.document.documentElement.lang, 'en');
         assert.doesNotMatch(
             source,
-            /fetch\(|XMLHttpRequest|WebSocket|socket\.io|getUserMedia|getDisplayMedia|localStorage|sessionStorage/
+            /fetch\(|XMLHttpRequest|WebSocket|socket\.io|getUserMedia|getDisplayMedia|setItem|removeItem|sessionStorage/
         );
     });
 
@@ -244,9 +279,7 @@ describe('public help guide and inert illustrations', () => {
         assert.equal(document.querySelector('input, iframe, video, audio'), null);
         assert.equal(document.querySelectorAll('script').length, 1);
         assert.equal(document.querySelector('script').getAttribute('src'), '/js/Help.js');
-        assert.equal(document.querySelectorAll('form').length, 1);
-        assert.equal(document.querySelector('form').getAttribute('action'), '/help');
-        assert.equal(document.querySelectorAll('select').length, 1);
+        assert.equal(document.querySelectorAll('form, select').length, 0);
         assert.equal(
             document.querySelector('[inert] script, [inert] form, [inert] input, [inert] select, [inert] button'),
             null

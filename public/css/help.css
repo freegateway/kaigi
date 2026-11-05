@@ -41,16 +41,9 @@
 }
 .help-page a:focus-visible,
 .help-page summary:focus-visible,
-.help-page select:focus-visible {
+.help-page button:focus-visible {
     outline: 3px solid #ffc857;
     outline-offset: 4px;
-}
-.help-header #preMeetingLanguage {
-    flex-wrap: wrap;
-    margin-left: 0;
-}
-.help-header #preMeetingLanguage select {
-    margin-top: 4px;
 }
 @media (max-width: 1200px) {
     .help-page .help-topic {
@@ -71,8 +64,7 @@
     .help-layout {
         display: block;
     }
-    .help-sidebar,
-    .help-header #preMeetingLanguage {
+    .help-sidebar {
         display: none;
     }
 }
@@ -375,8 +367,7 @@
     margin: 16mm;
 }
 @media print {
-    #helpPrint,
-    #preMeetingLanguage {
+    #helpPrint {
         display: none !important;
     }
 }

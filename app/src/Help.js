@@ -14,12 +14,10 @@ const template = fs.readFileSync(path.join(__dirname, 'templates/Help.html'), 'u
 const languages = ['en', 'en-CA', 'fr-CA', 'ja'];
 const dictionaries = Object.fromEntries(languages.map((code) => [code, require(`../../public/lang/${code}.json`)]));
 const policy = `default-src 'none'; script-src 'sha256-${scriptHash}'; script-src-attr 'none'; connect-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; object-src 'none'; form-action 'self'; base-uri 'none'`;
-const languageNames = {
-    en: '🇬🇧 English',
-    'en-CA': '🇨🇦 English (Canada)',
-    ja: '🇯🇵 日本語',
-    'fr-CA': '🇨🇦 Français (Canada)',
-};
+const interfaceLanguages = fs
+    .readdirSync(path.join(__dirname, '../../public/lang'))
+    .filter((name) => name.endsWith('.json'))
+    .map((name) => name.slice(0, -5));
 
 function escape(value) {
     return String(value ?? '').replace(
@@ -45,14 +43,17 @@ function localLogo(value) {
 function renderHelp(input = {}, requested) {
     const brand = input.htmlInjection === false ? {} : input;
     const permitted = Array.isArray(input.app?.languages)
-        ? [...new Set(input.app.languages.filter((code) => languages.includes(code)))]
-        : languages;
-    const available = permitted.length ? permitted : ['en'];
-    const language = available.includes(requested)
+        ? [...new Set(input.app.languages.filter((code) => interfaceLanguages.includes(code)))]
+        : interfaceLanguages;
+    const available = permitted.length ? permitted : interfaceLanguages;
+    const selected = available.includes(requested)
         ? requested
         : available.includes(input.app?.language)
           ? input.app.language
-          : available[0];
+          : available.includes('en')
+            ? 'en'
+            : available[0];
+    const language = languages.includes(selected) ? selected : 'en';
     const copy = strings[language] || strings.en;
     const dictionary = dictionaries[language];
     const ui = (key) => {
@@ -70,6 +71,9 @@ function renderHelp(input = {}, requested) {
         ...copy,
         LOGIN_STEP_A: values.HELP_LOGIN_INSTRUCTIONS ?? copy.LOGIN_STEP_A,
         LANGUAGE: language,
+        INTERFACE_LANGUAGE: selected,
+        AVAILABLE_LANGUAGES: JSON.stringify(available),
+        RETURN_TO_LOGIN: dictionary.about?.returnToLogin || 'Return to login',
         VERSION: version,
         SITE_NAME: String(values.SITE_NAME ?? (brand.site?.name || brand.app?.name || 'Kaigi')),
         SITE_DESCRIPTION: String(values.SITE_DESCRIPTION ?? (brand.site?.description || '')),
@@ -90,8 +94,6 @@ function renderHelp(input = {}, requested) {
         USERNAME_LABEL: ui('Username'),
         PASSWORD_LABEL: ui('Password'),
         LOGOUT_LABEL: ui('Logout'),
-        LANGUAGE_LABEL: ui('Language'),
-        APPLY_LABEL: ui('Apply'),
         PREJOIN_LABEL: ui('Join meeting'),
         LEAVE_LABEL: ui('Leave meeting'),
         AUDIO_ON: ui('Start the audio'),
@@ -133,12 +135,8 @@ function renderHelp(input = {}, requested) {
             ['desktop', 'SCREEN_ON'],
             ['stop-circle', 'SCREEN_OFF'],
         ],
-        'help-chat': [
-            ['comment', 'CHAT_LABEL'],
-        ],
-        'help-whiteboard': [
-            ['chalkboard', 'WHITEBOARD_LABEL'],
-        ],
+        'help-chat': [['comment', 'CHAT_LABEL']],
+        'help-whiteboard': [['chalkboard', 'WHITEBOARD_LABEL']],
         'help-leave': [
             ['sign-out-alt', 'LEAVE_LABEL'],
             ['power-off', 'LOGOUT_LABEL'],
@@ -160,12 +158,6 @@ function renderHelp(input = {}, requested) {
         ...sections.map((section) => [section.id, section.title]),
     ];
     const html = {
-        LANGUAGE_OPTIONS: available
-            .map(
-                (code) =>
-                    `<option value="${code}"${code === language ? ' selected' : ''}>${escape(languageNames[code])}</option>`
-            )
-            .join(''),
         HELP_NAV: nav.map(([id, title]) => `<li><a href="#${id}">${escape(title)}</a></li>`).join(''),
         HELP_TOPICS: sections
             .map(
@@ -174,7 +166,7 @@ function renderHelp(input = {}, requested) {
             )
             .join(''),
         SCRIPT_INTEGRITY: `sha256-${scriptHash}`,
-        LANGUAGE_NOTE: permitted.length ? '' : escape(topics.en.fallback),
+        LANGUAGE_NOTE: language === selected ? '' : escape(copy.HELP_LANGUAGE_FALLBACK),
     };
     // Expand instruction placeholders once, then escape. Configured values stay literal.
     return template.replace(/{{([A-Z_]+)}}/g, (_match, key) =>
