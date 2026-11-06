@@ -54,6 +54,10 @@ flow on narrow screens; both it and the footer avoid covering the guide text.
 
 ## Authentication and secrets
 
+Server-side sanitizer failures reject the affected operation; original input
+is never used as a fallback. Socket rejections emit fixed-field security events
+without input values or dependency exception details.
+
 ### Participant message boundaries
 
 DataChannel chat uses the server-announced producer owner's identity, not the
