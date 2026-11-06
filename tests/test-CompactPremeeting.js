@@ -27,7 +27,12 @@ describe('compact pre-meeting layout', () => {
         assert.match(compact, /object-fit: contain/);
         assert.match(compact, /#usernameInput/);
         assert.match(media[1].media.mediaText, /min-width: 700px/);
-        assert.match(media[1].cssText, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+        const columns = [...media[1].cssRules].find((rule) => rule.selectorText.includes('.init-user.no-camera'));
+        // Zero lengths may serialize with or without px; both tracks must remain equal.
+        assert.match(
+            columns.style.getPropertyValue('grid-template-columns'),
+            /^minmax\(0(?:px)?, 1fr\) minmax\(0(?:px)?, 1fr\)$/
+        );
         assert.match(media[1].cssText, /\.no-camera/);
         assert.match(media[1].cssText, /\.mic-guidance/);
         const html = read('public/views/Room.html');

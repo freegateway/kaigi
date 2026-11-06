@@ -1,5 +1,35 @@
 # Upstream intake
 
+## jsdom 31 compatibility (2026-11-06)
+
+Kaigi 0.5.7 selectively adopts jsdom 31.0.0 from upstream
+0d8628b54bc5311a4971e9a84090cf71a2a0f5c9 after the separate fail-closed
+sanitization fix. Update only jsdom and its required dependency tree, retaining
+existing overrides. Optional native canvas/Skia packages are not included.
+The CSS assertion accepts equivalent zero-length serialization while still
+requiring two equal minmax tracks. Browser styles and media bundles are unchanged.
+
+Primary comparisons:
+https://github.com/jsdom/jsdom/compare/v30.1.3...v31.0.0
+https://github.com/inikulin/parse5/compare/v8.0.1...v8.1.0
+https://github.com/fb55/entities/compare/v8.0.0...v9.0.0
+https://github.com/jsdom/whatwg-url/compare/v17.2.0...v17.3.0
+https://github.com/nodejs/undici/compare/v8.12.1...v8.12.4
+
+The required parser/URL/entity updates and Undici 8.12.4 are locked; the latter
+includes redirect credential handling and resource/error-boundary corrections.
+No new network integration or native mediasoup change is introduced. DOMPurify
+continues to use an inert default document, without scripts or resource loading.
+
+Validation covers sanitizer exceptions, malformed/encoded markup, inert default
+parsing, no embedded-resource requests, tuple-header redirect credential removal,
+Help/localization and CSS tests. Test without externally supplied NODE_PATH
+packages so optional global canvas cannot affect the packaged environment.
+All 533 application tests and 23 security tests passed on Linux/Node 24.22.1.
+Actual FreeBSD/native-media and browser layout testing remain separate.
+After merge, the FreeBSD port must update its source pin, npm-deps.mk and distinfo
+for the changed production dependency graph; retain the separate mediasoup port.
+
 ## Fail-closed sanitization (2026-11-06)
 
 Kaigi 0.5.6 rejects operations when server-side sanitization fails instead of
