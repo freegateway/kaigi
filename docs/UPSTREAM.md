@@ -1,5 +1,21 @@
 # Upstream intake
 
+## Fail-closed sanitization (2026-11-06)
+
+Kaigi 0.5.6 rejects operations when server-side sanitization fails instead of
+returning the original input. Use a fixed error without dependency exception
+details or input data. Socket callers catch failures before processing/relaying
+the result and emit a fixed sanitization_failed security event; whiteboard
+snapshot admission state is not updated before successful sanitization.
+HTTP callers retain existing token/upload error boundaries or Express 5's
+request error boundary. No participant authority or session policy changes.
+
+This is Kaigi-specific hardening identified while reviewing jsdom 31, not a
+claim of a demonstrated exploit. Keep jsdom 30.1.3 unchanged for this fix.
+Regression coverage injects sanitizer failures, checks fixed error contents,
+HTTP rejection and continued service, and real Socket.IO file-announcement
+rejection. Native media/browser/FreeBSD validation remains separate.
+
 ## Help language consistency and mediasoup alignment (2026-11-05)
 
 Kaigi 0.5.5 aligns the mediasoup manifest and lock with 3.32.2, as in upstream

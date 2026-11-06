@@ -2528,7 +2528,13 @@ function startServer() {
             // Get peer IPv4 (::1 Its the loopback address in ipv6, equal to 127.0.0.1 in ipv4)
             const peer_ip = getIpSocket(socket);
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Join request received', { peer_id: socket.id });
 
@@ -3313,7 +3319,13 @@ function startServer() {
             if (['transcript', 'transcriptionAll', 'geoLocation', 'geoLocationOK', 'geoLocationKO', 'remoteControl', 'remoteControlOK', 'remoteControlKO'].includes(dataObject?.type)) return;
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('cmd', data);
 
@@ -3349,7 +3361,13 @@ function startServer() {
         socket.on('roomAction', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) {
                 log.warn('Room action invalid data', { peer_id: socket.id, room_id: socket.room_id });
@@ -3459,7 +3477,13 @@ function startServer() {
         socket.on('roomLobby', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             const room = getRoom(socket);
 
@@ -3538,7 +3562,13 @@ function startServer() {
         socket.on('breakoutRoomBroadcast', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Breakout room broadcast', data);
 
@@ -3571,7 +3601,13 @@ function startServer() {
         socket.on('breakoutRoomEnd', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Breakout room end all', data);
 
@@ -3593,7 +3629,13 @@ function startServer() {
         socket.on('breakoutRoomCountdown', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Breakout room countdown', data);
 
@@ -3616,7 +3658,13 @@ function startServer() {
         socket.on('breakoutRoomHelp', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Breakout room help request', data);
 
@@ -3636,7 +3684,13 @@ function startServer() {
         socket.on('breakoutRoom', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Breakout room', data);
 
@@ -3672,7 +3726,13 @@ function startServer() {
             if (dataObject?.action === 'geoLocation') return;
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             log.debug('Peer action', data);
 
@@ -3722,7 +3782,13 @@ function startServer() {
 
             if (!peer) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -3746,7 +3812,13 @@ function startServer() {
                 return cb({ error: message });
             }
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -3764,7 +3836,13 @@ function startServer() {
         socket.on('updateRoomModerator', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -3803,7 +3881,13 @@ function startServer() {
         socket.on('updateRoomModeratorALL', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -3823,7 +3907,13 @@ function startServer() {
         socket.on('followMe', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -3873,7 +3963,13 @@ function startServer() {
         socket.on('shareVideoAction', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -3930,7 +4026,6 @@ function startServer() {
             const { requesterId, nonce, canvas, panelOpen } = response;
             const pending = pendingWhiteboardSnapshots.get(requesterId);
             if (!pending || pending.sourceId !== socket.id || pending.nonce !== nonce) return;
-            if (typeof panelOpen === 'boolean') room.getPeer(socket.id).whiteboardOpen = panelOpen;
             if (canvas === null) {
                 clearTimeout(pending.timer);
                 requestWhiteboardSnapshotFromPeer(requesterId, pending.roomId);
@@ -3944,7 +4039,14 @@ function startServer() {
                 return;
             }
             if (!parsed || !Array.isArray(parsed.objects)) return;
-            const safeCanvas = Validator.sanitizeWbCanvasJson(checkXSS(parsed));
+            let safeCanvas;
+            try {
+                safeCanvas = Validator.sanitizeWbCanvasJson(checkXSS(parsed));
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
+            if (typeof panelOpen === 'boolean') room.getPeer(socket.id).whiteboardOpen = panelOpen;
             clearTimeout(pending.timer);
             pendingWhiteboardSnapshots.delete(requesterId);
             const openPanel = [...room.getPeers()].some(([id, peer]) => id !== requesterId && peer.whiteboardOpen === true);
@@ -3995,7 +4097,13 @@ function startServer() {
                 return;
             }
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             // Accept embedded raster images only; remote image URLs are never relayed.
             const sanitized = Validator.sanitizeWbCanvasJson(data, ({ src }) => {
@@ -4033,7 +4141,13 @@ function startServer() {
             );
             if (!isPresenter && room.getWhiteboardLock()) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
             if (!['upsert', 'remove'].includes(data.action)) return;
             if (typeof data.object_id !== 'string' || data.object_id.length > 200) return;
 
@@ -4101,7 +4215,13 @@ function startServer() {
                 return;
             }
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -4144,7 +4264,13 @@ function startServer() {
         // Video drawing overlay: relay temporary strokes and persist screen annotations.
         socket.on('videoDrawing', (dataObject) => {
             if (!roomExists(socket)) return;
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
             const room = getRoom(socket);
             const peer = room.getPeer(socket.id);
             if (!peer) return;
@@ -4436,7 +4562,13 @@ function startServer() {
         socket.on('setVideoOff', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -4455,7 +4587,13 @@ function startServer() {
             if (!roomExists(socket)) return;
             if (!recordingAllowedIn(socket.room_id)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -4503,7 +4641,13 @@ function startServer() {
         socket.on('message', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return;
 
@@ -4597,7 +4741,13 @@ function startServer() {
 
         socket.on('chatReaction', (dataObject) => {
             if (!roomExists(socket)) return;
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
             if (!Validator.isValidData(data)) return;
             const { room } = getRoomAndPeer(socket);
             room.broadCast(socket.id, 'chatReaction', data);
@@ -4857,7 +5007,13 @@ function startServer() {
                 return cb(false);
             }
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return cb(false);
 
@@ -4916,7 +5072,13 @@ function startServer() {
                 return cb(false);
             }
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) return cb(false);
 
@@ -4969,7 +5131,13 @@ function startServer() {
         socket.on('createPoll', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data) || typeof data.question !== 'string' ||
                 !Array.isArray(data.options) || data.options.length === 0 ||
@@ -5015,7 +5183,13 @@ function startServer() {
         socket.on('vote', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data)) {
                 securityEvent('socket_event_rejected', socket, 'invalid_poll');
@@ -5061,7 +5235,13 @@ function startServer() {
         socket.on('editPoll', (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
 
             if (!Validator.isValidData(data) || typeof data.question !== 'string' ||
                 !Array.isArray(data.options) || data.options.length === 0 ||
@@ -5109,7 +5289,13 @@ function startServer() {
         socket.on('deletePoll', async (dataObject) => {
             if (!roomExists(socket)) return;
 
-            const data = checkXSS(dataObject);
+            let data;
+            try {
+                data = checkXSS(dataObject);
+            } catch {
+                securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+                return;
+            }
             if (!Validator.isValidData(data)) {
                 securityEvent('socket_event_rejected', socket, 'invalid_poll');
                 return;

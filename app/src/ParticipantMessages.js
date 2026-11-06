@@ -22,7 +22,13 @@ module.exports = function participantMessages(socket, { getRoom, getPeer, securi
     socket.on('fileInfo', (raw) => {
         const ctx = context();
         if (!ctx || !object(raw)) return;
-        const data = checkXSS(raw);
+        let data;
+        try {
+            data = checkXSS(raw);
+        } catch {
+            securityEvent('socket_event_rejected', socket, 'sanitization_failed');
+            return;
+        }
         if (!isValidFileName(data.fileName)) return;
         const recipients = [...ctx.room.getPeers().keys()].filter(
             (id) => id !== socket.id && (data.broadcast === true || id === data.peer_id)

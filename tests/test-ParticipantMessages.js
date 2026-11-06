@@ -65,7 +65,7 @@ describe('participant message boundaries over real Socket.IO frames', function (
                 getRoom: () => room,
                 getPeer: () => room.getPeer(socket.id),
                 securityEvent,
-                checkXSS: (data) => data,
+                checkXSS: (data) => { if (socket.handshake.auth.failSanitizer) throw Error('private payload'); return data; },
                 isValidFileName: (name) => typeof name === 'string' && !name.includes('/'),
             });
             socket.on('getMeetingRecordingPolicy', (_, ack) => ack(true));
@@ -73,6 +73,17 @@ describe('participant message boundaries over real Socket.IO frames', function (
         });
         await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     });
+    it('drops file announcements on sanitizer failure without relaying or killing the connection', async () => {
+        const sender = await connect('sender', { failSanitizer: true });
+        const receiver = await connect('receiver');
+        sender.send('fileInfo', { fileName: 'private payload', broadcast: true });
+        await sender.barrier();
+        await receiver.barrier();
+        assert.equal(receiver.events.filter(([name]) => name === 'fileInfo').length, 0);
+        assert(logs.some(([event, , reason]) => event === 'socket_event_rejected' && reason === 'sanitization_failed'));
+        assert(!JSON.stringify(logs.map(([event, , reason]) => [event, reason])).includes('private payload'));
+    });
+
     afterEach(async () => {
         for (const client of clients) client.ws.terminate();
         await new Promise((resolve) => io.close(resolve));

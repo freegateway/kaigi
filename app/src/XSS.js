@@ -60,9 +60,11 @@ purify.addHook('beforeSanitizeAttributes', cleanAttributes);
 const checkXSS = (dataObject) => {
     try {
         return sanitizeData(dataObject);
-    } catch (error) {
-        log.error('Sanitization error:', error);
-        return dataObject; // Return original data in case of error
+    } catch {
+        // Never return unsanitized input or expose a dependency exception's payload.
+        const error = new Error('Sanitization failed');
+        error.code = 'SANITIZATION_FAILED';
+        throw error;
     }
 };
 
