@@ -9,6 +9,7 @@ const roomClientSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'j
 
 describe('test-TransportRecovery', () => {
     let RoomClientProto;
+    let ProducerHandler;
     let popups;
 
     before(() => {
@@ -27,11 +28,17 @@ describe('test-TransportRecovery', () => {
             window: { location: { origin: 'https://localhost:3010' } },
             setTimeout,
             console: { log() {}, info() {}, warn() {}, error() {} },
+            mediaType: { screen: 'screen' },
+            wbUpdate: () => {},
             popupHtmlMessage: (...args) => popups.push(args),
             handleAspectRatio: () => {},
         });
         vm.runInContext(`${roomClientSource}; globalThis.RoomClientForTest = RoomClient;`, context);
         RoomClientProto = context.RoomClientForTest.prototype;
+        const start = roomClientSource.indexOf('    handleNewProducers = ');
+        const end = roomClientSource.indexOf('\n    handleNewDataProducer = ', start);
+        assert.ok(start >= 0 && end > start);
+        ProducerHandler = vm.runInContext(`(class {${roomClientSource.slice(start, end)}})`, context);
     });
 
     beforeEach(() => {
@@ -63,6 +70,68 @@ describe('test-TransportRecovery', () => {
     const plain = (value) => JSON.parse(JSON.stringify(value));
 
     const handleTransportLost = (client, ...args) => RoomClientProto.handleTransportLost.apply(client, args);
+
+    describe('handleNewProducers', () => {
+        const announcement = [{
+            producer_id: 'producer',
+            peer_name: 'Remote',
+            peer_info: { peer_id: 'remote' },
+            type: 'audio',
+        }];
+
+        it('skips announcements until the device and an open receive transport are available', async () => {
+            const client = new ProducerHandler();
+            client.consume = () => assert.fail('must not consume before readiness');
+            client.consumerTransport = { id: 'receive', closed: false };
+            await client.handleNewProducers(announcement);
+            client.device = {};
+            client.consumerTransport = null;
+            await client.handleNewProducers(announcement);
+            client.consumerTransport = { id: 'old', closed: true };
+            await client.handleNewProducers(announcement);
+        });
+
+        it('discovers a skipped producer on reconcile and does not consume it twice', async () => {
+            const client = new ProducerHandler();
+            const consumed = [];
+            Object.assign(client, {
+                _isConnected: true,
+                peer_id: 'local',
+                consumersProducer: new Map(),
+                consumers: new Map(),
+                resumedConsumers: new Set(),
+                consumingProducers: new Set(),
+                socket: {
+                    connected: true,
+                    async request(event, payload) {
+                        assert.equal(event, 'getProducers');
+                        assert.deepEqual(plain(payload), { knownProducerIds: [] });
+                        return announcement;
+                    },
+                },
+                consume: RoomClientProto.consume,
+                async getConsumeStream(id) {
+                    consumed.push(id);
+                    return { consumer: { id: 'consumer', on() {} }, kind: 'audio' };
+                },
+                handleConsumer() {},
+                resumeConsumerWithRetry: async () => {
+                    client.resumedConsumers.add('consumer');
+                    return true;
+                },
+                editorUpdate() {},
+                applyPendingFollowMe() {},
+            });
+            await client.handleNewProducers(announcement);
+            assert.deepEqual(consumed, []);
+            client.device = {};
+            client.consumerTransport = { id: 'new', closed: false };
+            await RoomClientProto.reconcileConsumers.call(client);
+            await client.handleNewProducers(announcement);
+            assert.deepEqual(consumed, ['producer']);
+            assert.equal(client.consumersProducer.get('producer'), 'consumer');
+        });
+    });
 
     describe('handleTransportLost', () => {
         it('ignores unknown transport kinds', async () => {

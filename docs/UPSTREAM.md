@@ -1,5 +1,13 @@
 # Upstream intake
 
+## Media producer readiness (2026-11-08)
+
+Adapt upstream `e8de55e0eb5bc01369755c5ba340c9ab7d124e9e`: ignore media
+producer announcements before the device and an open receive transport are
+available, without logging the skipped payload. Keep the existing post-setup
+producer discovery and post-recovery reconciliation, including deduplication.
+No signaling authorization, dependency, browser bundle or native worker change.
+
 ## jsdom 31 compatibility (2026-11-06)
 
 Kaigi 0.5.7 selectively adopts jsdom 31.0.0 from upstream
