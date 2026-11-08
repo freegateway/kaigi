@@ -1807,7 +1807,10 @@ class RoomClient {
     };
 
     handleNewProducers = async (data, reconcile = false) => {
-        if (data.length > 0) {
+        // Join requests the full producer list after setup; receive transport
+        // recovery reconciles it again after replacing the closed transport.
+        if (!this.device || !this.consumerTransport || this.consumerTransport.closed) return;
+        if (Array.isArray(data) && data.length > 0) {
             if (!reconcile) {
                 console.log('SocketOn New producers', {
                     data,
