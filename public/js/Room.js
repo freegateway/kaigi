@@ -2294,7 +2294,6 @@ function handleInitVideoOffClick() {
 
 function checkInitAudio(isAudioAllowed) {
     initMicrophoneSelect.disabled = !isAudioAllowed;
-    initSpeakerSelect.disabled = !isAudioAllowed;
     isAudioAllowed ? sound('joined') : sound('left');
 }
 
@@ -4412,6 +4411,7 @@ function handleSelects() {
         isButtonsBarOver = isKeepButtonsVisible = e.currentTarget.checked;
         localStorageSettings.keep_buttons_visible = isButtonsBarOver;
         lS.setSettings(localStorageSettings);
+        syncButtonsBarReserve();
         const status = isButtonsBarOver ? 'enabled' : 'disabled';
         userLog(isButtonsBarOver ? 'success' : 'info', `Buttons always visible ${status}`, 'top-end', 1800);
         e.target.blur();
@@ -5748,6 +5748,26 @@ function handleButtonsBar() {
     const showButtonsHandler = () => showButtons();
     document.body.addEventListener('pointermove', showButtonsHandler);
     document.body.addEventListener('touchstart', showButtonsHandler);
+    if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(syncButtonsBarReserve).observe(bottomButtons);
+    }
+    window.addEventListener('resize', syncButtonsBarReserve);
+}
+
+let buttonsBarReserve = 0;
+
+function syncButtonsBarReserve() {
+    // The side bar and the transient auto-hide bar must not resize the grid.
+    const height =
+        localStorageSettings.keep_buttons_visible && bottomButtons.dataset.position !== 'horizontal'
+            ? bottomButtons.offsetHeight
+            : 0;
+    const margin = height ? parseFloat(getComputedStyle(bottomButtons).marginBottom) || 0 : 0;
+    const reserve = height ? Math.ceil(height + margin + 6) : 0;
+    if (reserve === buttonsBarReserve) return;
+    buttonsBarReserve = reserve;
+    document.documentElement.style.setProperty('--buttons-bar-reserve', `${reserve}px`);
+    resizeVideoMedia();
 }
 
 function handleDropdownHover(dropdownElement = null) {
@@ -5807,6 +5827,7 @@ function showButtons() {
     bottomButtons.style.display = 'flex';
     toggleClassElements('username', 'flex');
     isButtonsVisible = true;
+    syncButtonsBarReserve();
 }
 
 function checkButtonsBar() {
@@ -5821,6 +5842,7 @@ function checkButtonsBar() {
             isButtonsVisible = false;
         }
     }
+    syncButtonsBarReserve();
     setTimeout(() => {
         checkButtonsBar();
     }, 10000);

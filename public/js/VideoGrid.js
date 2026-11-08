@@ -49,7 +49,8 @@ function resizeVideoMedia() {
     let videoMediaContainer = document.getElementById('videoMediaContainer');
     let Cameras = getVisibleCameraElements();
     let Width = videoMediaContainer.offsetWidth - Margin * 2;
-    let Height = videoMediaContainer.offsetHeight - Margin * 2;
+    const reservedHeight = parseFloat(getComputedStyle(videoMediaContainer).paddingBottom) || 0;
+    let Height = Math.max(0, videoMediaContainer.offsetHeight - reservedHeight - Margin * 2);
     let max = 0;
     let isOneVideoElement = Cameras.length === 1;
     let isPinnedSingleVideo = isOneVideoElement && typeof rc !== 'undefined' && rc.isVideoPinned;

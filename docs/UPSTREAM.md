@@ -1,5 +1,13 @@
 # Upstream intake
 
+## Speaker selection and meeting toolbar clearance (2026-11-08)
+
+Adapt upstream `1032bcfcae555cbff6156b9fb5ead77450eca104` and
+`a0ce621a776d97522da3a873b95dbcfd1b015add`. Keep available speaker selection
+independent of the pre-meeting microphone toggle. Reserve video space only for
+the always-visible bottom toolbar, and only in grid or pinned sections that
+reach the bottom. Keep the existing toolbar defaults, icons and compact styling.
+
 ## Media producer readiness (2026-11-08)
 
 Adapt upstream `e8de55e0eb5bc01369755c5ba340c9ab7d124e9e`: ignore media
