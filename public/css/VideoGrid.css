@@ -53,6 +53,16 @@
     /* border: 3px solid lime; */
 }
 
+#videoMediaContainer,
+#videoPinMediaContainer {
+    box-sizing: border-box;
+}
+
+#videoMediaContainer:not(.no-bar-reserve),
+#videoPinMediaContainer:not(.no-bar-reserve) {
+    padding-bottom: var(--buttons-bar-reserve, 0px);
+}
+
 .Camera {
     position: relative;
     vertical-align: middle;

@@ -6209,6 +6209,7 @@ class RoomClient {
             bottomButtons.dataset.position = position;
             this.btnsBarPosition = position;
             this.updateButtonsBarPinnedOffset();
+            if (typeof syncButtonsBarReserve === 'function') syncButtonsBarReserve();
         }
     }
 
@@ -6665,6 +6666,8 @@ class RoomClient {
         this.videoMediaContainer.style.right = '';
         this.videoMediaContainer.style.width = contentWidth + '%';
         this.videoMediaContainer.style.height = '100%';
+        this.videoMediaContainer.classList.remove('no-bar-reserve');
+        this.videoPinMediaContainer.classList.remove('no-bar-reserve');
         switch (position) {
             case 'speaker-bottom':
             case 'top':
@@ -6672,6 +6675,7 @@ class RoomClient {
                 this.videoPinMediaContainer.style.width = contentWidth + '%';
                 this.videoPinMediaContainer.style.height = '75%';
                 this.videoMediaContainer.style.height = '25%';
+                this.videoMediaContainer.classList.add('no-bar-reserve');
                 break;
             case 'speaker-left':
             case 'vertical':
@@ -6684,6 +6688,7 @@ class RoomClient {
                 this.videoPinMediaContainer.style.height = '75%';
                 this.videoMediaContainer.style.top = '75%';
                 this.videoMediaContainer.style.height = '25%';
+                this.videoPinMediaContainer.classList.add('no-bar-reserve');
                 break;
             case 'speaker-right':
                 this.videoPinMediaContainer.style.left = thumbnailWidth + '%';
@@ -7009,6 +7014,8 @@ class RoomClient {
         this.videoMediaContainer.style.right = '';
         this.videoMediaContainer.style.width = '100%';
         this.videoMediaContainer.style.height = '100%';
+        this.videoMediaContainer.classList.remove('no-bar-reserve');
+        this.videoPinMediaContainer.classList.remove('no-bar-reserve');
         this.resizeVideoMenuBar();
     }
 
