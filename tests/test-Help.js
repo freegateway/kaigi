@@ -374,6 +374,30 @@ describe('public help guide and inert illustrations', () => {
         dom.window.close();
     });
 
+    it('lets printed topics and figures flow while keeping headings and illustration rows together', () => {
+        const { window } = new JSDOM('<style></style>');
+        const style = window.document.querySelector('style');
+        style.textContent = read('public/css/help.css');
+        const rules = [...style.sheet.cssRules];
+        const print = rules.filter((rule) => rule.media?.mediaText === 'print');
+        assert.equal(print.length, 1);
+        const property = (selector, name) =>
+            [...print[0].cssRules]
+                .filter((rule) => rule.selectorText?.split(',').some((part) => part.trim() === selector))
+                .map((rule) => rule.style.getPropertyValue(name))
+                .filter(Boolean)
+                .at(-1);
+        assert.equal(property('.help-page .help-topic', 'break-before'), 'auto');
+        assert.equal(property('.help-page .help-figure', 'break-inside'), 'auto');
+        assert.equal(property('.help-page .help-control-reference', 'break-inside'), 'auto');
+        assert.equal(property('.help-page h2', 'break-after'), 'avoid');
+        assert.equal(property('.help-page .help-target', 'break-inside'), 'avoid');
+        assert.equal(property('.help-page #helpPrint', 'display'), 'none');
+        assert.equal(property('.help-page .help-sidebar', 'display'), 'none');
+        assert(!rules.some((rule) => rule.cssText.startsWith('@page')));
+        window.close();
+    });
+
     it('serves help publicly with strict independent CSP and no query/header data disclosure', async () => {
         const app = express();
         app.use(require('../app/src/middleware/ResourcePolicy')('https://meeting.example'));
