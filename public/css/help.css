@@ -60,14 +60,6 @@
         padding-bottom: 0;
     }
 }
-@media print {
-    .help-layout {
-        display: block;
-    }
-    .help-sidebar {
-        display: none;
-    }
-}
 .help-control-reference {
     margin: 24px 0;
     padding: 20px;
@@ -331,43 +323,197 @@
     }
 }
 @media print {
+    @page {
+        margin: 14mm;
+    }
     .help-page {
         display: block;
+        min-height: 0;
         background: #fff;
-        color: #111;
+        color: #171717;
+        font-size: 11pt;
+        line-height: 1.45;
     }
-    .help-header nav {
+    .help-page .help-sidebar,
+    .help-page .help-header nav,
+    .help-page #helpPrint,
+    .help-page .help-main > p > a.button {
         display: none;
     }
-    .help-topic {
+    .help-page .help-layout,
+    .help-page .help-topic {
         display: block;
-        break-before: page;
     }
-    .help-figure {
-        break-inside: avoid;
+    .help-page .help-topic,
+    .help-page .help-text-topic {
+        max-width: none;
+        margin: 14pt 0;
+        break-before: auto;
+        break-inside: auto;
     }
-    .help-main,
-    .help-header,
-    .help-footer {
+    .help-page .help-main,
+    .help-page .help-header,
+    .help-page .help-footer {
         width: 100%;
         padding: 0;
     }
-    .help-notice {
+    .help-page .help-header {
+        margin-bottom: 10pt;
+    }
+    .help-page .help-identity {
+        font-size: 15pt;
+    }
+    .help-page .help-identity img {
+        max-height: 28pt;
+    }
+    .help-page h1,
+    .help-page h2 {
+        color: inherit;
+        line-height: 1.2;
+        margin: 0 0 5pt;
+        break-after: avoid;
+    }
+    .help-page h1 {
+        font-size: 21pt;
+    }
+    .help-page h2 {
+        font-size: 14pt;
+    }
+    .help-page p,
+    .help-page ol {
+        margin: 0 0 6pt;
+        orphans: 2;
+        widows: 2;
+    }
+    .help-page .help-instructions li {
+        padding: 0 0 3pt 2pt;
+    }
+    .help-page .help-notice {
+        background: transparent;
+        padding: 4pt 8pt;
+    }
+    .help-page .help-figure,
+    .help-page .help-control-reference {
+        margin: 6pt 0;
+        break-inside: auto;
+    }
+    .help-page .help-illustration,
+    .help-page .help-control-reference {
+        padding: 7pt 10pt;
+        border: 1px solid #777;
+        border-radius: 4pt;
+        background: #fff;
+        color: #171717;
+    }
+    .help-page .help-illustration .login-card {
+        max-width: none;
+        padding: 0;
+        border: 0;
+        background: none;
+        box-shadow: none;
+        text-align: start;
+    }
+    .help-page .help-demo-brand {
+        display: none;
+    }
+    .help-page .help-illustration .login-icon {
+        display: none;
+    }
+    .help-page .help-illustration .login-description,
+    .help-page .help-illustration .help-field,
+    .help-page .help-illustration .login-input-group > i,
+    .help-page .help-illustration .help-chevron {
+        color: inherit;
+        font-size: 10pt;
+    }
+    .help-page .help-illustration .login-description {
+        max-width: none;
+        line-height: inherit;
+    }
+    .help-page .help-illustration .login-input-group {
+        margin-bottom: 4pt;
+        padding: 0 6pt;
+        border: 1px solid #999;
+        border-radius: 3pt;
         background: transparent;
     }
-    .help-illustration {
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
+    .help-page .help-illustration .help-field,
+    .help-page .help-illustration .help-control {
+        padding: 3pt 5pt;
+    }
+    .help-page .help-illustration .help-control,
+    .help-page .help-illustration .logout-icon-btn {
+        min-height: 0;
+        margin: 0;
+        border: 1px solid #777;
+        border-radius: 3pt;
+        background: #fff;
+        color: #171717;
+        box-shadow: none;
+        font-size: 10pt;
+    }
+    .help-page .help-logout,
+    .help-page .help-illustration .logout-icon-btn {
+        width: 22pt;
+        height: 19pt;
+    }
+    .help-page .help-logout {
+        margin-bottom: 3pt;
+    }
+    .help-page .help-callout {
+        top: 2pt;
+        right: -6pt;
+        width: 13pt;
+        height: 13pt;
+        border: 1px solid #777;
+        background: #fff;
+        color: #171717;
+        font-size: 9pt;
+    }
+    /* Keep short illustration rows intact without forcing an entire figure onto a new sheet. */
+    .help-page .help-target,
+    .help-page .help-icon-list > div:not(.help-layout-examples),
+    .help-page .help-layout-examples > div {
+        break-inside: avoid;
+    }
+    .help-page .help-icon-list {
+        display: block;
+    }
+    .help-page .help-icon-list > div:not(.help-layout-examples) {
+        display: flex;
+        flex-direction: row;
+        gap: 5pt;
+        margin: 2pt 0;
+        text-align: start;
+    }
+    .help-page .help-icon-list i {
+        font-size: 12pt;
+    }
+    .help-page .help-layout-examples > div {
+        margin-top: 5pt;
+    }
+    .help-page .help-mini-tiles {
+        min-height: 0;
+        margin-top: 2pt;
+    }
+    .help-page .help-mini-tiles span {
+        padding: 3pt;
+        border-color: #777;
+    }
+    .help-page figcaption {
+        margin: 3pt 0 0;
+        font-size: 9pt;
+        break-before: avoid;
+    }
+    .help-page .help-footer {
+        display: block;
+        padding-top: 4pt;
+        font-size: 9pt;
+    }
+    .help-page .help-footer > * {
+        margin-inline-end: 8pt;
     }
     .help-page a {
         color: inherit;
-    }
-}
-@page {
-    margin: 16mm;
-}
-@media print {
-    #helpPrint {
-        display: none !important;
     }
 }
