@@ -19,7 +19,10 @@ Only printing, section links and collapsible navigation work;
 illustrated meeting controls remain inert. Help reads the shared browser language
 preference without changing it. An explicit /help?lang= choice applies only to
 that visit. Unsupported guide languages fall back to English with an explanation.
-Without JavaScript or browser storage, the configured site language applies.
+On first visits the browser locale selects an enabled language, with English
+fallback. A saved language choice takes precedence. Public Help and Security
+also use Accept-Language without JavaScript; their local script applies a saved
+choice when available. An explicit ?lang= applies only to that visit.
 The return-to-login button shares About's styling and localized label.
 An additional Content Security Policy allows only
 the integrity-pinned local language-navigation script, blocks inline handlers,
@@ -30,6 +33,17 @@ denies camera, microphone and screen capture. Local logos under `/images/` or
 print layout for locally branded printouts. Administrator CSS can affect its
 appearance, as it does the live interface. A sticky section list moves into normal
 flow on narrow screens; both it and the footer avoid covering the guide text.
+
+### Public security information
+
+`/security` explains Kaigi's security, privacy, Digital Sovereignty and optional
+Kojo directory integration in English, Japanese and Canadian French. English
+uses the approved security_page8 text unchanged. The page projects only public
+site identity and local logo information, uses local styles and the same
+integrity-pinned print/language script as Help, and denies network connections,
+embedded media, camera, microphone and screen capture. It does not expose the
+configuration, accounts, grants or session information. External prose links
+contact their destinations only when opened by the user.
 
 ### Application resources
 

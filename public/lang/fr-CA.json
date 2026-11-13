@@ -473,6 +473,7 @@
         "Stop sharing": "Arrêter le partage"
     },
     "labels": {
+        "Security and privacy": "Sécurité et vie privée",
         "(get it here)": "(le télécharger ici)",
         "{first} and {second} are typing": "{first} et {second} sont en train d’écrire",
         "{name} is typing": "{name} est en train d’écrire",

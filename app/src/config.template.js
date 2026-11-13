@@ -1012,7 +1012,7 @@ module.exports = {
             siteTranslations,
 
             app: {
-                language: process.env.UI_LANGUAGE || 'en',
+                language: process.env.UI_LANGUAGE || 'en', // Branding default; browser locale selects first-visit UI language.
                 languages: process.env.UI_LANGUAGES
                     ? process.env.UI_LANGUAGES.split(',').map((code) => code.trim()).filter(Boolean)
                     : null,

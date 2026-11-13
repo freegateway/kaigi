@@ -1,5 +1,30 @@
 # Upstream intake
 
+## Public security page and first-visit language (2026-11-13)
+
+Kaigi-specific work: publish the approved security_page8 prose at /security,
+with Japanese and Canadian French translations, local site identity, Help's
+print layout and an independently restrictive resource policy. No new runtime
+dependencies or remote assets. Resolve first-visit interface language from
+browser preferences, after a saved explicit choice; unmatched locales use
+English. Public guide requests also negotiate Accept-Language. Preserve an
+explicit choice even when it equals the configured branding language.
+
+Reviewed all ten upstream commits dated 2026-11-09 through 2026-11-12 UTC,
+after Kaigi 0.5.9, through af393f15505898c331bfd69451b7b240c81425b2
+(upstream 2.7.88). No upstream application changes are adopted in this PR.
+Recommend separate targeted logger redaction (5222d3f), express-rate-limit
+8.7.4 maintenance (c8cd0fb), and login translation coverage (c1a1f3f,
+901e821, 957e634). Kaigi already masks sensitive named fields, but not URL
+credentials or bare key fields. Do not import upstream's raw-depth fallback
+or unchanged Error objects. RTMP protections in 5252413 affect an excluded,
+presenter-denied feature; do not enable it. Defer the six-second mobile audio
+popup in af393f1 in favor of persistent readable guidance. Axios, dotenv and
+Nodemailer bumps require targeted retained-path checks; excluded cloud SDKs,
+upstream version text, donation links and acknowledgement-only changes need
+no application intake. The FreeBSD port still pins Kaigi 0.5.9 and supplies
+mediasoup separately; no native worker update follows from these commits.
+
 ## Speaker selection and meeting toolbar clearance (2026-11-08)
 
 Adapt upstream `1032bcfcae555cbff6156b9fb5ead77450eca104` and
