@@ -58,7 +58,8 @@ for example when login names are email addresses. It does not change the live
 login panel. Missing entries use the guide's localized default; all help-specific
 settings use the HELP_ prefix.
 If no translation is available, the configured text or application default is used.
-The selected language follows UI_LANGUAGE and the permitted UI_LANGUAGES menu.
+The selected language follows the saved browser choice, or the browser locale
+on a first visit, restricted by UI_LANGUAGES. Unsupported locales use English.
 An empty translation is an explicit override, not a missing entry.
 The file must contain valid JSON without comments or variable expansion.
 Unknown text-setting names and invalid value types stop startup with an error.
@@ -212,7 +213,7 @@ Site text in site-translations.json follows the selected UI language.
 General interface labels use the application's local language files.
 .Bl -tag -width "UI_LANGUAGE"
 .It Ev UI_LANGUAGE
-Interface language override.  The default is
+Default language for initial server HTML and branding. The default is
 .Li en .
 .It Ev UI_LANGUAGES
 Optional comma-separated language codes to offer in the local language menus,
@@ -224,10 +225,11 @@ or an empty entry in a nonempty
 .Ev UI_LANGUAGES
 list, causes the service to fail at startup with an error naming the
 invalid code and listing the supported codes.
-The default
-.Ev UI_LANGUAGE
-should be included when restricting the menu; otherwise the first listed
-language becomes the initial selection.
+The browser uses its saved language choice first, then matches its locale
+against the permitted languages. If no locale matches, it uses English.
+The public Help and Security pages also use the request's Accept-Language
+header for visits without JavaScript. English remains the fallback even
+when it is not listed in the language menu.
 .El
 Supported language codes are:
 .Bl -column "fr-CA" "French (Canada)" -offset indent

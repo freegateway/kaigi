@@ -99,8 +99,7 @@
         t: translate,
         // Stable identifiers for port-owned pages. The English page text is
         // the fallback, not a translation key.
-        tKey: (key, fallback, namespace = 'about') =>
-            (state.native && lookup(key, namespace)) || fallback,
+        tKey: (key, fallback, namespace = 'about') => (state.native && lookup(key, namespace)) || fallback,
         isNative: () => state.native,
         getLang: () => state.lang,
     };
@@ -340,8 +339,7 @@
     async function applyLanguage(lang) {
         state.lang = lang;
         try {
-            if (lang === configLang()) localStorage.removeItem(OVERRIDE_KEY);
-            else localStorage.setItem(OVERRIDE_KEY, lang);
+            localStorage.setItem(OVERRIDE_KEY, lang);
         } catch (e) {
             console.warn('i18n: cannot persist language choice', e.message);
         }
@@ -385,13 +383,6 @@
         }
     }
 
-    function configLang() {
-        // BRAND is declared with `let` in Brand.js (global lexical binding, not window.BRAND).
-        const brand = typeof BRAND !== 'undefined' && BRAND ? BRAND : window.BRAND || {};
-        const configured = (brand.app && brand.app.language) || 'en';
-        return LANG_DISPLAY[configured] ? configured : 'en';
-    }
-
     function availableLanguages() {
         const brand = typeof BRAND !== 'undefined' && BRAND ? BRAND : window.BRAND || {};
         const configured = brand.app && brand.app.languages;
@@ -400,13 +391,22 @@
         return allowed.length ? allowed : Object.keys(LANG_DISPLAY);
     }
 
-    // Per-browser override (set via the in-room picker) wins over the server UI_LANGUAGE.
+    // A saved explicit choice wins over browser locale; unmatched locales use English.
     function resolveLang() {
         const allowed = availableLanguages();
         const override = getOverride();
         if (override && allowed.includes(override)) return override;
-        const configured = configLang();
-        return allowed.includes(configured) ? configured : allowed[0];
+        for (const raw of navigator.languages || [navigator.language]) {
+            const tag = String(raw || '').toLowerCase();
+            const exact = allowed.find((code) => code.toLowerCase() === tag);
+            if (exact) return exact;
+            const base = tag.split('-')[0];
+            const match =
+                allowed.find((code) => code.toLowerCase() === base) ||
+                allowed.find((code) => code.toLowerCase().split('-')[0] === base);
+            if (match) return match;
+        }
+        return 'en';
     }
 
     // Local language picker on the login page and in meeting settings.

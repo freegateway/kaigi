@@ -473,6 +473,7 @@
         "Stop sharing": "共有を停止"
     },
     "labels": {
+        "Security and privacy": "セキュリティとプライバシー",
         "(get it here)": "(こちらから入手)",
         "{first} and {second} are typing": "{first}さんと{second}さんが入力中",
         "{name} is typing": "{name}さんが入力中",

@@ -5,6 +5,7 @@ const path = require('node:path');
 const { version } = require('../../package.json');
 const strings = require('./templates/HelpStrings.json');
 const topics = require('./templates/HelpTopics.json');
+const { requestLanguage } = require('./Locale');
 const crypto = require('node:crypto');
 const scriptHash = crypto
     .createHash('sha256')
@@ -46,7 +47,7 @@ function renderHelp(input = {}, requested) {
         ? [...new Set(input.app.languages.filter((code) => interfaceLanguages.includes(code)))]
         : interfaceLanguages;
     const available = permitted.length ? permitted : interfaceLanguages;
-    const selected = available.includes(requested)
+    const selected = requested === 'en' || available.includes(requested)
         ? requested
         : available.includes(input.app?.language)
           ? input.app.language
@@ -75,6 +76,7 @@ function renderHelp(input = {}, requested) {
         AVAILABLE_LANGUAGES: JSON.stringify(available),
         RETURN_TO_LOGIN: dictionary.about?.returnToLogin || 'Return to login',
         VERSION: version,
+        SECURITY_LABEL: language === 'ja' ? 'セキュリティとプライバシー' : language === 'fr-CA' ? 'Sécurité et vie privée' : 'Security and privacy',
         SITE_NAME: String(values.SITE_NAME ?? (brand.site?.name || brand.app?.name || 'Kaigi')),
         SITE_DESCRIPTION: String(values.SITE_DESCRIPTION ?? (brand.site?.description || '')),
         SITE_COPYRIGHT: String(values.SITE_COPYRIGHT ?? (brand.site?.copyright || '')),
@@ -188,7 +190,8 @@ function helpHandler(brand) {
         res.setHeader('Permissions-Policy', 'camera=(), microphone=(), display-capture=(), geolocation=()');
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader('Referrer-Policy', 'no-referrer');
-        res.type('html').send(renderHelp(brand, req.query.lang));
+        const allowed = brand.app?.languages || interfaceLanguages;
+        res.type('html').send(renderHelp(brand, req.query.lang || requestLanguage(req, allowed)));
     };
 }
 

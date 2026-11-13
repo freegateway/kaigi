@@ -1283,6 +1283,7 @@ function startServer() {
 
     // Public, inert help uses an allowlisted projection of resolved branding only.
     app.get('/help', require('./Help')(config.ui?.brand || {}));
+    app.get('/security', require('./SecurityPage')(config.ui?.brand || {}));
     app.get('/manual', (_req, res) => res.redirect('/help'));
 
     // local site and open-source information

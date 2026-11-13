@@ -94,7 +94,7 @@ describe('public help guide and inert illustrations', () => {
         const input = { app: { language: 'ja', languages: ['fr-CA', 'ja', 'fr-CA', 'de'] } };
         const document = new JSDOM(help.renderHelp(input, 'en')).window.document;
         assert.deepEqual(JSON.parse(document.documentElement.dataset.helpLanguages), ['fr-CA', 'ja', 'de']);
-        assert.equal(document.documentElement.lang, 'ja');
+        assert.equal(document.documentElement.lang, 'en');
         const fallback = new JSDOM(help.renderHelp({ app: { languages: ['de'] } }, 'ja')).window.document;
         assert.equal(fallback.documentElement.lang, 'en');
         assert.match(fallback.body.textContent, /selected interface language is not supported/);
@@ -111,10 +111,11 @@ describe('public help guide and inert illustrations', () => {
             );
         }
         const configured = { app: { language: 'fr-CA', languages: ['fr-CA', 'ja', 'de'] } };
-        for (const requested of [undefined, '', 'https://outside.example', ['ja'], 'en']) {
+        for (const requested of [undefined, '', 'https://outside.example', ['ja']]) {
             const document = new JSDOM(help.renderHelp(configured, requested)).window.document;
             assert.equal(document.documentElement.lang, 'fr-CA');
         }
+        assert.equal(new JSDOM(help.renderHelp(configured, 'en')).window.document.documentElement.lang, 'en');
         const unsupported = new JSDOM(help.renderHelp(configured, 'de')).window.document;
         assert.equal(unsupported.documentElement.lang, 'en');
         assert.equal(unsupported.documentElement.dataset.helpLanguage, 'de');
@@ -408,8 +409,8 @@ describe('public help guide and inert illustrations', () => {
         vm.runInNewContext(source.slice(first, last), {
             app,
             require: (name) => {
-                assert.equal(name, './Help');
-                return help;
+                assert(['./Help', './SecurityPage'].includes(name));
+                return name === './Help' ? help : require('../app/src/SecurityPage');
             },
             config: { ui: { brand } },
         });

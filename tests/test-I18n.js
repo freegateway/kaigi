@@ -161,6 +161,7 @@ describe('dynamic native dropdown translations', () => {
     afterEach(() => dom.window.close());
 
     async function initialize(lang) {
+        Object.defineProperty(dom.window.navigator, 'languages', { value: [lang], configurable: true });
         dom.window.BRAND = { app: { language: lang, translationMode: 'native' } };
         dom.window.fetch = async (url) => ({
             ok: true,
