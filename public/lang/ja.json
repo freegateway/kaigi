@@ -199,6 +199,7 @@
         "Yellow annotation color": "黄色の注釈色"
     },
     "buttons": {
+        "Hide password": "パスワードを隠す",
         "Help": "ヘルプ",
         "Abort": "中止",
         "About": "情報",
@@ -473,6 +474,11 @@
         "Stop sharing": "共有を停止"
     },
     "labels": {
+        "Enter meeting name": "会議名を入力",
+        "Invalid credentials. Please try again.": "認証情報が無効です。もう一度お試しください。",
+        "Too many login attempts. Please try again later.": "ログイン試行回数が多すぎます。しばらくしてからもう一度お試しください。",
+        "Too many login attempts. Please try again after {minutes} minute.": "ログイン試行回数が多すぎます。{minutes} 分後にもう一度お試しください。",
+        "Too many login attempts. Please try again after {minutes} minutes.": "ログイン試行回数が多すぎます。{minutes} 分後にもう一度お試しください。",
         "Security and privacy": "セキュリティとプライバシー",
         "(get it here)": "(こちらから入手)",
         "{first} and {second} are typing": "{first}さんと{second}さんが入力中",

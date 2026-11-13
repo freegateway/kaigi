@@ -1,7 +1,5 @@
 'use strict';
 
-console.log(window.location);
-
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const loginForm = document.getElementById('loginForm');
@@ -16,6 +14,12 @@ const joinSelectRoomBtn = document.getElementById('joinSelectRoomButton');
 const generateRoomBtn = document.getElementById('generateRoomButton');
 const logoutBtn = document.getElementById('logoutButton');
 
+// Preserve English sources so an existing button follows live language changes.
+function setTranslatedAttribute(element, attribute, source, namespace) {
+    element[`__i18nAttr_${attribute}`] = source;
+    element.setAttribute(attribute, window.i18n?.t?.(source, namespace) || source);
+}
+
 const togglePasswordBtn = document.getElementById('togglePassword');
 if (togglePasswordBtn) {
     togglePasswordBtn.onclick = () => {
@@ -23,8 +27,8 @@ if (togglePasswordBtn) {
         passwordInput.type = isPassword ? 'text' : 'password';
         togglePasswordBtn.querySelector('i').className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
         const label = isPassword ? 'Hide password' : 'Show password';
-        togglePasswordBtn.title = label;
-        togglePasswordBtn.setAttribute('aria-label', label);
+        setTranslatedAttribute(togglePasswordBtn, 'title', label, 'buttons');
+        setTranslatedAttribute(togglePasswordBtn, 'aria-label', label, 'buttons');
         togglePasswordBtn.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
     };
 }
@@ -185,7 +189,6 @@ function configureRoomSelector(allowedRooms, displayname) {
     selectRoom.style.display = '';
 
     if (!(allowedRooms.includes('*') && window.sessionStorage.mirotalk_allow_any_meeting === 'true')) {
-        console.log('User detected with limited join room access!', allowedRooms);
         allowedRooms.forEach((room) => {
             const option = document.createElement('option');
             option.value = room;
@@ -199,11 +202,10 @@ function configureRoomSelector(allowedRooms, displayname) {
         return true;
     }
 
-    console.log('User detected with admin access!', allowedRooms);
     const input = document.createElement('input');
     input.type = 'text';
     input.id = 'customRoomInput';
-    input.placeholder = 'Enter room name';
+    setTranslatedAttribute(input, 'placeholder', 'Enter meeting name', 'labels');
     input.className = 'form-input';
     input.maxLength = 256;
     selectRoom.parentNode.insertBefore(input, selectRoom);
@@ -334,15 +336,13 @@ function login() {
                 password: password,
             })
             .then(function (response) {
-                console.log(response);
-
                 const { allowedRooms, displayname } = storeAuthenticatedSession(response, username);
 
                 configureRoomSelector(allowedRooms, displayname);
                 return;
             })
             .catch(function (error) {
-                console.error(error);
+                console.warn('Login request failed');
                 setLoginLoading(false);
                 if (error.response && error.response.status === 429) {
                     const msg = error.response.data?.message || 'Too many login attempts. Please try again later.';
@@ -389,10 +389,21 @@ function highlightEmpty(input) {
 }
 
 function showLoginError(msg) {
+    if (typeof msg !== 'string') msg = 'Invalid credentials. Please try again.';
     const el = document.getElementById('loginError');
     const text = document.getElementById('loginErrorText');
     if (!el || !text) return;
-    text.textContent = window.i18n?.t ? window.i18n.t(msg, 'labels') : msg;
+    const limited = /^Too many login attempts\. Please try again after (\d+) (minute|minutes)\.$/.exec(msg);
+    const source = limited
+        ? `Too many login attempts. Please try again after {minutes} ${limited[2]}.`
+        : msg;
+    const values = limited ? { minutes: limited[1] } : {};
+    const translated = window.i18n?.t?.(source, 'labels') || source;
+    text.textContent = translated.replace(/\{(\w+)\}/g, (match, key) => values[key] ?? match);
+    if (text.firstChild) {
+        text.firstChild.__i18nSrc = source;
+        text.firstChild.__i18nValues = values;
+    }
     el.classList.add('show');
 }
 

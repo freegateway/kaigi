@@ -199,6 +199,7 @@
         "Yellow annotation color": "สีคำอธิบายประกอบสีเหลือง"
     },
     "buttons": {
+        "Hide password": "Hide password",
         "Help": "Help",
         "Abort": "ยกเลิก",
         "About": "เกี่ยวกับ",
@@ -473,6 +474,11 @@
         "Stop sharing": "Stop sharing"
     },
     "labels": {
+        "Enter meeting name": "Enter meeting name",
+        "Invalid credentials. Please try again.": "Invalid credentials. Please try again.",
+        "Too many login attempts. Please try again later.": "Too many login attempts. Please try again later.",
+        "Too many login attempts. Please try again after {minutes} minute.": "Too many login attempts. Please try again after {minutes} minute.",
+        "Too many login attempts. Please try again after {minutes} minutes.": "Too many login attempts. Please try again after {minutes} minutes.",
         "Security and privacy": "Security and privacy",
         "(get it here)": "(ดาวน์โหลดที่นี่)",
         "{first} and {second} are typing": "{first} และ {second} กำลังพิมพ์",

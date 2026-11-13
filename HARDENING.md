@@ -459,6 +459,13 @@ outages emit `authentication_error` and are not matched. Duplicate
 login, missing grants, meeting denials and single connection timeouts are not
 password attacks and are not matched by the supplied filter.
 
+Operational Logger output also masks sensitive fields and credentials embedded
+in URLs, including Error messages, stacks and causes. Redaction never falls back
+to raw nested values when it reaches a traversal limit, and does not invoke
+custom getters or serializers. This does not make arbitrary payload logging
+safe: callers must still minimize logged data. Login browser diagnostics do not
+dump authentication responses or credential-bearing request errors.
+
 ### Optional Fail2ban deployment
 
 The port does not install or start a blocker. Copy the installed example
