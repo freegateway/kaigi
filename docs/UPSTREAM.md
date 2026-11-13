@@ -1,5 +1,45 @@
 # Upstream intake
 
+## Log privacy, limiter maintenance and login translations (2026-11-13)
+
+Kaigi 0.5.11 selectively adapts upstream
+5222d3f17461a097e60d993ae2120a6740e89f2d and
+957e6345a5ea88cbec69b9dbcba0ad476fd92cbd. Extend Kaigi's existing operational
+log redaction to URL userinfo, sensitive query parameters, bare key and credential
+fields, and Error messages, stacks and causes. Traverse only data descriptors;
+never invoke custom serializers, inspectors or accessors. Replace excessive
+depth/entry counts with markers rather than returning raw values. Sanitize
+message strings and JSON extras as well as structured data. This is defensive
+redaction, not a guarantee that arbitrary free-form text cannot contain secrets;
+callers must continue to avoid logging credentials and unnecessary client data.
+Remove login-console dumps of response/token objects and request error objects.
+Fixed-field securityEvent logging is unchanged.
+
+Update only express-rate-limit 8.7.3 to 8.7.4 from upstream
+c8cd0fb72bfdf871853702d2852651df71c0e3e8. Preserve Kaigi's limiter policy;
+adopt its decrement/callback rejection handling, duplicate-decrement guard and
+expired MemoryStore lookup correction. No other locked dependency changes.
+Primary diff: https://github.com/express-rate-limit/express-rate-limit/compare/v8.7.3...v8.7.4
+
+Keep English source attributes for the password-visibility button and custom
+meeting placeholder. Maintain Japanese, en-CA and fr-CA login errors and timed
+throttle messages, including live switching without stale text. Insert numeric
+values as text, never HTML. Preserve custom site labels, exact grants, session
+checks and opaque meeting navigation. Do not import host-waiting, presenter or
+direct-room-URL behavior, or regenerate the dictionaries from upstream's extractor.
+The reviewed head remains af393f15505898c331bfd69451b7b240c81425b2 (2.7.88).
+Keep the mobile popup, RTMP and lower-priority dependency intake deferred.
+
+Validation: 559 application tests and 23 security tests pass on Linux/Node
+24.22.1 after a clean locked dependency install with package scripts disabled.
+Real loopback HTTP tests cover concurrent successful/failed login limits,
+window rollover, decrement/callback rejection containment and duplicate events.
+DOM tests exercise login visibility labels, timed/error text, live language
+changes, custom site labels and literal rendering. Logger tests cover all
+severities in text/JSON output, errors/causes, credential URLs, sensitive objects,
+cycles, traversal limits and non-execution of getters/custom serializers.
+Browser rendering, native media and FreeBSD/Poudriere testing are not claimed.
+
 ## Public security page and first-visit language (2026-11-13)
 
 Kaigi-specific work: publish the approved security_page8 prose at /security,

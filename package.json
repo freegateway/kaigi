@@ -1,6 +1,6 @@
 {
     "name": "kaigi",
-    "version": "0.5.10",
+    "version": "0.5.11",
     "description": "FreeGateway Kaigi: privacy-hardened FreeBSD video conferencing",
     "main": "Server.js",
     "scripts": {
@@ -51,7 +51,7 @@
         "dotenv": "^18.0.8",
         "express": "5.3.0",
         "express-openid-connect": "^3.4.0",
-        "express-rate-limit": "^8.7.3",
+        "express-rate-limit": "^8.7.4",
         "he": "^2.0.0",
         "helmet": "^8.3.0",
         "httpolyglot": "0.1.2",

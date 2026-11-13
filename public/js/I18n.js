@@ -248,7 +248,12 @@
         if (!parent || shouldSkip(parent)) return;
         if (parent.closest('.notranslate, [translate="no"], [data-i18n-skip]')) return;
         const source = node.__i18nSrc != null ? node.__i18nSrc : node.nodeValue;
-        const next = translate(source, namespaceFor(node));
+        const translated = translate(source, namespaceFor(node));
+        const next = node.__i18nValues
+            ? translated.replace(/\{(\w+)\}/g, (match, key) =>
+                  Object.hasOwn(node.__i18nValues, key) ? node.__i18nValues[key] : match
+              )
+            : translated;
         if (next !== node.nodeValue) {
             if (node.__i18nSrc == null) node.__i18nSrc = source;
             node.nodeValue = next;

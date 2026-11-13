@@ -199,6 +199,7 @@
         "Yellow annotation color": "Couleur d’annotation jaune"
     },
     "buttons": {
+        "Hide password": "Masquer le mot de passe",
         "Help": "Aide",
         "Abort": "Abandonner",
         "About": "À propos",
@@ -473,6 +474,11 @@
         "Stop sharing": "Arrêter le partage"
     },
     "labels": {
+        "Enter meeting name": "Entrez le nom de la réunion",
+        "Invalid credentials. Please try again.": "Identifiants invalides. Veuillez réessayer.",
+        "Too many login attempts. Please try again later.": "Trop de tentatives de connexion. Veuillez réessayer plus tard.",
+        "Too many login attempts. Please try again after {minutes} minute.": "Trop de tentatives de connexion. Veuillez réessayer dans {minutes} minute.",
+        "Too many login attempts. Please try again after {minutes} minutes.": "Trop de tentatives de connexion. Veuillez réessayer dans {minutes} minutes.",
         "Security and privacy": "Sécurité et vie privée",
         "(get it here)": "(le télécharger ici)",
         "{first} and {second} are typing": "{first} et {second} sont en train d’écrire",

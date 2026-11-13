@@ -3,6 +3,7 @@
 const util = require('util');
 const colors = require('colors');
 const config = require('./config');
+const { redact: sanitizeLogValue } = require('./LogRedactor');
 
 config.system?.console?.colors ? colors.enable() : colors.disable();
 
@@ -14,34 +15,16 @@ const options = {
 const LOGS_JSON = config.system?.console?.json;
 const LOGS_JSON_PRETTY = config.system?.console?.json_pretty;
 
-const sensitiveKeyPattern = /(password|passwd|secret|token|authorization|cookie|api[_-]?key|private[_-]?key|dsn)/i;
-
-function sanitizeLogValue(value, seen = new WeakSet()) {
-    if (value === null || value === undefined || typeof value !== 'object') return value;
-
-    if (seen.has(value)) return '[Circular]';
-    seen.add(value);
-
-    if (value instanceof Error) {
-        return {
-            name: value.name,
-            message: value.message,
-            stack: value.stack,
-        };
-    }
-
-    if (Array.isArray(value)) return value.map((entry) => sanitizeLogValue(entry, seen));
-
-    const sanitized = {};
-    for (const [key, entry] of Object.entries(value)) {
-        sanitized[key] = sensitiveKeyPattern.test(key) ? '[REDACTED]' : sanitizeLogValue(entry, seen);
-    }
-    return sanitized;
+function safeMessage(value) {
+    const sanitized = sanitizeLogValue(value);
+    return typeof sanitized === 'string'
+        ? sanitized
+        : util.inspect(sanitized, { ...options, customInspect: false, getters: false });
 }
 
 module.exports = class Logger {
     constructor(appName = 'miroTalkSfu') {
-        this.appName = colors.yellow(appName);
+        this.appName = colors.yellow(safeMessage(appName));
         this.debugOn = config.system?.console?.debug;
         this.timeStart = Date.now();
         this.timeEnd = null;
@@ -60,13 +43,15 @@ module.exports = class Logger {
             message: msg,
             ...extra,
         };
-        if (op && typeof op === 'object' && Object.keys(op).length > 0) {
-            logObj.data = sanitizeLogValue(op);
+        if (op !== '' && op !== undefined && op !== null) {
+            logObj.data = op;
         }
-        LOGS_JSON_PRETTY ? console.log(JSON.stringify(logObj, null, 2)) : console.log(JSON.stringify(logObj));
+        const sanitized = sanitizeLogValue(logObj);
+        LOGS_JSON_PRETTY ? console.log(JSON.stringify(sanitized, null, 2)) : console.log(JSON.stringify(sanitized));
     }
 
     debug(msg, op = '') {
+        msg = safeMessage(msg);
         if (this.debugOn) {
             this.timeEnd = Date.now();
             this.timeElapsedMs = this.getFormatTime(Math.floor(this.timeEnd - this.timeStart));
@@ -84,14 +69,19 @@ module.exports = class Logger {
     }
 
     log(msg, op = '') {
+        msg = safeMessage(msg);
         if (LOGS_JSON) {
             this.jsonLog('log', this.appName, msg, op);
         } else {
-            console.log('[' + this.getDateTime() + '] [' + this.appName + '] ' + msg, util.inspect(sanitizeLogValue(op), options));
+            console.log(
+                '[' + this.getDateTime() + '] [' + this.appName + '] ' + msg,
+                util.inspect(sanitizeLogValue(op), options)
+            );
         }
     }
 
     info(msg, op = '') {
+        msg = safeMessage(msg);
         if (LOGS_JSON) {
             this.jsonLog('info', this.appName, msg, op);
         } else {
@@ -103,6 +93,7 @@ module.exports = class Logger {
     }
 
     warn(msg, op = '') {
+        msg = safeMessage(msg);
         if (LOGS_JSON) {
             this.jsonLog('warn', this.appName, msg, op);
         } else {
@@ -114,6 +105,7 @@ module.exports = class Logger {
     }
 
     error(msg, op = '') {
+        msg = safeMessage(msg);
         if (LOGS_JSON) {
             this.jsonLog('error', this.appName, msg, op);
         } else {
