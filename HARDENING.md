@@ -68,6 +68,10 @@ contact their destinations only when opened by the user.
 
 ## Authentication and secrets
 
+Named-instance deployment and the configuration/state isolation audit are
+described in `docs/INSTANCES.md`. Separate processes do not by themselves provide
+a security boundary between services running under the same Unix account.
+
 Server-side sanitizer failures reject the affected operation; original input
 is never used as a fallback. Socket rejections emit fixed-field security events
 without input values or dependency exception details.

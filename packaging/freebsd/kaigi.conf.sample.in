@@ -15,6 +15,10 @@
 # - %%PREFIX%%/etc/kaigi/users contains local-user passwords and grants.
 #   Install it root:wheel mode 0600. The rc script reads it as root and exports
 #   HOST_USERS to the daemon; the daemon does not open this file directly.
+# Named instances read this file beneath etc/kaigi/instances/NAME. Configure
+# distinct WEB_LISTEN_PORT, WEB_URL and disjoint MEDIA_MIN_PORT..MEDIA_MAX_PORT
+# allocations for each instance. See kaigi(8). Service-only KAIGI_INSTANCE,
+# KAIGI_CONFIG_DIR and KAIGI_STATE_DIR do not belong in this file.
 # - %%PREFIX%%/etc/kaigi/jwt-secret holds the JWT signing secret. At startup,
 #   %%PREFIX%%/etc/rc.d/kaigi creates it if absent, using 32 random bytes
 #   encoded as 64 hexadecimal characters and umask 077 (mode 0600). It reuses
