@@ -270,9 +270,9 @@ Values are expressed in seconds.
 Maximum permitted inactivity before the authenticated session is terminated.
 Meaningful browser activity refreshes this timeout while the user is on the
 room-selection or pre-join pages.
-While the user is connected to an active meeting, the authenticated browser
-periodically refreshes the session so a quiet participant is not logged out
-merely for not using the keyboard or mouse.
+Server-confirmed admitted meeting participation suspends idle expiry, so a quiet
+participant is not logged out merely for not using the keyboard or mouse.
+An unadmitted socket cannot suspend expiry. Absolute session expiry still applies.
 Default: 1800 seconds.
 Set to 0 to disable the inactivity limit.
 .It Ev AUTH_SESSION_MAX_AGE
@@ -517,4 +517,6 @@ a stable event, verified direct peer IP and a fixed reason code.
 No credentials, tokens or LDAP attributes are included in these event lines.
 Kaigi uses the direct peer address for security attribution and ignores
 client-supplied forwarded-address headers.
-See HARDENING.md for Fail2ban integration on PF and IPFW hosts.
+See
+.Pa %%PREFIX%%/share/kaigi/fail2ban/README.md
+for optional Fail2ban integration on PF and IPFW hosts.

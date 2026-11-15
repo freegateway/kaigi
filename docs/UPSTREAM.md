@@ -1,5 +1,14 @@
 # Upstream intake
 
+## Public pages and Fail2ban integration (2026-11-15)
+
+Kaigi 0.6.3 reconciles the public About/Security layout, maintained security
+labels, Help Back navigation, local GitHub source icon and illustration wording.
+Add localized optional Fail2ban explanations, dedicated PF/IPFW table examples
+and administrator integration instructions. The companion port installs the
+filter and README under share/kaigi/fail2ban. Correct session-idle documentation
+to describe admitted participation rather than a client heartbeat guarantee.
+No authentication, firewall defaults or dependency updates.
 ## Instance-relative LDAP files (2026-11-15)
 
 Kaigi 0.6.2 resolves relative LDAP_BIND_PASSWORD_FILE and LDAP_TLS_CA_FILE paths

@@ -87,7 +87,7 @@ describe('public help guide and inert illustrations', () => {
         assert.equal(document.querySelector('select, form, #preMeetingLanguage'), null);
         const back = document.querySelector('a.button[href="/login"]');
         assert.equal(back.className, about.querySelector('a[href="/login"]').className);
-        assert.equal(back.textContent, require('../public/lang/ja.json').about.returnToLogin);
+        assert.equal(back.textContent, require('../public/lang/ja.json').about.back);
     });
 
     it('restricts guide locales to supported configured choices and explains an unsupported-only list', () => {
@@ -107,7 +107,7 @@ describe('public help guide and inert illustrations', () => {
             assert.equal(document.documentElement.dataset.helpLanguage, language);
             assert.equal(
                 document.querySelector('a.button[href="/login"]').textContent,
-                require('../public/lang/' + language + '.json').about.returnToLogin
+                require('../public/lang/' + language + '.json').about.back
             );
         }
         const configured = { app: { language: 'fr-CA', languages: ['fr-CA', 'ja', 'de'] } };
@@ -191,7 +191,7 @@ describe('public help guide and inert illustrations', () => {
                     },
                 },
                 document: {
-                    getElementById: () => printButton,
+                    getElementById: (id) => id === 'helpPrint' ? printButton : null,
                     documentElement: {
                         dataset: { helpLanguage: 'en', helpLanguages: '["en","en-CA","fr-CA","ja","de"]' },
                     },

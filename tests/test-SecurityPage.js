@@ -31,13 +31,13 @@ describe('security page and initial browser language', () => {
     it('keeps approved English prose intact and provides complete maintained translations', () => {
         const root = new JSDOM(security.renderSecurity()).window.document;
         assert.equal(root.querySelectorAll('main > ul > li').length, 3);
-        assert.equal(root.querySelectorAll('main h2').length, 6);
+        assert.equal(root.querySelectorAll('main h2').length, 8);
         assert(root.body.textContent.includes('knowing a meeting’s name'));
         assert(root.body.textContent.includes('Kaigi does not provide end-to-end encryption.'));
         for (const lang of ['en', 'en-CA', 'ja', 'fr-CA']) {
             const doc = new JSDOM(security.renderSecurity({}, lang)).window.document;
             assert.equal(doc.documentElement.lang, lang);
-            assert.equal(doc.querySelectorAll('main h2').length, 6);
+            assert.equal(doc.querySelectorAll('main h2').length, 8);
             assert.equal(doc.querySelectorAll('main > ul > li').length, 3);
             assert.equal(doc.querySelectorAll('main p').length, root.querySelectorAll('main p').length);
             assert.equal(doc.querySelectorAll('script').length, 1);

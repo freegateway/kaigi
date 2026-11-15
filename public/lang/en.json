@@ -480,6 +480,7 @@
         "Too many login attempts. Please try again after {minutes} minute.": "Too many login attempts. Please try again after {minutes} minute.",
         "Too many login attempts. Please try again after {minutes} minutes.": "Too many login attempts. Please try again after {minutes} minutes.",
         "Security and privacy": "Security and privacy",
+        "Security & Privacy": "Security & Privacy",
         "(get it here)": "(get it here)",
         "{first} and {second} are typing": "{first} and {second} are typing",
         "{name} is typing": "{name} is typing",
@@ -1498,6 +1499,9 @@
         "Recording is disabled for this meeting": "Recording is disabled for this meeting"
     },
     "about": {
+        "back": "Back",
+        "securityLabel": "Security & Privacy",
+        "helpLabel": "Help",
         "versionLabel": "Kaigi version",
         "privacyTitle": "Kaigi privacy information",
         "privacyOperator": "This page describes Kaigi software. The organization operating this installation is responsible for its privacy policy, contact details, logging and retention rules. Ask that organization for the policy that applies to your meetings.",

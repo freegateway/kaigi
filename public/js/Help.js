@@ -6,8 +6,7 @@ if (helpPrint) {
     helpPrint.hidden = false;
     helpPrint.addEventListener('click', () => window.print());
 }
-const publicBack =
-    document.documentElement.dataset.publicPath === '/security' ? document.getElementById('publicBack') : null;
+const publicBack = document.getElementById('publicBack');
 if (publicBack)
     publicBack.addEventListener('click', (event) => {
         if (

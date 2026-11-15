@@ -475,7 +475,7 @@ dump authentication responses or credential-bearing request errors.
 ### Optional Fail2ban deployment
 
 The port does not install or start a blocker. Copy the installed example
-`/usr/local/share/examples/kaigi/fail2ban/kaigi.conf` to
+`/usr/local/share/kaigi/fail2ban/kaigi.conf` to
 `/usr/local/etc/fail2ban/filter.d/kaigi.conf`. Configure a
 Fail2ban jail with filter=kaigi, logpath=/var/log/kaigi/NAME/kaigi.log,
 maxretry=5, findtime=900, bantime=900, usedns=no and appropriate ignoreip entries.
@@ -487,6 +487,8 @@ its bsd-ipfw action. Review their table/rule ownership and rule order locally;
 existing firewall policies differ. Test the filter with fail2ban-regex before
 activation. Do not have sshguard and Fail2ban independently manage the same table.
 Conservative thresholds are necessary when multiple users share an IP address.
+For complete named-instance setup and dedicated PF/IPFW table examples, read
+`/usr/local/share/kaigi/fail2ban/README.md`.
 
 ## Browser privacy and smaller viewports
 

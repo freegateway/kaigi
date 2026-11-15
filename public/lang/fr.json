@@ -480,6 +480,7 @@
         "Too many login attempts. Please try again after {minutes} minute.": "Trop de tentatives de connexion. Veuillez réessayer dans {minutes} minute.",
         "Too many login attempts. Please try again after {minutes} minutes.": "Trop de tentatives de connexion. Veuillez réessayer dans {minutes} minutes.",
         "Security and privacy": "Sécurité et vie privée",
+        "Security & Privacy": "Sécurité et vie privée",
         "(get it here)": "(le télécharger ici)",
         "{first} and {second} are typing": "{first} et {second} sont en train d’écrire",
         "{name} is typing": "{name} est en train d’écrire",
@@ -1498,6 +1499,9 @@
         "Recording is disabled for this meeting": "L’enregistrement est désactivé pour cette réunion"
     },
     "about": {
+        "back": "Back",
+        "securityLabel": "Sécurité et vie privée",
+        "helpLabel": "Help",
         "versionLabel": "Kaigi version",
         "privacyTitle": "Informations sur la confidentialité de Kaigi",
         "privacyOperator": "Cette page décrit le logiciel Kaigi. L’organisation qui exploite cette installation est responsable de sa politique de confidentialité, de ses coordonnées, de la journalisation et des règles de conservation. Demandez à cette organisation la politique qui s’applique à vos réunions.",

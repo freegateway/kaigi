@@ -50,7 +50,7 @@ function renderSecurity(input = {}, requested = 'en') {
     const selected = available.includes(requested) ? requested : 'en';
     const language = guideLanguages.includes(selected) ? selected : 'en';
     const copy = {
-        en: ['Security and privacy', 'Back', 'Help', 'About', 'Print / Save as PDF'],
+        en: ['Security & Privacy', 'Back', 'Help', 'About', 'Print / Save as PDF'],
         ja: ['セキュリティとプライバシー', '戻る', 'ヘルプ', 'Kaigi について', '印刷 / PDF として保存'],
         'fr-CA': ['Sécurité et vie privée', 'Retour', 'Aide', 'À propos', 'Imprimer / Enregistrer en PDF'],
     }[language === 'en-CA' ? 'en' : language];
@@ -78,14 +78,16 @@ function renderSecurity(input = {}, requested = 'en') {
 <title>${copy[0]} - ${name}</title>
 <link rel="stylesheet" href="/css/landing.css"><link rel="stylesheet" href="/css/login.css">
 <link rel="stylesheet" href="/css/help.css"><link rel="stylesheet" href="/css/security.css">
+<link rel="stylesheet" href="/css/public-page.css">
 <link rel="stylesheet" href="/site-assets/site.css">
 <script defer src="/js/Help.js" integrity="sha256-${scriptHash}"></script></head>
-<body class="help-page security-page"><header class="help-header">
+<body class="public-page security-page"><main class="about-local">
 <button id="helpPrint" type="button" hidden>${copy[4]}</button>
-<a href="/" class="help-identity"><img src="${escape(logo)}" alt=""><span>${name}</span></a></header>
-<main class="security-main"><h1>${copy[0]}</h1>${prose(text)}
+<a href="/" class="help-identity"><img class="about-local-logo" src="${escape(logo)}" alt=""><span hidden>${name}</span></a>
+<h1>${name}</h1><p>${escape(values.SITE_DESCRIPTION ?? brand.site?.description ?? '')}</p>
+<h2>${copy[0]}</h2>${prose(text)}
 <p><a class="button button-primary" href="/login" id="publicBack">${copy[1]}</a></p></main>
-<footer class="help-footer"><a href="/help">${copy[2]}</a><a href="/about">${copy[3]}</a><span>Kaigi ${escape(version)}</span><span>${escape(values.SITE_COPYRIGHT ?? brand.site?.copyright ?? '')}</span></footer></body></html>`;
+<footer class="public-footer"><a href="/help">${copy[2]}</a><a href="/about">${copy[3]}</a><span>Kaigi ${escape(version)}</span><span>${escape(values.SITE_COPYRIGHT ?? brand.site?.copyright ?? '')}</span></footer></body></html>`;
 }
 
 module.exports = (brand) => (req, res) => {
