@@ -76,6 +76,15 @@ describe('startup safety preflight', function () {
             assert.equal(plans[0].listeners[0].min, 7443);
         } finally { f.cleanup(); }
     });
+    it('never treats top-level configuration as an instance fallback', () => {
+        const f = fixture();
+        try {
+            fs.copyFileSync(path.join(f.config, 'instances/staff/kaigi.conf'), path.join(f.config, 'kaigi.conf'));
+            fs.copyFileSync(path.join(f.config, 'instances/staff/users'), path.join(f.config, 'users'));
+            fs.unlinkSync(path.join(f.config, 'instances/staff/kaigi.conf'));
+            assert.notEqual(f.check().status, 0);
+        } finally { f.cleanup(); }
+    });
     it('shares hostname resolution and rejects ambiguous local addresses (injected DNS/interface fixtures)', async () => {
         const resolve = require('../app/src/NetworkConfig').configureFreeBSDNetwork;
         const config = { server: { listen: { ip: '0.0.0.0' } }, mediasoup: {

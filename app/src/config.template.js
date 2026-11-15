@@ -92,7 +92,7 @@ const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'k
     return config;
 };
 
-const freeBSDConfig = loadFreeBSDConfig(undefined, runtimePaths.named);
+const freeBSDConfig = loadFreeBSDConfig(undefined, true);
 for (const name of ['KAIGI_INSTANCE', 'KAIGI_CONFIG_DIR', 'KAIGI_STATE_DIR']) {
     if (Object.hasOwn(freeBSDConfig, name)) throw new Error(`${name} is a service environment setting, not a kaigi.conf setting`);
 }
@@ -286,8 +286,8 @@ const NUM_WORKERS = Math.min(process.env.SFU_NUM_WORKERS || NUM_CPUS, NUM_CPUS);
 
 const RTMP_FFMPEG_PATH = process.env.RTMP_FFMPEG_PATH || getFFmpegPath(PLATFORM);
 
-if (runtimePaths.named) {
-    // Named instances cannot silently inherit the default site's sockets/URL.
+function validateInstanceNetwork() {
+    // Each instance explicitly allocates its sockets and public URL.
     for (const name of ['SERVER_LISTEN_PORT', 'SFU_MIN_PORT', 'SFU_MAX_PORT']) {
         const value = process.env[name];
         if (!/^[1-9][0-9]*$/.test(value || '') || Number(value) > 65535) {
@@ -302,6 +302,7 @@ if (runtimePaths.named) {
         throw new Error('MEDIA_MIN_PORT..MEDIA_MAX_PORT is too small for the WebRtcServer worker allocation');
     }
 }
+validateInstanceNetwork();
 
 // ==============================================
 // Main Configuration Export
@@ -437,7 +438,7 @@ module.exports = {
          *      - Push recordings to a remote server
          *      - Store in cloud storage services
          *      - Send to processing pipelines
-         * - dir            : Storage directory for recordings (Relative to app/src/ default: app/rec)
+         * - dir            : Recording subdirectory within this instance's state root
          * - maxFileSize    : Maximum recording size (1GB default)
          *
          * Upload Security:

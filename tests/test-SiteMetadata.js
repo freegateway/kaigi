@@ -18,7 +18,7 @@ function configuredBrand(settings, translations = {}, language = 'en') {
     try {
         fs.writeFileSync(
             path.join(directory, 'kaigi.conf'),
-            Object.entries(settings)
+            Object.entries({ WEB_LISTEN_PORT: 3010, WEB_URL: 'https://localhost:3010', MEDIA_MIN_PORT: 40000, MEDIA_MAX_PORT: 40100, ...settings })
                 .map(([key, value]) => `${key}=${value}`)
                 .join('\n')
         );
@@ -28,6 +28,8 @@ function configuredBrand(settings, translations = {}, language = 'en') {
         const env = {
             PATH: process.env.PATH,
             KAIGI_CONFIG_DIR: directory,
+            KAIGI_INSTANCE: 'metadata',
+            KAIGI_STATE_DIR: path.join(directory, 'state'),
             SFU_ANNOUNCED_IP: '127.0.0.1',
             UI_LANGUAGE: language,
         };

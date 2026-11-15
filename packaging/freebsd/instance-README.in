@@ -1,0 +1,45 @@
+Kaigi instance templates
+========================
+
+This directory is a template, not an enabled deployment. The package installs
+only .sample files and this README. There is no default instance and no generated
+password or JWT secret here. Package upgrades update these templates, not your
+deployed instance configuration.
+
+Choose an instance name: at most 32 lowercase letters, digits and underscores,
+beginning with a letter. For example, use staff. The destination directory must
+not already exist. As root, copy the example directory:
+
+cp -R %%PREFIX%%/etc/kaigi/instances/example %%PREFIX%%/etc/kaigi/instances/staff
+mv %%PREFIX%%/etc/kaigi/instances/staff/kaigi.conf.sample %%PREFIX%%/etc/kaigi/instances/staff/kaigi.conf
+mv %%PREFIX%%/etc/kaigi/instances/staff/users.sample %%PREFIX%%/etc/kaigi/instances/staff/users
+chmod 0600 %%PREFIX%%/etc/kaigi/instances/staff/users
+
+Edit kaigi.conf for the web IP/port, public URL, TLS certificate/key and media
+IP/range. Every instance needs disjoint TCP/UDP allocations on overlapping bind
+addresses. Edit users to add real accounts and exact meeting grants; its example
+entries are comments, not usable credentials. Keep users root-owned mode 0600.
+The service creates this instance's jwt-secret on first successful startup
+preparation; keep it root-owned mode 0600 too. Do not copy another site's secret.
+
+Optionally rename site-translations.json.sample, meeting-properties.json.sample
+and site-assets/site.css.sample without their .sample suffixes, then customize
+them. Copy your local logos into site-assets. Optional privacy examples also
+need renaming/customization before use. Configure LDAP only when needed: rename
+and edit ldap/ldap.conf.sample and ldap/group-meetings.json.sample, provision the
+restricted search account and protected bind secret, and enable LDAP in kaigi.conf.
+The service account must be able to read configuration, public assets, LDAP
+settings/secrets and TLS keys; it does not need direct access to users/jwt-secret.
+
+Enable the service and explicitly name the instance:
+
+sysrc kaigi_enable="YES"
+sysrc kaigi_instances="staff"
+service kaigi start staff
+
+For several instances use, for example, kaigi_instances="staff public" after
+provisioning both directories. Directories are never automatically enabled.
+Preflight validates all configured instances before start/restart. State and
+recordings live under /var/db/kaigi/NAME; PID files under /var/run/kaigi/NAME;
+logs under /var/log/kaigi/NAME. No files at the top level of etc/kaigi configure
+an instance. See kaigi(8), kaigi.conf(5), kaigi-ldap.conf(5) and INSTANCES.md.

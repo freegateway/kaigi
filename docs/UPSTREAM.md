@@ -1,5 +1,20 @@
 # Upstream intake
 
+## Uniform named-instance layout (2026-11-15)
+
+Kaigi-specific deployment change in 0.6.0; no upstream intake or dependency
+refresh. Require an explicit instance name, configuration directory and state
+root for every application process. Remove implicit/default configuration,
+recording, cookie and allocation-snapshot branches. All rc-managed configurations
+use etc/kaigi/instances/NAME; state/PID/log paths follow that same name.
+
+The companion port installs inactive .sample files and a provisioning README
+only under instances/example. No active configuration or credentials are created
+by package installation. Startup requires a nonempty explicit rc.conf list;
+shutdown discovery remains available. Preserve allocation preflight, lifecycle
+locking, readiness checks, authorization, local assets and maintained locales.
+Refresh public README coverage of security, privacy and named deployments.
+
 ## Named-instance startup safety (2026-11-15)
 
 Kaigi-specific correction in 0.5.13; no upstream intake or dependency refresh.

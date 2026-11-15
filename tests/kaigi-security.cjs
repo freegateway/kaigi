@@ -9,7 +9,8 @@ const source = fs.readFileSync(path.join(__dirname, '../app/src/Server.js'), 'ut
 test('Kaigi configuration is isolated from a colocated MiroTalk configuration', () => {
     const os = require('node:os'), { spawnSync } = require('node:child_process');
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'kaigi-config-isolation-'));
-    const environment = { ...process.env, KAIGI_CONFIG_DIR: directory, SFU_ANNOUNCED_IP: '127.0.0.1' };
+    const environment = { ...process.env, KAIGI_INSTANCE: 'isolation', KAIGI_CONFIG_DIR: directory,
+        KAIGI_STATE_DIR: path.join(directory, 'state'), SFU_ANNOUNCED_IP: '127.0.0.1' };
     delete environment.SERVER_LISTEN_PORT;
     const config = path.join(__dirname, '../app/src/config.js');
     const readPort = () => {
@@ -21,10 +22,12 @@ test('Kaigi configuration is isolated from a colocated MiroTalk configuration', 
     };
     try {
         fs.writeFileSync(path.join(directory, 'mirotalk.conf'), 'WEB_LISTEN_PORT=7444\n');
-        fs.writeFileSync(path.join(directory, 'kaigi.conf'), 'WEB_LISTEN_PORT=7443\n');
+        fs.writeFileSync(path.join(directory, 'kaigi.conf'), 'WEB_LISTEN_PORT=7443\nWEB_URL=https://localhost:7443\nMEDIA_MIN_PORT=40000\nMEDIA_MAX_PORT=40100\n');
         assert.equal(readPort(), 7443);
         fs.unlinkSync(path.join(directory, 'kaigi.conf'));
-        assert.equal(readPort(), 3010);
+        const result = spawnSync(process.execPath, ['-e', 'require(process.argv[1])', config], { env: environment, encoding: 'utf8' });
+        assert.notEqual(result.status, 0);
+        assert.match(result.stderr, /Required configuration file is missing/);
     } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 function sessions() {

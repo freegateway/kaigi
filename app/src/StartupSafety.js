@@ -70,8 +70,6 @@ function checkPlans(plans, cpuCount = require('node:os').cpus().length) {
             }
             for (const x of [a.config, a.recordings]) for (const y of [b.config, b.recordings]) {
                 if (x === y || x.startsWith(y + path.sep) || y.startsWith(x + path.sep)) {
-                    // The default config tree intentionally contains instances/.
-                    if (x === a.config && y === b.config && a.config !== b.config && (a.name === 'default' || b.name === 'default')) continue;
                     throw Error(`Instances ${a.name} and ${b.name}: overlapping configuration/state paths`);
                 }
             }
@@ -177,8 +175,8 @@ async function main(args) {
         const plans = [];
         for (let i = 0; i < instances.length; i += 3) {
             const [name, user, group] = instances.slice(i, i + 3);
-            const config = name === 'default' ? configRoot : path.join(configRoot, 'instances', name);
-            const state = name === 'default' ? '' : path.join(stateRoot, name);
+            const config = path.join(configRoot, 'instances', name);
+            const state = path.join(stateRoot, name);
             const environment = cleanEnvironment({ PATH: process.env.PATH, NODE_ENV: process.env.NODE_ENV || 'production',
                 KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config, ...(state ? { KAIGI_STATE_DIR: state } : {}) });
             const result = spawnSync(process.execPath, [__filename, 'inspect', name, config, state, user, group], {
@@ -193,14 +191,14 @@ async function main(args) {
         }
         const active = [];
         for (const entry of fs.readdirSync(runRoot, { withFileTypes: true })) {
-            const name = entry.name === 'kaigi.pid' ? 'default' : entry.name;
-            if (name !== 'default' && (!entry.isDirectory() || !/^[a-z][a-z0-9_]{0,31}$/.test(name))) continue;
+            const name = entry.name;
+            if (!entry.isDirectory() || !/^[a-z][a-z0-9_]{0,31}$/.test(name)) continue;
             // Only a single selected instance is guaranteed to stop before its
             // replacement starts. Group restart remains sequential, so other
             // selected instances' old allocations must still be considered.
             const selectedNames = selected.split(',').filter(Boolean);
             if (operation === 'restart' && selectedNames.length === 1 && selectedNames[0] === name) continue;
-            const directory = name === 'default' ? runRoot : path.join(runRoot, name);
+            const directory = path.join(runRoot, name);
             const pidfile = path.join(directory, 'kaigi.pid');
             if (!fs.existsSync(pidfile)) continue;
             noSymlinks(pidfile);
