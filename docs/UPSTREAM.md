@@ -1,5 +1,14 @@
 # Upstream intake
 
+## Instance-relative LDAP files (2026-11-15)
+
+Kaigi 0.6.2 resolves relative LDAP_BIND_PASSWORD_FILE and LDAP_TLS_CA_FILE paths
+against the selected instance's ldap/ directory, alongside group-meetings.json.
+Explicit absolute paths remain unchanged; working-directory and shared top-level
+fallbacks are not used. Update administrator examples and manuals; retain secret
+file permissions and symlink checks, LDAP transport policy and exact meeting
+authorization. No upstream intake or dependency updates.
+
 ## Safe startup diagnostics (2026-11-15)
 
 Kaigi 0.6.1 replaces opaque inspection-stage failures with catalogued reasons,

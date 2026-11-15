@@ -25,8 +25,9 @@
 # !!! REQUIRED: DN of the restricted search account. No default.
 # LDAP_BIND_DN=<restricted search account DN>
 
-# !!! REQUIRED: absolute path to the search-account password file. Example path; no default. Use mode 0600 or 0640 with appropriate ownership.
-# LDAP_BIND_PASSWORD_FILE=%%PREFIX%%/etc/kaigi/instances/NAME/ldap/bind-secret
+# !!! REQUIRED: password file path, relative to this instance's ldap/ directory
+# or explicitly absolute. No default. Use mode 0600 or 0640 with appropriate ownership.
+# LDAP_BIND_PASSWORD_FILE=bind-secret
 
 # ====================================================================
 # User lookup and identity
@@ -124,7 +125,8 @@
 # ====================================================================
 
 # !!! REQUIRED when using ldaps or ldap-starttls: CA bundle path. No default. Certificate verification cannot be disabled.
-# LDAP_TLS_CA_FILE=<absolute path to CA bundle>
+# Relative to this instance's ldap/ directory, or explicitly absolute.
+# LDAP_TLS_CA_FILE=ca.pem
 
 # Default: TLSv1.2. Allowed values: TLSv1.2 or TLSv1.3.
 # LDAP_TLS_MIN_VERSION=TLSv1.2

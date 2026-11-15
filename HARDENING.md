@@ -260,7 +260,9 @@ Existing idle expiry, active-meeting activity and logout/revocation remain.
 Restarting the daemon invalidates existing sessions. No LDAP password is cached,
 logged or used for subsequent meeting joins.
 
-LDAP_BIND_PASSWORD_FILE must be an absolute path to a regular non-symlink file,
+LDAP_BIND_PASSWORD_FILE names a regular non-symlink file; relative paths resolve
+against the named instance's ldap/ directory, while explicit absolute paths remain
+unchanged. The file must be
 readable by the daemon, at most 4096 bytes, with no group-write or other access
 (mode 0600 owned by the daemon, or 0640 with an appropriate daemon group).
 Store a single password, optionally followed by one newline. LDAP credentials

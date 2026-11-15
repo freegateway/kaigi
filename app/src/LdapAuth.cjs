@@ -365,7 +365,13 @@ function ldapConfig(values, groupMeetingsFile) {
         result.tlsServerName = required('LDAP_TLS_SERVER_NAME', true);
         if (!['TLSv1.2', 'TLSv1.3'].includes(result.tlsMinVersion)) fail('INVALID_CONFIG', 'LDAP_TLS_MIN_VERSION must be TLSv1.2 or TLSv1.3.');
     }
-    for (const [setting, filename] of [['LDAP_BIND_PASSWORD_FILE', result.bindPasswordFile], ['LDAP_TLS_CA_FILE', result.caFile]]) if (filename && !path.isAbsolute(filename)) fail('INVALID_CONFIG', `${setting} must be an absolute filesystem path.`);
+    // groupMeetingsFile is supplied from this instance's ldap/ directory.
+    // Never resolve relative files against cwd or a shared installation path.
+    for (const key of ['bindPasswordFile', 'caFile']) {
+        if (result[key] && !path.isAbsolute(result[key])) {
+            result[key] = path.resolve(path.dirname(groupMeetingsFile), result[key]);
+        }
+    }
     for (const [setting, filter, placeholder] of [['LDAP_USER_FILTER', result.userFilter, '{username}'], ...(result.groupsEnabled && result.groupSource === 'group-search' ? [['LDAP_GROUP_FILTER', result.groupFilter, '{member}']] : []), ...(result.groupsEnabled && result.groupSource === 'group-search' && (result.mode === 'direct' || result.mappingKey === 'name') ? [['LDAP_GROUP_UNIQUE_FILTER', result.groupUniqueFilter, '{group}']] : [])]) {
         if (!filter.includes(placeholder) || /\{[^}]*\}/.test(filter.replaceAll(placeholder, 'test'))) fail('INVALID_CONFIG', `${setting} must be a valid, balanced LDAP filter containing ${placeholder} and no unsupported placeholders.`);
         const probe = filter.replaceAll(placeholder, 'test');

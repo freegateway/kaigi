@@ -104,6 +104,10 @@ belong in kaigi.conf, not inherited shell variables. Service launches sanitize
 Node's environment before loading configuration; interactive npm launches retain
 their environment interface. NODE_ENV defaults to production for the service.
 No credentials appear in command arguments or preflight errors.
+In ldap/ldap.conf, relative LDAP_BIND_PASSWORD_FILE and LDAP_TLS_CA_FILE paths
+resolve against that instance's ldap/ directory. For example,
+LDAP_BIND_PASSWORD_FILE=bind-secret selects ldap/bind-secret within that instance.
+Explicit absolute paths remain unchanged, including intentionally shared CA files.
 Validation errors identify the instance and logical resource (such as kaigi.conf,
 users or the TLS private key), with a setting or parser line number when known.
 Only catalogued explanations are printed, never configured values, raw dependency
