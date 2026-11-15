@@ -104,6 +104,11 @@ belong in kaigi.conf, not inherited shell variables. Service launches sanitize
 Node's environment before loading configuration; interactive npm launches retain
 their environment interface. NODE_ENV defaults to production for the service.
 No credentials appear in command arguments or preflight errors.
+Validation errors identify the instance and logical resource (such as kaigi.conf,
+users or the TLS private key), with a setting or parser line number when known.
+Only catalogued explanations are printed, never configured values, raw dependency
+exceptions or stacks. Unrecognized failures retain a generic resource-specific
+message; inspector failures and timeouts are distinguished from invalid settings.
 
 Root-owned launch snapshots preserve allocations still used by running instances
 after configuration changes or removal from rc.conf. A pre-safety running instance

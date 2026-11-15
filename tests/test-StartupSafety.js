@@ -76,6 +76,27 @@ describe('startup safety preflight', function () {
             assert.equal(plans[0].listeners[0].min, 7443);
         } finally { f.cleanup(); }
     });
+    it('reports useful child-process diagnostics without leaking configuration values', () => {
+        const f = fixture();
+        try {
+            f.configure('staff', { MEDIA_MAX_PORT: 39999 });
+            let result = f.check();
+            assert.notEqual(result.status, 0);
+            assert.match(result.stderr, /Instance staff: configuration validation failed \(kaigi.conf\).*MEDIA_MAX_PORT must not be below MEDIA_MIN_PORT/);
+            f.configure('staff');
+            fs.appendFileSync(path.join(f.config, 'instances/staff/kaigi.conf'), '\nPASSWORD=do-not-print-this\nBAD LINE do-not-print-this');
+            result = f.check();
+            assert.notEqual(result.status, 0);
+            assert.match(result.stderr, /kaigi.conf, line \d+.*expected SETTING=value/);
+            assert.ok(!result.stderr.includes('do-not-print-this'));
+            f.configure('staff', { LDAP_ENABLED: 'true' });
+            result = f.check();
+            assert.match(result.stderr, /ldap\/ldap.conf.*file is missing/);
+            fs.unlinkSync(path.join(f.config, 'instances/staff/users'));
+            result = f.check();
+            assert.match(result.stderr, /Instance staff: credentials validation failed \(users\): file is missing/);
+        } finally { f.cleanup(); }
+    });
     it('never treats top-level configuration as an instance fallback', () => {
         const f = fixture();
         try {
