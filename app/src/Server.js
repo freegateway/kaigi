@@ -1,4 +1,5 @@
 'use strict';
+require('./StartupEnvironment');
 
 /*
 ███████ ███████ ██████  ██    ██ ███████ ██████  
@@ -620,7 +621,7 @@ const STREAM_TIMEOUT_MS = 60 * 1000; // Cleanup orphaned streams after 60s of in
 const webRtcServerActive = config.mediasoup.webRtcServerActive;
 
 // ip (server local IPv4)
-const IP = webRtcServerActive
+let IP = webRtcServerActive
     ? config.mediasoup.webRtcServerOptions.listenInfos[0].ip
     : config.mediasoup.webRtcTransport.listenInfos[0].ip;
 
@@ -639,77 +640,15 @@ let nextMediasoupWorkerIdx = 0;
 // to this host.  The media announced address is resolved from
 // MEDIA_ANNOUNCED_HOST, or WEB_LISTEN_HOST when no explicit media address is
 // configured.
-async function configureFreeBSDNetwork() {
-    const webListenHost = process.env.WEB_LISTEN_HOST;
-    const explicitWebListenIp = process.env.SERVER_LISTEN_IP;
-    const explicitMediaListenIp = process.env.SFU_LISTEN_IP;
-    const mediaAnnouncedHost = process.env.MEDIA_ANNOUNCED_HOST;
-    const explicitMediaAnnouncedIp = process.env.SFU_ANNOUNCED_IP;
+const { configureFreeBSDNetwork } = require('./NetworkConfig');
 
-    const resolveIPv4 = async (hostname) => {
-        const addresses = await dns.lookup(hostname, { family: 4, all: true });
-        return [...new Set(addresses.map(({ address }) => address))];
-    };
-
-    if (!explicitWebListenIp && webListenHost) {
-        const resolved = await resolveIPv4(webListenHost);
-        const local = new Set();
-        for (const entries of Object.values(os.networkInterfaces())) {
-            for (const entry of entries || []) {
-                if (entry.family === 'IPv4') local.add(entry.address);
-            }
-        }
-        const matches = resolved.filter((address) => local.has(address));
-        if (matches.length !== 1) {
-            throw new Error(
-                `WEB_LISTEN_HOST "${webListenHost}" resolves to ${resolved.join(', ') || 'no IPv4 addresses'}, ` +
-                    `but ${matches.length === 0 ? 'none is' : 'more than one is'} assigned to this host; ` +
-                    'set WEB_LISTEN_IP explicitly'
-            );
-        }
-        config.server.listen.ip = matches[0];
-        if (!explicitMediaListenIp) updateListenAddress(matches[0]);
-    }
-
-    if (!explicitMediaAnnouncedIp) {
-        const announcedHost = mediaAnnouncedHost || webListenHost;
-        if (announcedHost) {
-            const resolved = await resolveIPv4(announcedHost);
-            if (resolved.length !== 1) {
-                throw new Error(
-                    `Media announced host "${announcedHost}" resolves to ${resolved.length} IPv4 addresses; ` +
-                        'set MEDIA_ANNOUNCED_IP explicitly'
-                );
-            }
-            announcedAddress = resolved[0];
-            updateAnnouncedAddress(announcedAddress);
-        }
-    }
-
-    if (!announcedAddress && IP === '0.0.0.0') {
-        throw new Error(
-            'No media announced address is configured. Set MEDIA_ANNOUNCED_IP, ' +
-                'MEDIA_ANNOUNCED_HOST, or WEB_LISTEN_HOST.'
-        );
-    }
-}
-
-function updateListenAddress(ip) {
-    const targets = [config.mediasoup.webRtcServerOptions.listenInfos, config.mediasoup.webRtcTransport.listenInfos];
-    for (const infos of targets) {
-        for (const info of infos) info.ip = ip;
-    }
-}
-
-function updateAnnouncedAddress(ip) {
-    const targets = [config.mediasoup.webRtcServerOptions.listenInfos, config.mediasoup.webRtcTransport.listenInfos];
-    for (const infos of targets) {
-        for (const info of infos) info.announcedAddress = ip;
-    }
-}
-
-configureFreeBSDNetwork()
-    .then(startServer)
+configureFreeBSDNetwork(config)
+    .then(() => {
+        const infos = webRtcServerActive ? config.mediasoup.webRtcServerOptions.listenInfos : config.mediasoup.webRtcTransport.listenInfos;
+        IP = infos[0].ip;
+        announcedAddress = infos[0].announcedAddress;
+        startServer();
+    })
     .catch((err) => {
         log.error('Network configuration failed', err.message);
         process.exit(1);
@@ -2291,6 +2230,7 @@ function startServer() {
                 return ngrokStart();
             }
             log.info('Server config', getServerConfig());
+            require('./StartupSafety').signalReady();
 
             // Warn if default secrets are still in use
             if (config.api?.keySecret === 'mirotalksfu_default_secret') {

@@ -138,6 +138,7 @@ describe('instance boundaries', function () {
             ].join('\n'));
             const child = spawn(process.execPath, ['tests/fixtures/instance-server.cjs'], {
                 cwd: root, env: { ...process.env, KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config,
+                    KAIGI_READY_FILE: path.join(config, 'ready.json'), KAIGI_STARTUP_NONCE: name,
                     KAIGI_STATE_DIR: path.join(directory, 'state', name),
                     JWT_SECRET: `${name}-tests-only-012345678901234567890123456789`,
                     HOST_USERS: `${name}|password|${name}|["${name}"]` },
@@ -149,7 +150,12 @@ describe('instance boundaries', function () {
             child.stderr.on('data', chunk => output += chunk);
             for (let attempt = 0; attempt < 200; attempt++) {
                 if (child.exitCode !== null) throw Error(`Instance exited: ${output}`);
-                try { if ((await request(port, '/login')).status === 200) return { port, child }; } catch {}
+                try {
+                    if ((await request(port, '/login')).status === 200) {
+                        assert.deepEqual(JSON.parse(fs.readFileSync(path.join(config, 'ready.json'), 'utf8')), { pid: child.pid, nonce: name });
+                        return { port, child };
+                    }
+                } catch {}
                 await new Promise(resolve => setTimeout(resolve, 50));
             }
             throw Error(`Instance failed to start: ${output}`);
