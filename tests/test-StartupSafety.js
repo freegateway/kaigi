@@ -133,6 +133,12 @@ describe('startup safety preflight', function () {
             fs.writeFileSync(path.join(directory, 'launch-plan.json'), JSON.stringify({ name: 'staff' }));
             fs.writeFileSync(ready, JSON.stringify({ pid: process.pid, nonce: 'current' }));
             const call = (...args) => spawnSync(process.execPath, [helper, ...args], { encoding: 'utf8' });
+            const plans = path.join(f.run, 'plans.json');
+            fs.writeFileSync(plans, JSON.stringify([{ name: 'staff' }]));
+            const snapshot = path.join(directory, 'launch-plan.json');
+            fs.chmodSync(snapshot, 0o666);
+            assert.equal(call('save-plan', plans, 'staff', snapshot).status, 0);
+            assert.equal(fs.statSync(snapshot).mode & 0o777, 0o644);
             assert.notEqual(call('ready', ready, pidfile, 'old').status, 0);
             const before = performance.now();
             assert.notEqual(call('wait', ready, pidfile, 'old', '1').status, 0);

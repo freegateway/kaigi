@@ -19,6 +19,30 @@ function noSymlinks(directory) {
     }
 }
 
+function writeMetadata(filename, data, mode = 0o600) {
+    noSymlinks(filename);
+    const temporary = `${filename}.${require('node:crypto').randomUUID()}`;
+    const fd = fs.openSync(temporary, 'wx', mode);
+    try {
+        fs.fchmodSync(fd, mode);
+        fs.writeFileSync(fd, JSON.stringify(data));
+    } catch (error) {
+        fs.unlinkSync(temporary);
+        throw error;
+    } finally { fs.closeSync(fd); }
+    try { fs.renameSync(temporary, filename); }
+    finally { try { fs.unlinkSync(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; } }
+}
+
+function readMetadata(filename) {
+    noSymlinks(filename);
+    const stat = fs.lstatSync(filename);
+    if (!stat.isFile() || stat.size > 65536 || (stat.mode & 0o022) || (stat.uid !== 0 && stat.uid !== process.getuid?.())) {
+        throw Error('Unsafe launch metadata');
+    }
+    return JSON.parse(fs.readFileSync(filename, 'utf8'));
+}
+
 function addressOverlaps(a, b) {
     // Conservative dual-stack policy: :: may also accept IPv4 connections.
     const normalize = value => {
@@ -176,20 +200,20 @@ async function main(args) {
             const snapshot = path.join(directory, 'launch-plan.json');
             noSymlinks(snapshot);
             if (!fs.existsSync(snapshot)) throw Error(`Instance ${name}: running allocation is unknown; stop it before upgrading startup safety`);
-            const plan = JSON.parse(fs.readFileSync(snapshot, 'utf8'));
+            const plan = readMetadata(snapshot);
             if (plan.pid !== pid || !plan.started || plan.started !== processStamp(pid)) throw Error(`Instance ${name}: stale process identity; inspect its PID file`);
             active.push(plan);
         }
         const warning = checkPlans([...plans, ...active]);
         if (warning) process.stderr.write(`kaigi: warning: ${warning}\n`);
         noSymlinks(path.join(runRoot, 'preflight.json'));
-        fs.writeFileSync(path.join(runRoot, 'preflight.json'), JSON.stringify(plans), { mode: 0o600 });
+        writeMetadata(path.join(runRoot, 'preflight.json'), plans);
     } else if (mode === 'save-plan') {
         const [filename, name, destination] = rest;
-        const plan = JSON.parse(fs.readFileSync(filename, 'utf8')).find(item => item.name === name);
+        const plan = readMetadata(filename).find(item => item.name === name);
         if (!plan) throw Error('Missing validated launch plan');
         noSymlinks(destination);
-        fs.writeFileSync(destination, JSON.stringify(plan), { mode: 0o644 });
+        writeMetadata(destination, plan, 0o644);
     } else if (mode === 'ready') {
         const [filename, pidfile, nonce] = rest;
         const stat = fs.lstatSync(filename);
@@ -200,14 +224,14 @@ async function main(args) {
         process.kill(pid, 0);
         const snapshot = path.join(path.dirname(pidfile), 'launch-plan.json');
         noSymlinks(snapshot);
-        const plan = JSON.parse(fs.readFileSync(snapshot, 'utf8'));
-        fs.writeFileSync(snapshot, JSON.stringify({ ...plan, pid, started: processStamp(pid) }), { mode: 0o644 });
+        const plan = readMetadata(snapshot);
+        writeMetadata(snapshot, { ...plan, pid, started: processStamp(pid) }, 0o644);
     } else if (mode === 'identity') {
         const [pidfile] = rest;
         const snapshot = path.join(path.dirname(pidfile), 'launch-plan.json');
         if (!fs.existsSync(snapshot)) return; // Explicit stop of a pre-safety installation.
         noSymlinks(snapshot);
-        const plan = JSON.parse(fs.readFileSync(snapshot, 'utf8'));
+        const plan = readMetadata(snapshot);
         const pid = Number(fs.readFileSync(pidfile, 'utf8').trim());
         if (!Number.isSafeInteger(pid) || pid < 2 || pid !== plan.pid || !plan.started || processStamp(pid) !== plan.started) throw Error('Stale process identity');
     } else throw Error('Unknown startup-safety operation');
