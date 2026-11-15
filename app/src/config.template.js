@@ -275,6 +275,9 @@ const IPv4 = getIPv4();
 const RTC_MIN_PORT = parseInt(process.env.SFU_MIN_PORT) || 40000;
 const RTC_MAX_PORT = parseInt(process.env.SFU_MAX_PORT) || 40100;
 const NUM_CPUS = os.cpus().length;
+if (process.env.SFU_NUM_WORKERS !== undefined && (!/^[1-9][0-9]*$/.test(process.env.SFU_NUM_WORKERS) || !Number.isSafeInteger(Number(process.env.SFU_NUM_WORKERS)))) {
+    throw new Error('MEDIA_NUM_WORKERS must be a positive integer');
+}
 const NUM_WORKERS = Math.min(process.env.SFU_NUM_WORKERS || NUM_CPUS, NUM_CPUS);
 
 // ==============================================

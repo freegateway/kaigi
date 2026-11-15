@@ -1,5 +1,22 @@
 # Upstream intake
 
+## Named-instance startup safety (2026-11-15)
+
+Kaigi-specific correction in 0.5.13; no upstream intake or dependency refresh.
+Share production network resolution with service preflight. Validate all
+configured instances and retained live allocations before start/restart, including
+TCP/UDP ranges, wildcard/IPv6 web listeners, account/TLS/configuration checks and
+unsafe existing path aliases. Preserve fixed-field security logging and session,
+grant and participant policies. Service launches discard caller configuration
+overrides; interactive launch behavior remains available.
+
+Readiness is a fresh per-launch acknowledgment after workers and HTTP listen,
+bound to the child PID and process start time. Port lifecycle locking, shutdown
+discovery and preflight ordering live in the separate port repository. This does
+not provide transactional restart, a runtime filesystem sandbox or reservations
+against manually started services. FreeBSD/native-worker testing remains separate
+from Linux HTTP/Socket.IO tests and injected DNS/interface fixtures.
+
 ## Log privacy, limiter maintenance and login translations (2026-11-13)
 
 Kaigi 0.5.11 selectively adapts upstream

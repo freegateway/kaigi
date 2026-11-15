@@ -51,6 +51,9 @@ and underscores, and have at most 32 characters.
 The name
 .Dq default
 retains the original single-instance paths and navigation cookie.
+.It Va kaigi_start_timeout
+Readiness deadline in seconds, from 1 through 300. Default:
+.Dq 30 .
 .El
 .Sh NAMED INSTANCES
 For example, configure two independent instances in
@@ -121,9 +124,33 @@ accidental session replacement. This does not isolate mutually untrusted sites;
 use separate hostnames and service accounts, or jails, for stronger isolation.
 Instances using the same account share that account's filesystem privileges.
 .Pp
-Start, stop and restart across the list are sequential, not atomic. A failure
-does not prevent attempts on the remaining instances; the overall action fails
-if any instance fails. Stop an instance before removing it from the list.
+Start and restart perform a locked service-wide preflight before changing any
+process. This checks every configured instance, including current live allocation
+snapshots, for conflicting TCP/UDP ports and configuration/state paths. It validates
+configuration, credentials, service accounts and TLS under the intended account.
+Hostname resolution uses the same code as the running server. A validation failure
+leaves running instances untouched. Worker counts must be positive integers;
+excessive aggregate counts produce a warning.
+.Pp
+Readiness requires initialized workers, a listening HTTP server and a fresh
+per-launch acknowledgment matching the Node PID and process start time. Failure
+returns nonzero and signals only the failed launch's supervisor. After five
+seconds without exit it forcibly stops that launch's validated child and
+supervisor; cleanup can add five seconds to the readiness deadline. Remaining
+instances are not started/restarted after a runtime failure. Operations are
+sequential, not transactional; runtime failures can occur after successful
+preflight. Already running or successfully started instances remain untouched.
+.Pp
+The service discards inherited caller environment overrides; use kaigi.conf.
+NODE_ENV defaults to production. Startup metadata is root-owned and contains
+resource allocations, PID and process start time, not credentials. Pre-safety
+running instances lack allocation snapshots: stop them once before starting
+other instances, or restart the selected group after its replacement plan passes.
+.Pp
+Explicit stop/status works after removal from the instance list and without
+valid application configuration. Stop without a name also discovers PID
+directories, ignoring malformed configured names. A stale recorded process
+identity is rejected instead of signaling an unrelated process.
 Stopping an instance does not delete its configuration or recordings.
 .Sh APPLICATION CONFIGURATION
 Use

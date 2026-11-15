@@ -51,10 +51,12 @@ The service sets these launch-time environment variables; do not put them in
 Named instances require explicit web and media port settings and a public web URL
 (or a hostname from which Kaigi constructs it). Allocate non-overlapping media
 ranges across instances, as well as distinct web ports. WebRtcServer worker
-allocations must fit inside the range. Kaigi validates each instance's settings;
-it does not reserve ranges across independent processes. The operating system
-rejects sockets already in use, but unused overlapping media ranges can conflict
-later when participants join. Account for TCP media fallback and any relay too.
+allocations must fit inside the range. The service validates the whole configured
+list before start/restart, even when one instance is selected. It rejects
+overlapping TCP/UDP media reservations, web listeners and web/media intersections
+on overlapping bind addresses, including wildcard and equivalent IPv6 forms.
+It uses the same hostname resolver as the running application. Account for TCP
+media fallback and any relay too.
 
 Named recordings default to `KAIGI_STATE_DIR/recordings`. `RECORDING_DIR` can
 select a relative subdirectory or an absolute path within that state root.
@@ -73,6 +75,53 @@ not a hostile service on another port impersonating the site. Use separate
 hostnames/accounts or jails when stronger isolation is required. Processes using
 the same service account have that account's filesystem privileges. Share neither
 users nor JWT secrets unless deliberately accepting the resulting trust boundary.
+
+## Startup and shutdown safety
+
+Lifecycle commands run under one host-local service lock. Preflight validates
+configuration, accounts/groups, JWT material, TLS certificate/key compatibility,
+and existing instance/recording paths before stopping or starting any process.
+It reads root-only local credentials before validating configuration and TLS under
+the daemon account's UID, primary group and supplementary groups. It does not
+authenticate against LDAP or start native workers. Individual checks are bounded.
+A total worker count exceeding the CPU count produces a warning; worker counts
+must be positive integers.
+
+The service starts with a clean caller environment. Configuration overrides
+belong in kaigi.conf, not inherited shell variables. Service launches sanitize
+Node's environment before loading configuration; interactive npm launches retain
+their environment interface. NODE_ENV defaults to production for the service.
+No credentials appear in command arguments or preflight errors.
+
+Root-owned launch snapshots preserve allocations still used by running instances
+after configuration changes or removal from rc.conf. A pre-safety running instance
+without a snapshot must be stopped once before starting another instance; restart
+can validate the replacement plan for its selected instances first. Snapshots
+include the acknowledged PID and process start time to detect stale identity.
+They contain resource metadata, not credentials. Checks coordinate this
+installation's rc-managed instances, not manually launched processes, other
+applications/installations or other jails.
+
+The application acknowledges readiness after worker initialization and HTTP listen
+succeed. The service checks a fresh nonce, its Node PID and process start time.
+kaigi_start_timeout defaults to 30 seconds (1..300). Failure returns nonzero and
+signals only that launch's supervisor to terminate its child. If it has not exited
+after five seconds, the service forcibly stops that launch's validated child and
+supervisor. This cleanup can extend the readiness deadline by five seconds.
+Remaining instances
+are not started/restarted after a runtime failure; previously running or
+successfully started instances remain. All-instance restart is sequential, not
+transactional or zero-downtime. Resources, permissions and files can change after
+preflight; runtime failures remain possible. Readiness confirms startup, not
+future availability or successful conference media exchange.
+
+Explicit stop/status accepts a valid name after removal from rc.conf, without
+parsing application configuration. Stop without a name also discovers PID
+directories, ignoring malformed configured names. It never deletes credentials
+or recordings. Stale recorded identity is rejected instead of signaling another
+process. Preflight rejects symlinks in existing configuration/state/recording
+paths; this does not sandbox a compromised process changing writable paths later.
+Use separate accounts or jails for stronger isolation.
 
 ## Checks
 
