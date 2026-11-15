@@ -1,5 +1,15 @@
 # Upstream intake
 
+## Security navigation and administrator text guide (2026-11-15)
+
+Kaigi 0.6.4 adds a localized, numbered Security contents list generated from
+the maintained section headings. It collapses natively, moves above the text
+on narrow viewports and disappears in print. Keep the Fail2ban directory path
+unbroken with keyboard-accessible horizontal scrolling on small screens.
+Convert the administrator Fail2ban guide to README.txt and update references.
+Align only read-only pre-meeting display-name styling with the other identity
+values; preserve its validation/submission input and authenticated identity.
+No dependency, authentication or firewall-policy changes.
 ## Public pages and Fail2ban integration (2026-11-15)
 
 Kaigi 0.6.3 reconciles the public About/Security layout, maintained security

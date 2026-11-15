@@ -518,5 +518,5 @@ No credentials, tokens or LDAP attributes are included in these event lines.
 Kaigi uses the direct peer address for security attribution and ignores
 client-supplied forwarded-address headers.
 See
-.Pa %%PREFIX%%/share/kaigi/fail2ban/README.md
+.Pa %%PREFIX%%/share/kaigi/fail2ban/README.txt
 for optional Fail2ban integration on PF and IPFW hosts.

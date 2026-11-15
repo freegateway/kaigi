@@ -488,7 +488,7 @@ existing firewall policies differ. Test the filter with fail2ban-regex before
 activation. Do not have sshguard and Fail2ban independently manage the same table.
 Conservative thresholds are necessary when multiple users share an IP address.
 For complete named-instance setup and dedicated PF/IPFW table examples, read
-`/usr/local/share/kaigi/fail2ban/README.md`.
+`/usr/local/share/kaigi/fail2ban/README.txt`.
 
 ## Browser privacy and smaller viewports
 

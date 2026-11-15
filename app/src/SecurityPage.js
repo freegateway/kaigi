@@ -22,15 +22,17 @@ const scriptHash = crypto
 
 // Deliberately restricted Markdown for maintained prose: no raw HTML, images or scripts.
 function prose(text) {
+    let section = 0;
     const inline = (value) =>
         escape(value)
             .replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g, '<a href="$2" rel="noreferrer">$1</a>')
-            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/(^|\s)(\/usr\/local\/share\/kaigi\/fail2ban\/)/g, '$1<code class="security-path" tabindex="0">$2</code>');
     return text
         .trim()
         .split(/\n\n+/)
         .map((block) => {
-            if (block.startsWith('## ')) return `<h2>${inline(block.slice(3))}</h2>`;
+            if (block.startsWith('## ')) return `<h2 id="security-section-${++section}" tabindex="-1">${inline(block.slice(3))}</h2>`;
             if (block.startsWith('- '))
                 return `<ul>${block
                     .split('\n')
@@ -72,6 +74,11 @@ function renderSecurity(input = {}, requested = 'en') {
         path.join(__dirname, `templates/security.${language === 'en-CA' ? 'en' : language}.md`),
         'utf8'
     );
+    const topics = require('./templates/HelpTopics.json');
+    const contents = topics[language]?.contents || topics.en.contents;
+    const sections = text.trim().split(/\n\n+/).filter(block => block.startsWith('## '));
+    const navigation = sections.map((block, index) =>
+        `<li><a href="#security-section-${index + 1}">${escape(block.slice(3))}</a></li>`).join('');
     return `<!doctype html>
 <html lang="${language}" data-public-path="/security" data-help-language="${escape(selected)}" data-help-languages="${escape(JSON.stringify(available))}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -81,12 +88,15 @@ function renderSecurity(input = {}, requested = 'en') {
 <link rel="stylesheet" href="/css/public-page.css">
 <link rel="stylesheet" href="/site-assets/site.css">
 <script defer src="/js/Help.js" integrity="sha256-${scriptHash}"></script></head>
-<body class="public-page security-page"><main class="about-local">
+<body class="public-page security-page"><div class="security-layout">
+<aside class="help-sidebar security-sidebar"><details open><summary>${escape(contents)}</summary>
+<nav aria-label="${escape(contents)}"><ol>${navigation}</ol></nav></details></aside>
+<main class="about-local">
 <button id="helpPrint" type="button" hidden>${copy[4]}</button>
 <a href="/" class="help-identity"><img class="about-local-logo" src="${escape(logo)}" alt=""><span hidden>${name}</span></a>
 <h1>${name}</h1><p>${escape(values.SITE_DESCRIPTION ?? brand.site?.description ?? '')}</p>
 <h2>${copy[0]}</h2>${prose(text)}
-<p><a class="button button-primary" href="/login" id="publicBack">${copy[1]}</a></p></main>
+<p><a class="button button-primary" href="/login" id="publicBack">${copy[1]}</a></p></main></div>
 <footer class="public-footer"><a href="/help">${copy[2]}</a><a href="/about">${copy[3]}</a><span>Kaigi ${escape(version)}</span><span>${escape(values.SITE_COPYRIGHT ?? brand.site?.copyright ?? '')}</span></footer></body></html>`;
 }
 

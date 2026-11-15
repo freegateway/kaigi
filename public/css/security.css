@@ -37,3 +37,36 @@
         display: none;
     }
 }
+.security-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 808px);
+    width: min(1048px, 100%);
+    margin-inline: auto;
+    flex: 1;
+    align-items: start;
+}
+.security-layout > .about-local { min-width: 0; }
+.security-sidebar { margin-top: 3rem; }
+.security-sidebar a { display: inline-block; padding-block: 4px; }
+.security-sidebar a:focus-visible, .security-sidebar summary:focus-visible,
+.security-path:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.security-page h2[id] { scroll-margin-top: 16px; }
+.security-page .security-path {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    vertical-align: middle;
+}
+@media (max-width: 900px) {
+    .security-layout { display: block; }
+    .security-sidebar { position: static; max-height: none; margin-top: 0; padding-bottom: 0; }
+}
+@media (max-height: 760px) { .security-sidebar { margin-top: 1rem; } }
+@media print {
+    .security-layout { display: block; width: 100%; }
+    .security-sidebar { display: none; }
+    .security-page .security-path { font-size: 9pt; overflow: visible; }
+}
