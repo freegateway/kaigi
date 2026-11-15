@@ -33,7 +33,9 @@ Directory URL including the selected protocol, host and explicit port. ldap-plai
 .It Va LDAP_BIND_DN
 Restricted search-account DN.
 .It Va LDAP_BIND_PASSWORD_FILE
-Absolute path to a protected search-account password file readable by the daemon.
+Path to a protected search-account password file readable by the daemon.
+Relative paths resolve against this instance's ldap directory, not the working
+directory. Explicit absolute paths remain unchanged. For example, use bind-secret.
 .It Va LDAP_USER_BASE
 User search base DN.
 .It Va LDAP_USER_SCOPE
@@ -71,7 +73,8 @@ Uniqueness filter containing {group}, required for group-search with direct mode
 .It Va LDAP_MEETING_MODE
 direct or mapped; grants are combined by union.
 .It Va LDAP_TLS_CA_FILE
-Explicit absolute CA bundle path; required for ldaps and ldap-starttls.
+CA bundle path; required for ldaps and ldap-starttls. Relative paths resolve
+against this instance's ldap directory; explicit absolute paths remain unchanged.
 .It Va LDAP_TLS_MIN_VERSION
 TLSv1.2 or TLSv1.3; required for ldaps and ldap-starttls.
 .It Va LDAP_TLS_SERVER_NAME
