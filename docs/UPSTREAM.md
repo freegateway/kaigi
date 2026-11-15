@@ -1,5 +1,15 @@
 # Upstream intake
 
+## Safe startup diagnostics (2026-11-15)
+
+Kaigi 0.6.1 replaces opaque inspection-stage failures with catalogued reasons,
+logical file names, setting identifiers and parser line numbers. The parent
+validates the child diagnostic structure and renders fixed text; arbitrary
+exception messages, configuration values, paths and stacks are never forwarded.
+Timeouts and failed inspectors receive bounded fallback messages. Real preflight
+subprocess regressions cover invalid ranges, malformed configuration and missing
+credentials, alongside diagnostic secret-injection tests. No dependency updates.
+
 ## Uniform named-instance layout (2026-11-15)
 
 Kaigi-specific deployment change in 0.6.0; no upstream intake or dependency

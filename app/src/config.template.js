@@ -29,7 +29,7 @@ const configDirectory = runtimePaths.configDirectory;
 const sourceCodeUrl = process.env.KAIGI_SOURCE_URL || 'https://github.com/freegateway/kaigi';
 
 const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'kaigi.conf'), requiredFile = false) => {
-
+    try {
     if (!fs.existsSync(configPath)) {
         if (requiredFile) throw new Error(`Required configuration file is missing: ${configPath}`);
         return Object.create(null);
@@ -90,6 +90,10 @@ const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'k
         config[name] = resolve(name);
     }
     return config;
+    } catch (error) {
+        error.configResource = configPath.endsWith('/ldap/ldap.conf') ? 'ldap/ldap.conf' : 'kaigi.conf';
+        throw error;
+    }
 };
 
 const freeBSDConfig = loadFreeBSDConfig(undefined, true);

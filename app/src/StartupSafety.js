@@ -6,7 +6,8 @@ const net = require('node:net');
 const { spawnSync, execFileSync } = require('node:child_process');
 const { cleanEnvironment } = require('./StartupEnvironment');
 let inspectionStage = 'paths';
-const inspectionStages = new Set(['paths', 'credentials', 'account', 'configuration', 'network', 'tls', 'recordings']);
+const { diagnose, formatDiagnostic } = require('./StartupDiagnostics');
+let inspectionResource = 'instance paths';
 
 function noSymlinks(directory) {
     const absolute = path.resolve(directory);
@@ -87,6 +88,7 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     if (stateDirectory) noSymlinks(stateDirectory);
     inspectionStage = 'credentials';
     const readSecret = filename => {
+        inspectionResource = path.basename(filename);
         const stat = fs.lstatSync(filename);
         if (!stat.isFile() || (stat.mode & 0o022)) throw Error('Unsafe credential file');
         return fs.readFileSync(filename, 'utf8').trim();
@@ -95,6 +97,7 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
         ? readSecret(path.join(configDirectory, 'jwt-secret')) : require('node:crypto').randomBytes(32).toString('hex');
     process.env.HOST_USERS = readSecret(path.join(configDirectory, 'users'));
     inspectionStage = 'account';
+    inspectionResource = 'service account';
     const commandOptions = { encoding: 'utf8', timeout: 1000, stdio: ['ignore', 'pipe', 'pipe'] };
     const uid = Number(execFileSync('/usr/bin/id', ['-u', user], commandOptions).trim());
     const gid = Number(execFileSync('/usr/bin/id', ['-g', user], commandOptions).trim());
@@ -104,11 +107,14 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
         process.setgid(gid);
         process.setuid(uid);
     } else if (uid !== process.getuid?.()) throw Error('Cannot validate service account');
-    fs.accessSync(path.join(configDirectory, 'kaigi.conf'), fs.constants.R_OK);
     inspectionStage = 'configuration';
+    inspectionResource = 'kaigi.conf';
+    fs.accessSync(path.join(configDirectory, 'kaigi.conf'), fs.constants.R_OK);
     const config = require('./config');
-    require('./JwtSecret').getJwtKeys(config.security.jwt.key);
-    require('./middleware/ResourcePolicy').buildResourcePolicy(config.server.hostUrl);
+    try { require('./JwtSecret').getJwtKeys(config.security.jwt.key); }
+    catch { const error = Error(); error.startupReason = 'jwt'; throw error; }
+    try { require('./middleware/ResourcePolicy').buildResourcePolicy(config.server.hostUrl); }
+    catch { const error = Error(); error.startupReason = 'origin'; throw error; }
     const { seconds } = require('./ConnectionSecurity');
     for (const [name, fallback] of [['CONNECTION_INITIAL_TIMEOUT', 15], ['SOCKET_AUTH_TIMEOUT', 30],
         ['HTTP_HEADERS_TIMEOUT', 30], ['HTTP_REQUEST_TIMEOUT', 120], ['HTTP_KEEPALIVE_TIMEOUT', 5], ['HTTP_IDLE_TIMEOUT', 30]]) {
@@ -117,9 +123,13 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     inspectionStage = 'network';
     await require('./NetworkConfig').configureFreeBSDNetwork(config);
     inspectionStage = 'tls';
+    inspectionResource = 'TLS certificate';
+    const cert = fs.readFileSync(path.resolve(__dirname, config.server.ssl.cert));
+    inspectionResource = 'TLS private key';
+    const key = fs.readFileSync(path.resolve(__dirname, config.server.ssl.key));
+    inspectionResource = 'TLS certificate/key pair';
     require('node:tls').createSecureContext({
-        cert: fs.readFileSync(path.resolve(__dirname, config.server.ssl.cert)),
-        key: fs.readFileSync(path.resolve(__dirname, config.server.ssl.key)),
+        cert, key,
     });
     const media = config.mediasoup.webRtcTransport.listenInfos;
     const listeners = [{ kind: 'web', protocol: 'tcp', ip: config.server.listen.ip,
@@ -131,6 +141,7 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
             listener.min < 1 || listener.max > 65535 || listener.max < listener.min) throw Error('Invalid listener');
     }
     inspectionStage = 'recordings';
+    inspectionResource = 'state/recordings';
     noSymlinks(config.media.recording.dir);
     if (config.media.recording.enabled && (!stateDirectory || fs.existsSync(stateDirectory))) {
         let parent = config.media.recording.dir;
@@ -184,8 +195,12 @@ async function main(args) {
             });
             // Never forward dependency/configuration exception text or credentials.
             if (result.status !== 0) {
-                const stage = result.stderr?.trim();
-                throw Error(`Instance ${name}: ${inspectionStages.has(stage) ? stage : 'startup configuration'} validation failed`);
+                let detail;
+                try { detail = formatDiagnostic(JSON.parse(result.stderr)); } catch {}
+                if (!detail) detail = result.error?.code === 'ETIMEDOUT'
+                    ? 'startup configuration validation failed: inspector exceeded its 15-second deadline'
+                    : 'startup configuration validation failed: inspector could not complete';
+                throw Error(`Instance ${name}: ${detail}`);
             }
             plans.push(JSON.parse(result.stdout));
         }
@@ -246,9 +261,9 @@ async function main(args) {
 }
 
 if (require.main === module) main(process.argv.slice(2)).catch(error => {
-    // Inspect errors are deliberately opaque; the parent reports the instance.
+    // Structured catalogued diagnostics only; never forward exception text.
     if (process.argv[2] === 'preflight') process.stderr.write(`kaigi: ${error.message}\n`);
-    if (process.argv[2] === 'inspect') process.stderr.write(inspectionStage);
+    if (process.argv[2] === 'inspect') process.stderr.write(JSON.stringify(diagnose(error, inspectionStage, inspectionResource)));
     process.exitCode = 1;
 });
 module.exports = { addressOverlaps, checkPlans, noSymlinks, signalReady, inspect };
