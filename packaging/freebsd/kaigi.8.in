@@ -1,4 +1,4 @@
-.Dd October 19, 2026
+.Dd November 15, 2026
 .Dt KAIGI 8
 .Os
 .Sh NAME
@@ -8,6 +8,7 @@
 .Nm service
 .Cm kaigi
 .Ar start | stop | restart | status
+.Op Ar instance
 .Sh DESCRIPTION
 Kaigi is the FreeGateway Project's self-hosted video conferencing service,
 derived from MiroTalk SFU and built on mediasoup.
@@ -40,9 +41,90 @@ Service user passed to
 .Xr daemon 8 .  Default:
 .Dq www .
 .It Va kaigi_daemon_group
-Group used for the service runtime and log directories.  Default:
+Group used for named-instance state directories.  Default:
 .Dq www .
+.It Va kaigi_instances
+Space-separated instance names. Default:
+.Dq default .
+Names start with a lowercase letter, contain only lowercase letters, digits
+and underscores, and have at most 32 characters.
+The name
+.Dq default
+retains the original single-instance paths and navigation cookie.
 .El
+.Sh NAMED INSTANCES
+For example, configure two independent instances in
+.Pa /etc/rc.conf :
+.Bd -literal -offset indent
+kaigi_enable="YES"
+kaigi_instances="staff public"
+.Ed
+.Pp
+An action without an instance argument operates on every configured instance.
+An action with an instance argument operates only on that configured instance:
+.Bd -literal -offset indent
+service kaigi start
+service kaigi restart staff
+service kaigi status public
+service kaigi stop
+.Ed
+.Pp
+Each named instance reads its own configuration, accounts, secret, translations,
+meeting properties, LDAP settings and public assets below
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME .
+Provision this directory before starting it; there is no fallback to the default
+configuration. Keep users and jwt-secret root-owned mode 0600. Configuration
+and public assets must be readable by the selected service account.
+.Pp
+Configure a distinct web listening port and public URL, and disjoint media port
+ranges, in every instance's kaigi.conf. For example:
+.Bd -literal -offset indent
+WEB_LISTEN_IP=192.0.2.10
+WEB_LISTEN_PORT=7443
+WEB_URL=https://meetings.example.org:7443
+MEDIA_LISTEN_IP=192.0.2.10
+MEDIA_ANNOUNCED_IP=192.0.2.10
+MEDIA_MIN_PORT=40000
+MEDIA_MAX_PORT=40100
+MEDIA_NUM_WORKERS=2
+.Ed
+.Pp
+A second instance might use web port 8443 and media ports 40200 through 40300.
+Account for TCP as well as UDP media listeners, firewall rules and any configured
+relay. Sharing a certificate is possible when it covers the hostname.
+.Pp
+Named instances use
+.Pa /var/run/kaigi/NAME/kaigi.pid ,
+.Pa /var/log/kaigi/NAME/kaigi.log
+and
+.Pa /var/db/kaigi/NAME .
+Recordings default to the recordings subdirectory of that state directory.
+For a named instance, RECORDING_DIR is relative to its state directory, or an
+absolute path within it; paths outside that directory are rejected.
+The default instance retains its existing recording location.
+.Pp
+Optional per-instance account overrides are:
+.Bd -literal -offset indent
+kaigi_staff_daemon_user="kaigi_staff"
+kaigi_staff_daemon_group="kaigi_staff"
+.Ed
+.Pp
+Create accounts separately. The daemon user's account determines process group
+membership; daemon_group controls the state directory's group, not setgid.
+PID and log directories remain root-owned. State directories are mode 0700.
+Each instance creates its own secret. Never copy credentials or secrets
+implicitly from another instance.
+.Pp
+Ports separate browser origins, but not the browser's cookie scope or same-site
+boundary. Named instances use different navigation cookie names to prevent
+accidental session replacement. This does not isolate mutually untrusted sites;
+use separate hostnames and service accounts, or jails, for stronger isolation.
+Instances using the same account share that account's filesystem privileges.
+.Pp
+Start, stop and restart across the list are sequential, not atomic. A failure
+does not prevent attempts on the remaining instances; the overall action fails
+if any instance fails. Stop an instance before removing it from the list.
+Stopping an instance does not delete its configuration or recordings.
 .Sh APPLICATION CONFIGURATION
 Use
 .Xr kaigi.conf 5
@@ -59,6 +141,8 @@ Site-owned logos and other presentation files may be stored in
 .Pa %%PREFIX%%/etc/kaigi/site-assets
 and are served under
 .Pa /site-assets/ .
+Kaigi serves these files directly from the selected configuration directory,
+without a shared public-directory symlink.
 The administrator-owned
 .Pa site.css
 is loaded after Kaigi's packaged stylesheets so local CSS can adjust such things
@@ -116,6 +200,13 @@ Standard output and error are written to
 The package installs a
 .Xr newsyslog 8
 configuration to rotate this log rather than retaining it indefinitely.
+Named-instance rotation entries are generated under
+.Pa /var/run/kaigi/newsyslog
+and included by the installed newsyslog configuration.
+Rotation signals each instance's daemon supervisor to reopen its log, not the
+Node process. The supervisor PID is stored alongside kaigi.pid in daemon.pid.
+Point any fail2ban jail at the relevant instance log and scope its firewall
+action to that instance's listening ports if bans should remain independent.
 .Sh FILES
 .Bl -tag -width "%%PREFIX%%/etc/kaigi/kaigi.conf.sample"
 .It Pa %%PREFIX%%/etc/kaigi/kaigi.conf

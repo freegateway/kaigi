@@ -24,7 +24,8 @@ const os = require('os');
 const fs = require('fs');
 const splitChar = ',';
 // Kaigi owns a separate configuration namespace from upstream MiroTalk.
-const configDirectory = process.env.KAIGI_CONFIG_DIR || '/usr/local/etc/kaigi';
+const runtimePaths = require('./InstancePaths').instancePaths();
+const configDirectory = runtimePaths.configDirectory;
 const sourceCodeUrl = process.env.KAIGI_SOURCE_URL || 'https://github.com/freegateway/kaigi';
 
 const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'kaigi.conf'), requiredFile = false) => {
@@ -59,7 +60,7 @@ const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'k
             value = value.slice(1, -1);
         }
 
-        if (requiredFile && values.has(name)) throw new Error(`Duplicate LDAP configuration setting: ${name}`);
+        if (requiredFile && values.has(name)) throw new Error(`Duplicate ${configPath.endsWith('/ldap.conf') ? 'LDAP ' : ''}configuration setting: ${name}`);
         values.set(name, value);
     }
 
@@ -91,7 +92,10 @@ const loadFreeBSDConfig = (configPath = require('path').join(configDirectory, 'k
     return config;
 };
 
-const freeBSDConfig = loadFreeBSDConfig();
+const freeBSDConfig = loadFreeBSDConfig(undefined, runtimePaths.named);
+for (const name of ['KAIGI_INSTANCE', 'KAIGI_CONFIG_DIR', 'KAIGI_STATE_DIR']) {
+    if (Object.hasOwn(freeBSDConfig, name)) throw new Error(`${name} is a service environment setting, not a kaigi.conf setting`);
+}
 const ldapCompiled = true;
 for (const name of Object.keys(freeBSDConfig)) {
     if (name.startsWith('LDAP_') && name !== 'LDAP_ENABLED') throw new Error(`${name} belongs in ${configDirectory}/ldap/ldap.conf`);
@@ -279,11 +283,29 @@ const NUM_WORKERS = Math.min(process.env.SFU_NUM_WORKERS || NUM_CPUS, NUM_CPUS);
 
 const RTMP_FFMPEG_PATH = process.env.RTMP_FFMPEG_PATH || getFFmpegPath(PLATFORM);
 
+if (runtimePaths.named) {
+    // Named instances cannot silently inherit the default site's sockets/URL.
+    for (const name of ['SERVER_LISTEN_PORT', 'SFU_MIN_PORT', 'SFU_MAX_PORT']) {
+        const value = process.env[name];
+        if (!/^[1-9][0-9]*$/.test(value || '') || Number(value) > 65535) {
+            throw new Error(`Named instances require an explicit valid ${name}`);
+        }
+    }
+    if (RTC_MAX_PORT < RTC_MIN_PORT) throw new Error('MEDIA_MAX_PORT must not be below MEDIA_MIN_PORT');
+    const webPort = Number(process.env.SERVER_LISTEN_PORT);
+    if (webPort >= RTC_MIN_PORT && webPort <= RTC_MAX_PORT) throw new Error('Web and media port allocations must not overlap');
+    if (!process.env.SERVER_HOST_URL) throw new Error('Named instances require WEB_URL or WEB_LISTEN_HOST');
+    if (process.env.SFU_SERVER === 'true' && NUM_WORKERS + RTC_MIN_PORT > RTC_MAX_PORT) {
+        throw new Error('MEDIA_MIN_PORT..MEDIA_MAX_PORT is too small for the WebRtcServer worker allocation');
+    }
+}
+
 // ==============================================
 // Main Configuration Export
 // ==============================================
 
 module.exports = {
+    runtimePaths,
     meetingRestrictions: meetingSettings.restrictions,
     meetingTranslations: meetingSettings.translations,
     // ==============================================
@@ -435,7 +457,7 @@ module.exports = {
             enabled: process.env.RECORDING_ENABLED === 'true',
             uploadToS3: false,
             endpoint: process.env.RECORDING_ENDPOINT || '',
-            dir: process.env.RECORDING_DIR || '../rec',
+            dir: runtimePaths.recordingDirectory(process.env.RECORDING_DIR),
             maxFileSize: process.env.RECORDING_MAX_FILE_SIZE || 1 * 1024 * 1024 * 1024, // 1GB
             uploadTokenExp: process.env.RECORDING_UPLOAD_TOKEN_EXP || '24h',
             rateLimit: {

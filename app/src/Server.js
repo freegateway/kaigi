@@ -87,6 +87,8 @@ const { randomUUID } = require('crypto');
 const sanitizeFilename = require('sanitize-filename');
 const helmet = require('helmet');
 const config = require('./config');
+const runtimePaths = config.runtimePaths;
+const navigationCookieName = runtimePaths.navigationCookie;
 
 // Optional integrations are loaded only when enabled.  This allows package
 // builders to omit integration-specific dependencies from a core install.
@@ -404,7 +406,7 @@ if (config?.integrations?.chatGPT?.enabled) {
 // directory
 const dir = {
     public: path.join(__dirname, '../../public'),
-    rec: path.join(__dirname, config?.media?.recording?.dir || 'rec'),
+    rec: path.resolve(__dirname, config?.media?.recording?.dir || '../rec'),
     rtmp: path.join(__dirname, config?.media?.rtmp?.dir || 'rtmp'),
 };
 
@@ -413,7 +415,7 @@ const recMaxFileSize = config?.media?.recording?.maxFileSize || 1 * 1024 * 1024 
 const serverRecordingEnabled = config?.media?.recording?.enabled || false;
 const recordingAllowedIn = (roomId) => !(Object.hasOwn(config.meetingRestrictions || {}, roomId) && config.meetingRestrictions[roomId].includes('RP'));
 if (serverRecordingEnabled) {
-    log.debug('Server Recording enabled creating dir', dir.rtmp);
+    log.debug('Server Recording enabled creating dir', dir.rec);
     if (!fs.existsSync(dir.rec)) {
         fs.mkdirSync(dir.rec, { recursive: true });
     }
@@ -768,8 +770,14 @@ function startServer() {
         try { pathname = decodeURIComponent(req.path).replace(/\\/g, '/').toLowerCase(); }
         catch { return res.status(400).end(); }
         if (path.posix.normalize(pathname).startsWith('/views/')) return res.status(403).end();
+        const normalized = path.posix.normalize(pathname);
+        if ((normalized === '/site-assets' || normalized.startsWith('/site-assets/')) && !/^\/site-assets(?:\/|$)/i.test(req.path)) {
+            return res.status(404).end();
+        }
         next();
     });
+    // Resolve site-owned assets from this instance, never a package-wide symlink.
+    app.use('/site-assets', require('./middleware/SiteAssets')(runtimePaths.siteAssets));
     // Serve public assets; block direct access to HTML view templates.
     app.use(
         express.static(dir.public, {
@@ -982,7 +990,7 @@ function startServer() {
     });
 
     app.post('/auth/session/logout', (req, res) => {
-        res.clearCookie('__Host-mirotalk_session', { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
+        res.clearCookie(navigationCookieName, { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
         const token = getBearerToken(req);
         if (token) {
             try {
@@ -1199,7 +1207,7 @@ function startServer() {
     });
 
     // Meeting names are submitted in an authenticated body, never navigation URLs.
-    const navigationCookie = '__Host-mirotalk_session';
+    const navigationCookie = navigationCookieName;
     const navigationCookieOptions = { httpOnly: true, secure: true, sameSite: 'lax', path: '/' };
     function navigationSession(req) {
         const cookies = String(req.headers.cookie || '').split(';').map(value => value.trim()).filter(value => value.startsWith(navigationCookie + '='));
@@ -1332,7 +1340,7 @@ function startServer() {
                 hostCfg.authenticated = true;
             }
             const token = encodeToken({ username: identity.username, presenter: false, sessionId: session.id });
-            res.cookie('__Host-mirotalk_session', session.id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
+            res.cookie(navigationCookieName, session.id, { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
             res.set('Cache-Control', 'no-store');
             log.info('Login succeeded', { loginName: identity.username, submittedLoginName: username, ip, attemptId, source: identity.source, meetings: [...identity.rooms], ...(identity.source === 'ldap' ? { ldapAttributes: identity.ldapAttributes } : {}) });
             return res.status(200).json({

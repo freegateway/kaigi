@@ -29,6 +29,7 @@ describe('server reconnect authorization boundaries', () => {
         };
         sessions.set(sessionId, session);
         const context = vm.createContext({
+            navigationCookieName: '__Host-mirotalk_session',
             app,
             getIP: () => '127.0.0.1',
             hostCfg: { users: [{ username: 'attendee' }] },
