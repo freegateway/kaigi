@@ -91,7 +91,8 @@ describe('startup safety preflight', function () {
     it('rejects bad accounts, malformed worker counts, unreadable TLS and unsafe paths without printing credentials', () => {
         const f = fixture();
         try {
-            for (const options of [{ MEDIA_NUM_WORKERS: 0 }, { MEDIA_NUM_WORKERS: '1.5' }, { MEDIA_NUM_WORKERS: '-1' }, { WEB_SSL_KEY: '/missing-secret-password-value' }]) {
+            for (const options of [{ MEDIA_NUM_WORKERS: 0 }, { MEDIA_NUM_WORKERS: '1.5' }, { MEDIA_NUM_WORKERS: '-1' },
+                { WEB_URL: 'invalid' }, { CONNECTION_INITIAL_TIMEOUT: 0 }, { HTTP_HEADERS_TIMEOUT: 'bad' }, { WEB_SSL_KEY: '/missing-secret-password-value' }]) {
                 f.configure('public', options);
                 const result = f.check();
                 assert.notEqual(result.status, 0);

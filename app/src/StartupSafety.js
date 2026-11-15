@@ -110,6 +110,12 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     inspectionStage = 'configuration';
     const config = require('./config');
     require('./JwtSecret').getJwtKeys(config.security.jwt.key);
+    require('./middleware/ResourcePolicy').buildResourcePolicy(config.server.hostUrl);
+    const { seconds } = require('./ConnectionSecurity');
+    for (const [name, fallback] of [['CONNECTION_INITIAL_TIMEOUT', 15], ['SOCKET_AUTH_TIMEOUT', 30],
+        ['HTTP_HEADERS_TIMEOUT', 30], ['HTTP_REQUEST_TIMEOUT', 120], ['HTTP_KEEPALIVE_TIMEOUT', 5], ['HTTP_IDLE_TIMEOUT', 30]]) {
+        seconds(name, fallback);
+    }
     inspectionStage = 'network';
     await require('./NetworkConfig').configureFreeBSDNetwork(config);
     inspectionStage = 'tls';
