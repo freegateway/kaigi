@@ -36,6 +36,12 @@ Logging out ends your session on the Kaigi server. An expired or revoked session
 
 Kaigi limits repeated login attempts and closes connections that open but fail to finish connecting or authenticating. These measures help keep the service available to legitimate users. Security event logs can record details such as the time, type of event, and connecting IP address, but do not include passwords or login tokens. The organization operating this site sets its own log retention policy.
 
+## Optional protection against repeated failed logins
+
+Administrators can connect Kaigi's security logs to Fail2ban, which temporarily blocks network addresses that repeatedly submit incorrect login credentials. This adds another barrier against automated password guessing. It does not replace Kaigi's authentication or meeting permissions, and shared network addresses can include legitimate users. The administrator chooses whether to enable it and how long blocks last.
+
+Kaigi supplies a filter and setup instructions with PF and IPFW examples under /usr/local/share/kaigi/fail2ban/. On jail hosts, the administrator runs Fail2ban on the host and connects it to the appropriate instance log and firewall rules. Installing Kaigi does not activate blocking automatically.
+
 ## What these protections do not cover
 
 Kaigi encrypts connections between your browser and the conferencing server. HTTPS protects web pages and login information, while WebRTC encryption protects audio, video and screen sharing. This protects information in transit, but does not hide meeting content from the conferencing server itself. Kaigi does not provide end-to-end encryption. The organization running the site is responsible for securing that server, keeping it updated, and explaining how it handles data. Other authorized attendees can still see, hear, or copy what you choose to share with them.

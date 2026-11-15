@@ -1,0 +1,24 @@
+/* Shared standalone About/Security layout; never applies to meeting popups. */
+.public-page { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+.public-page .about-local { box-sizing: border-box; width: 100%; max-width: 808px; margin: 3rem auto 2rem; padding: 0 24px; flex: 1; overflow-wrap: anywhere; text-align: start; }
+.public-page .about-local-logo { display: block; max-width: 160px; max-height: 96px; width: auto; height: auto; margin-bottom: 1.5rem; }
+.public-page .about-local section { margin: 2rem 0; }
+.public-page .about-local dt { font-weight: 700; margin-top: 1rem; }
+.public-page .about-local dd { margin-left: 0; }
+.public-page .public-footer { box-sizing: border-box; width: 100%; max-width: 808px; margin: 0 auto; padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 16px; }
+.public-page #helpPrint { float: inline-end; }
+.public-page .help-identity { display: block; font-size: inherit; }
+.kaigi-github-icon { display: inline-block; vertical-align: middle; filter: invert(1); }
+@media (max-height: 760px), (max-width: 600px) {
+    .public-page .about-local { margin-top: 1rem; padding-inline: 16px; }
+    .public-page .about-local-logo { max-width: 112px; max-height: 64px; margin-bottom: 1rem; }
+    .public-page .about-local section { margin-block: 1.25rem; }
+}
+@media print {
+    .public-page { display: block; color: #171717; background: white; }
+    .public-page .about-local { max-width: none; margin: 0; padding: 0; }
+    .public-page .public-footer, .public-page #publicBack, .public-page #helpPrint { display: none; }
+    .public-page h1, .public-page h2 { break-after: avoid; }
+    .public-page p, .public-page li { orphans: 3; widows: 3; }
+    .public-page .kaigi-github-icon { filter: none; }
+}

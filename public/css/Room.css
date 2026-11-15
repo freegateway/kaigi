@@ -9844,3 +9844,4 @@ z-index:
         grid-column: 1 / -1;
     }
 }
+.kaigi-github-icon { display: inline-block; vertical-align: middle; filter: invert(1); }

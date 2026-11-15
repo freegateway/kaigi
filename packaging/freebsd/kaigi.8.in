@@ -244,6 +244,10 @@ Rotation signals each instance's daemon supervisor to reopen its log, not the
 Node process. The supervisor PID is stored alongside kaigi.pid in daemon.pid.
 Point any fail2ban jail at the relevant instance log and scope its firewall
 action to that instance's listening ports if bans should remain independent.
+The supplied filter and PF/IPFW setup instructions are installed under
+.Pa %%PREFIX%%/share/kaigi/fail2ban .
+Fail2ban is optional and must be configured and enabled by the administrator.
+On a jail host, run it on the host with access to the instance log and firewall.
 .Sh FILES
 .Bl -tag -width "%%PREFIX%%/etc/kaigi/instances/example/kaigi.conf.sample"
 .It Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf

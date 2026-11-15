@@ -5,17 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>About Kaigi, Credits &amp; Open Source</title>
         <link rel="stylesheet" href="../css/landing.css" />
+        <link rel="stylesheet" href="/css/public-page.css" />
+        <link rel="stylesheet" href="/site-assets/site.css" />
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
-        <style>
-            .about-local { max-width: 760px; margin: 5rem auto; padding: 0 1.5rem; }
-            .about-local-logo { max-width: 160px; max-height: 96px; margin-bottom: 1.5rem; }
-            .about-local section { margin: 2rem 0; }
-            .about-local dt { font-weight: 700; margin-top: 1rem; }
-            .about-local dd { margin-left: 0; }
-        </style>
+        <script defer src="/js/Help.js"></script>
     </head>
-    <body class="is-boxed has-animations">
+    <body class="public-page">
         <main class="about-local">
             <a id="siteLogoLink" href="/"><img id="siteLogo" class="about-local-logo" data-brand-logo alt="Site logo" /></a>
             <h1 id="siteName">Video Conferencing</h1>
@@ -27,10 +23,11 @@
             </dl>
 
             {{KAIGI_ABOUT}}
-            <p><a href="/security">Security and privacy</a></p>
+            <p><a href="/security" data-about-key="securityLabel" data-i18n-skip>Security &amp; Privacy</a></p>
 
-            <p><a class="button button-primary" href="/login" data-about-key="returnToLogin" data-i18n-skip>Return to login</a></p>
+            <p><a class="button button-primary" href="/login" id="publicBack" data-about-key="back" data-i18n-skip>Back</a></p>
         </main>
+        <footer class="public-footer"><a href="/help" data-about-key="helpLabel" data-i18n-skip>Help</a><a href="/security" data-about-key="securityLabel" data-i18n-skip>Security &amp; Privacy</a><span id="publicCopyright"></span></footer>
         <script>
             'use strict';
             document.addEventListener('DOMContentLoaded', async () => {
@@ -59,6 +56,7 @@
                         link.textContent = site.url;
                     }
                     if (site.copyright) {
+                        document.getElementById('publicCopyright').textContent = site.copyright;
                         document.getElementById('siteCopyrightRow').hidden = false;
                         document.getElementById('siteCopyright').textContent = site.copyright;
                     }

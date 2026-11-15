@@ -100,7 +100,8 @@ describe('Kaigi project information', () => {
 
     it('keeps hostile source values literal and meeting data out of template expansion', () => {
         const dom = new JSDOM(render('about', { site: { sourceCodeUrl: '/source/$&?q="<img src=x>"' } }));
-        assert.equal(dom.window.document.querySelector('.kaigi-about-content img'), null);
+        assert.equal(dom.window.document.querySelector('.kaigi-about-content img:not(.kaigi-github-icon)'), null);
+        assert.equal(dom.window.document.querySelector('.kaigi-github-icon').getAttribute('src'), '/vendor/@fortawesome/fontawesome-free/svgs/brands/github.svg');
         assert.equal(
             dom.window.document.getElementById('sourceCodeUrl').getAttribute('href'),
             '/source/$&?q="<img src=x>"'
@@ -231,7 +232,7 @@ describe('Kaigi project information', () => {
                 content.querySelector('[data-about-key="projectPurpose"]').textContent,
                 '<img src="https://untrusted.example/tracker">'
             );
-            assert.equal(content.querySelector('img'), null);
+            assert.equal(content.querySelector('img:not(.kaigi-github-icon)'), null);
             assert.match(content.body.textContent, /Miroslav Pejic/);
             assert.ok(content.querySelector('a[href^="mailto:"]'));
             assert.equal(content.querySelector('[data-kaigi-version]').textContent, version);

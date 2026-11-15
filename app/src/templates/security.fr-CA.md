@@ -36,6 +36,12 @@ La déconnexion met fin à votre session sur le serveur Kaigi. Une session expir
 
 Kaigi limite les tentatives répétées de connexion et ferme les connexions qui n’achèvent pas leur établissement ou leur authentification. Ces mesures aident à garder le service disponible pour les utilisateurs légitimes. Les journaux de sécurité peuvent inclure l’heure, le type d’événement et l’adresse IP de connexion, mais ne contiennent ni mot de passe ni jeton de connexion. L’organisme qui exploite ce site établit sa propre politique de conservation des journaux.
 
+## Protection facultative contre les échecs de connexion répétés
+
+L’administrateur peut relier les journaux de sécurité de Kaigi à Fail2ban pour bloquer temporairement les adresses réseau qui soumettent à répétition des identifiants incorrects. Cette mesure ajoute une protection contre les tentatives automatisées de deviner les mots de passe. Elle ne remplace ni l’authentification ni les autorisations de réunion. Plusieurs utilisateurs légitimes peuvent partager une adresse réseau. L’administrateur décide d’activer cette protection et choisit la durée des blocages.
+
+Kaigi fournit un filtre et des instructions avec des exemples PF et IPFW dans /usr/local/share/kaigi/fail2ban/. Sur un hôte de jails, l’administrateur exécute Fail2ban sur l’hôte et le relie au journal de l’instance et aux règles de pare-feu appropriés. L’installation de Kaigi n’active pas automatiquement les blocages.
+
 ## Ce que ces protections ne couvrent pas
 
 Kaigi chiffre les connexions entre votre navigateur et le serveur de conférence. HTTPS protège les pages Web et les renseignements de connexion, tandis que le chiffrement WebRTC protège l’audio, la vidéo et le partage d’écran. Cela protège les renseignements en transit, mais ne cache pas le contenu de la réunion au serveur de conférence lui-même. Kaigi ne fournit pas de chiffrement de bout en bout. L’organisme qui exploite le site doit sécuriser le serveur, le tenir à jour et expliquer comment il traite les données. Les autres participants autorisés peuvent toujours voir, entendre ou copier ce que vous choisissez de partager avec eux.
