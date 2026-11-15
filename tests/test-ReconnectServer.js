@@ -29,7 +29,7 @@ describe('server reconnect authorization boundaries', () => {
         };
         sessions.set(sessionId, session);
         const context = vm.createContext({
-            navigationCookieName: '__Host-mirotalk_session',
+            navigationCookieName: '__Host-kaigi_test_session',
             app,
             getIP: () => '127.0.0.1',
             hostCfg: { users: [{ username: 'attendee' }] },
@@ -54,7 +54,7 @@ describe('server reconnect authorization boundaries', () => {
                         host: '127.0.0.1',
                         port: server.address().port,
                         path: '/meeting?selection=' + ref,
-                        headers: { Cookie: '__Host-mirotalk_session=' + sessionId },
+                        headers: { Cookie: '__Host-kaigi_test_session=' + sessionId },
                     },
                     (res) => {
                         res.resume();

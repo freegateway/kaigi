@@ -1,4 +1,4 @@
-.Dd October 4, 2026
+.Dd November 15, 2026
 .Dt KAIGI-LDAP.CONF 5
 .Os
 .Sh NAME
@@ -6,7 +6,7 @@
 .Nd optional LDAP authentication configuration for Kaigi
 .Sh DESCRIPTION
 The actual configuration file is
-.Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf .
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/ldap/ldap.conf .
 It uses the same NAME=VALUE syntax as kaigi.conf, but variable references are
 resolved within this file only.
 LDAP support is included in Kaigi and disabled by default.
@@ -111,11 +111,11 @@ Directory, transport, group and meeting policy settings remain explicit;
 commented examples without a stated default are not active values.
 .Sh FILES
 .Bl -tag -width "ldap/group-meetings.json"
-.It Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/ldap/ldap.conf
 LDAP connection, identity and group lookup settings.
-.It Pa %%PREFIX%%/etc/kaigi/ldap/bind-secret
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/ldap/bind-secret
 Protected search-account password.
-.It Pa %%PREFIX%%/etc/kaigi/ldap/group-meetings.json
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/ldap/group-meetings.json
 Default groups and group-to-meeting grants.
 .El
 .Sh GROUP MEETING POLICY

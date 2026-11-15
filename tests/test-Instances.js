@@ -14,12 +14,8 @@ const root = path.resolve(__dirname, '..');
 describe('instance boundaries', function () {
     this.timeout(30000);
 
-    it('preserves default paths and cookie; named instances fail closed without explicit roots', () => {
-        const defaults = instancePaths({}, '/application/app/src');
-        assert.equal(defaults.configDirectory, '/usr/local/etc/kaigi');
-        assert.equal(defaults.navigationCookie, '__Host-mirotalk_session');
-        assert.equal(defaults.recordingDirectory(), '/application/app/rec');
-        assert.equal(defaults.recordingDirectory('/recordings'), '/recordings');
+    it('requires an explicit name and roots for every instance, without special names', () => {
+        assert.throws(() => instancePaths({}), /KAIGI_INSTANCE/);
         assert.throws(() => instancePaths({ KAIGI_INSTANCE: 'staff' }), /KAIGI_CONFIG_DIR/);
         assert.throws(() => instancePaths({ KAIGI_INSTANCE: 'staff', KAIGI_CONFIG_DIR: '/config/staff' }), /KAIGI_STATE_DIR/);
         for (const name of ['../staff', 'staff-public', 'Staff', 'a'.repeat(33)]) {
@@ -31,6 +27,9 @@ describe('instance boundaries', function () {
         assert.equal(staff.recordingDirectory('local'), '/state/staff/local');
         assert.throws(() => staff.recordingDirectory('../public'), /inside KAIGI_STATE_DIR/);
         assert.throws(() => staff.recordingDirectory('/state/public'), /inside KAIGI_STATE_DIR/);
+        const ordinary = instancePaths({ KAIGI_INSTANCE: 'default', KAIGI_CONFIG_DIR: '/config/instances/default', KAIGI_STATE_DIR: '/state/default' });
+        assert.equal(ordinary.navigationCookie, '__Host-kaigi_default_session');
+        assert.equal(ordinary.recordingDirectory(), '/state/default/recordings');
     });
 
     it('does not fall back to default configuration for a missing named configuration', () => {
@@ -137,7 +136,7 @@ describe('instance boundaries', function () {
                 `SITE_NAME=${name}`, 'RECORDING_ENABLED=true',
             ].join('\n'));
             const child = spawn(process.execPath, ['tests/fixtures/instance-server.cjs'], {
-                cwd: root, env: { ...process.env, KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config,
+                cwd: root, env: { PATH: process.env.PATH, KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config,
                     KAIGI_READY_FILE: path.join(config, 'ready.json'), KAIGI_STARTUP_NONCE: name,
                     KAIGI_STATE_DIR: path.join(directory, 'state', name),
                     JWT_SECRET: `${name}-tests-only-012345678901234567890123456789`,

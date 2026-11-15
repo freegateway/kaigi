@@ -3,6 +3,9 @@
 One read-only Kaigi installation can serve several independently configured
 processes. The FreeBSD service selects instances; the application never searches
 other instances for missing settings, credentials or branding.
+Every deployment uses this layout, even with one instance. There is no implicit
+or privileged default name and no active configuration at the top level of
+`/usr/local/etc/kaigi`.
 
 ## Resource audit
 
@@ -14,8 +17,8 @@ other instances for missing settings, credentials or branding.
 | LDAP connection settings, group mappings and pools | Per configuration directory/process |
 | Site assets, site translations and meeting properties | Per configuration directory/process |
 | Sessions, revocation, grants, rate-limit counters and meeting state | Per process |
-| Navigation cookie | Historical name for default; unique name for each named instance |
-| Recordings | Legacy location for default; private state root for named instances |
+| Navigation cookie | Unique name for each instance |
+| Recordings | Each instance's private state root |
 | PID files, log and log-rotation target | Per instance, managed by the port |
 | Web and TCP/UDP media ports | Administrator allocates distinct sockets/ranges |
 | Firewall, fail2ban and shared service-account privileges | Host-level unless explicitly isolated |
@@ -30,9 +33,19 @@ ephemeral process state, not a new persistent database.
 ## Service configuration
 
 The port's `kaigi(8)` manual describes named-instance provisioning and commands.
-For example, `kaigi_instances="staff public"` selects two names; leaving this
-setting unset retains the existing `default` instance. Include `default` in the
-list explicitly if it should also run. Stop an instance before removing its name.
+For example, `kaigi_instances="staff"` selects one instance and
+`kaigi_instances="staff public"` selects two. Start/restart fails when this setting
+is absent or empty. Directories are never automatically enabled. Stop an instance
+before removing its name; explicit stop/status also works afterward.
+
+The package supplies only templates under
+`/usr/local/etc/kaigi/instances/example/`, including a provisioning README.
+Copy that directory to a new name, rename `kaigi.conf.sample` and `users.sample`
+to `kaigi.conf` and `users`, and configure network/TLS settings and real accounts.
+Rename optional translations, meeting properties, CSS and LDAP examples only as
+needed. The package never installs active accounts/configuration or a JWT secret.
+Updates replace the templates, not your deployed instance files. No directory
+name, including `example`, has special runtime meaning.
 
 Each named instance needs its own `etc/kaigi/instances/NAME` directory containing
 its configuration and users. Root reads `users` and `jwt-secret` at service
@@ -43,10 +56,10 @@ the access that account needs; do not make the whole directory tree writable.
 The service sets these launch-time environment variables; do not put them in
 `kaigi.conf`:
 
-- `KAIGI_INSTANCE`: lowercase name, at most 32 letters/digits/underscores,
-  beginning with a letter; `default` preserves the legacy paths and cookie.
-- `KAIGI_CONFIG_DIR`: absolute configuration directory. Mandatory for named instances.
-- `KAIGI_STATE_DIR`: absolute private state directory. Mandatory for named instances.
+- `KAIGI_INSTANCE`: required name, at most 32 lowercase letters/digits/underscores,
+  beginning with a letter. No implicit fallback.
+- `KAIGI_CONFIG_DIR`: required absolute configuration directory.
+- `KAIGI_STATE_DIR`: required absolute private state directory.
 
 Named instances require explicit web and media port settings and a public web URL
 (or a hostname from which Kaigi constructs it). Allocate non-overlapping media
@@ -60,13 +73,12 @@ media fallback and any relay too.
 
 Named recordings default to `KAIGI_STATE_DIR/recordings`. `RECORDING_DIR` can
 select a relative subdirectory or an absolute path within that state root.
-Paths outside it are rejected. The default instance retains `app/rec`, including
-existing relative overrides; absolute overrides now resolve correctly rather
-than being appended to the application source path.
+Paths outside it are rejected. Every instance uses `/var/db/kaigi/NAME` for state,
+`/var/run/kaigi/NAME` for PID files, and `/var/log/kaigi/NAME/kaigi.log` for logs.
 
 Site assets are served directly from the selected configuration directory.
-Missing assets return 404 rather than falling through to a legacy shared
-`public/site-assets` link. Operator-owned symlinks remain the operator's
+Missing assets return 404 rather than falling through to shared application
+files. Operator-owned symlinks remain the operator's
 responsibility; do not link public assets to configuration or credential files.
 
 Different ports create separate browser origins, not separate cookie or

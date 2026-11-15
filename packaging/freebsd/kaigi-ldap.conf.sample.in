@@ -26,7 +26,7 @@
 # LDAP_BIND_DN=<restricted search account DN>
 
 # !!! REQUIRED: absolute path to the search-account password file. Example path; no default. Use mode 0600 or 0640 with appropriate ownership.
-# LDAP_BIND_PASSWORD_FILE=%%PREFIX%%/etc/kaigi/ldap/bind-secret
+# LDAP_BIND_PASSWORD_FILE=%%PREFIX%%/etc/kaigi/instances/NAME/ldap/bind-secret
 
 # ====================================================================
 # User lookup and identity
@@ -112,7 +112,7 @@
 # LDAP_MAPPING_KEY=<name or dn>
 
 # Default groups and group-to-meeting grants are in:
-# %%PREFIX%%/etc/kaigi/ldap/group-meetings.json
+# %%PREFIX%%/etc/kaigi/instances/NAME/ldap/group-meetings.json
 # defaultGroups is an array of stable group keys, used only when no groups are returned.
 # groupMeetings maps stable group keys to arrays of exact meeting keys.
 # Mapped mode uses the union of all matching grants; direct mode uses group keys as meetings.

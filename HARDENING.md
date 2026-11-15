@@ -93,8 +93,8 @@ notes are not included in snapshots. These checks supplement, not replace,
 live-session and admission checks.
 
 - Local accounts and allowed meetings are configured in the root-only
-  `etc/kaigi/users` file. The rc script reads it at startup. It creates a
-  persistent random JWT signing secret in `etc/kaigi/jwt-secret` on first
+  `etc/kaigi/instances/NAME/users` file. The rc script reads it at startup. It creates a
+  persistent random JWT signing secret in `etc/kaigi/instances/NAME/jwt-secret` on first
   start. Keep both files owned by root and mode 0600.
 - JWT secrets must contain at least 32 characters and must not use the published
   default. Authentication, recording-upload and RTMP tokens use independently
@@ -142,7 +142,7 @@ live-session and admission checks.
   local browser token and its server-side session. See `kaigi.conf(5)` for
   defaults and disabling either limit.
 - The application `config.js` under `www/kaigi/app/src` is package-owned
-  code. Configure supported behavior in `etc/kaigi/kaigi.conf` instead.
+  code. Configure supported behavior in `etc/kaigi/instances/NAME/kaigi.conf` instead.
 
 ## Administrator choices and boundaries
 
@@ -320,7 +320,7 @@ defaults to false. Local authentication and password-free sessions do not requir
 LDAP. MiroTalk is maintained independently in its own port.
 
 Only LDAP_ENABLED remains in kaigi.conf. The remaining settings live in
-/usr/local/etc/kaigi/ldap/ldap.conf, with ldap.conf.sample installed using
+/usr/local/etc/kaigi/instances/NAME/ldap/ldap.conf, with ldap.conf.sample installed using
 package sample-file preservation. Supporting files are ldap/bind-secret,
 ldap/group-meetings.json. No bind secret is generated or installed;
 administrators create it with the protected permissions documented above.
@@ -454,7 +454,7 @@ The application obtains client addresses directly from the socket: forwarding
 headers are ignored. A reverse proxy therefore requires a separately reviewed
 trusted-proxy policy before IP-based blocking can identify individual clients.
 
-Security events are single-line JSON in /var/log/kaigi/kaigi.log, with
+Security events are single-line JSON in /var/log/kaigi/NAME/kaigi.log, with
 component `conference-security`, timestamp, stable event, verified peer IP and
 fixed reason. They contain no credentials, tokens, usernames or LDAP attributes.
 These lines supplement existing operational logs. Only repeated
@@ -475,7 +475,7 @@ dump authentication responses or credential-bearing request errors.
 The port does not install or start a blocker. Copy the installed example
 `/usr/local/share/examples/kaigi/fail2ban/kaigi.conf` to
 `/usr/local/etc/fail2ban/filter.d/kaigi.conf`. Configure a
-Fail2ban jail with filter=kaigi, logpath=/var/log/kaigi/kaigi.log,
+Fail2ban jail with filter=kaigi, logpath=/var/log/kaigi/NAME/kaigi.log,
 maxretry=5, findtime=900, bantime=900, usedns=no and appropriate ignoreip entries.
 On a jail host, run Fail2ban on the host and point logpath at the jail's log path.
 

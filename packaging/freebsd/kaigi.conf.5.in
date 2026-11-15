@@ -1,4 +1,4 @@
-.Dd October 19, 2026
+.Dd November 15, 2026
 .Dt KAIGI.CONF 5
 .Os
 .Sh NAME
@@ -6,7 +6,7 @@
 .Nd Kaigi deployment configuration
 .Sh DESCRIPTION
 The file
-.Pa %%PREFIX%%/etc/kaigi/kaigi.conf
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf
 contains non-secret deployment, site, network, localization and presentation
 settings for the Kaigi service on FreeBSD.
 Kaigi reads it during startup;
@@ -34,9 +34,9 @@ as the final fallback.
 Language-specific site text is configured separately as described below.
 .Sh SITE TEXT TRANSLATIONS
 User-facing site text examples are provided in
-.Pa %%PREFIX%%/etc/kaigi/site-translations.json.sample .
+.Pa %%PREFIX%%/etc/kaigi/instances/example/site-translations.json.sample .
 The installed
-.Pa %%PREFIX%%/etc/kaigi/site-translations.json
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-translations.json
 is administrator-owned configuration and is preserved by package upgrades.
 It is read at startup; restart the service after editing it.
 .Pp
@@ -66,13 +66,13 @@ Unknown text-setting names and invalid value types stop startup with an error.
 The translation contents are public; never put passwords, tokens or other
 secrets in this file.
 .Sh SECRET FILES
-.Pa %%PREFIX%%/etc/kaigi/users
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/users
 contains local-user passwords and meeting grants; keep it root:wheel mode 0600.
 .Pa %%PREFIX%%/etc/rc.d/kaigi
 reads it as root and exports HOST_USERS before starting the service user.
 .Pp
 The rc script creates
-.Pa %%PREFIX%%/etc/kaigi/jwt-secret
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/jwt-secret
 if absent, with 32 random bytes encoded as 64 hexadecimal characters and
 umask 077. It reuses the file on subsequent starts and exports JWT_SECRET;
 it rejects an empty file and does not automatically rotate an existing secret.
@@ -122,14 +122,14 @@ MiroTalk software copyright and licensing information remains on the local
 About page.
 .It Ev SITE_LOGO_NAME
 Logo file name relative to
-.Pa %%PREFIX%%/etc/kaigi/site-assets .
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets .
 .It Ev SITE_LOGO_URL
 Optional target URL for the clickable logo; normally the same as
 .Ev SITE_URL .
 .El
 .Pp
 Files in
-.Pa %%PREFIX%%/etc/kaigi/site-assets
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets
 are served under
 .Pa /site-assets/ .
 Asset settings ending in
@@ -424,16 +424,16 @@ overrides
 .Ev MEDIA_LISTEN_IP .
 Kaigi's application defaults are the final fallback.
 .Sh FILES
-.Bl -tag -width "%%PREFIX%%/etc/kaigi/kaigi.conf.sample"
-.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf
+.Bl -tag -width "%%PREFIX%%/etc/kaigi/instances/example/kaigi.conf.sample"
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf
 Administrator-maintained deployment configuration.
-.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf.sample
+.It Pa %%PREFIX%%/etc/kaigi/instances/example/kaigi.conf.sample
 Current package-provided example.
-.It Pa %%PREFIX%%/etc/kaigi/site-assets/site.css
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets/site.css
 Administrator-maintained site stylesheet.
-.It Pa %%PREFIX%%/etc/kaigi/users
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/users
 Root-only local-user database.
-.It Pa %%PREFIX%%/etc/kaigi/jwt-secret
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/jwt-secret
 Root-only generated JWT signing secret.
 .El
 .Sh SEE ALSO
@@ -445,7 +445,7 @@ The footer displays a Privacy Policy link only when one of the following is conf
 .Bl -tag -width PRIVACY_POLICY_NAME
 .It Va PRIVACY_POLICY_NAME
 Name of an administrator-owned HTML file below
-.Pa %%PREFIX%%/etc/kaigi/site-assets .
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets .
 For example,
 .Dq privacy-private.html .
 .It Va PRIVACY_POLICY_URL
@@ -461,7 +461,7 @@ and
 as starting points only; administrators must review them against the site's actual operation before publication.
 .Sh SITE PRESENTATION
 The administrator-owned
-.Pa %%PREFIX%%/etc/kaigi/site-assets/site.css
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets/site.css
 file is loaded after Kaigi's packaged stylesheets.  It may be used for local
 presentation changes without modifying packaged application files.  The
 installed sample includes commented examples for wide logos, custom static
@@ -479,14 +479,14 @@ service endpoint has not been configured.
 accepts true or false and defaults to false.
 LDAP support is included in Kaigi and disabled by default.
 When enabled, settings are read from
-.Pa %%PREFIX%%/etc/kaigi/ldap/ldap.conf .
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/ldap/ldap.conf .
 When disabled, that file is neither read nor validated.
 No inherited LDAP environment overrides are used.
 All other LDAP variables belong in the separate file.
 See
 .Xr kaigi-ldap.conf 5 .
 .Sh MEETING PROPERTIES
-.Pa %%PREFIX%%/etc/kaigi/meeting-properties.json
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/meeting-properties.json
 is a JSON object keyed by stable meeting key. Each entry contains an optional
 names object (language codes mapped to display labels) and an optional
 restrictions array. RP prohibits built-in recording and server recording uploads.

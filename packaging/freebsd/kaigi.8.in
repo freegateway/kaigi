@@ -28,6 +28,7 @@ and integrates it with the FreeBSD rc system.
 Enable it with:
 .Bd -literal -offset indent
 kaigi_enable="YES"
+kaigi_instances="staff"
 .Ed
 .Pp
 The rc.conf interface is intentionally limited to service
@@ -44,18 +45,25 @@ Service user passed to
 Group used for named-instance state directories.  Default:
 .Dq www .
 .It Va kaigi_instances
-Space-separated instance names. Default:
-.Dq default .
+Required, nonempty space-separated instance names. There is no default instance.
 Names start with a lowercase letter, contain only lowercase letters, digits
 and underscores, and have at most 32 characters.
-The name
-.Dq default
-retains the original single-instance paths and navigation cookie.
+Every name uses the same configuration, state, PID, log and cookie rules.
 .It Va kaigi_start_timeout
 Readiness deadline in seconds, from 1 through 300. Default:
 .Dq 30 .
 .El
 .Sh NAMED INSTANCES
+All configuration belongs below
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME ,
+including deployments with only one instance. Replace NAME with the chosen name.
+The package installs templates and a provisioning README under
+.Pa %%PREFIX%%/etc/kaigi/instances/example .
+No template is enabled automatically and no active configuration, account or JWT
+secret is installed. Copy the example to a new named directory, rename required
+.sample files and configure the deployment before starting. Package upgrades
+update only the examples, not administrator-created instance files.
+.Pp
 For example, configure two independent instances in
 .Pa /etc/rc.conf :
 .Bd -literal -offset indent
@@ -75,8 +83,8 @@ service kaigi stop
 Each named instance reads its own configuration, accounts, secret, translations,
 meeting properties, LDAP settings and public assets below
 .Pa %%PREFIX%%/etc/kaigi/instances/NAME .
-Provision this directory before starting it; there is no fallback to the default
-configuration. Keep users and jwt-secret root-owned mode 0600. Configuration
+Provision this directory before starting it; there is no top-level configuration
+fallback. Keep users and jwt-secret root-owned mode 0600. Configuration
 and public assets must be readable by the selected service account.
 .Pp
 Configure a distinct web listening port and public URL, and disjoint media port
@@ -104,7 +112,6 @@ and
 Recordings default to the recordings subdirectory of that state directory.
 For a named instance, RECORDING_DIR is relative to its state directory, or an
 absolute path within it; paths outside that directory are rejected.
-The default instance retains its existing recording location.
 .Pp
 Optional per-instance account overrides are:
 .Bd -literal -offset indent
@@ -164,11 +171,11 @@ The application configuration code at
 is package-owned and is replaced on upgrades.
 Do not edit it to configure the service.
 Administrator settings belong in
-.Pa %%PREFIX%%/etc/kaigi/kaigi.conf .
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf .
 Kaigi does not read or migrate settings from a MiroTalk installation.
 .Sh SITE ASSETS
 Site-owned logos and other presentation files may be stored in
-.Pa %%PREFIX%%/etc/kaigi/site-assets
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets
 and are served under
 .Pa /site-assets/ .
 Kaigi serves these files directly from the selected configuration directory,
@@ -186,7 +193,7 @@ Corresponding Source link for the exact FreeBSD package revision.
 Local authentication is enabled by default in
 .Xr kaigi.conf 5 .
 The account database is
-.Pa %%PREFIX%%/etc/kaigi/users
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/users
 and should be owned by
 .Li root:wheel
 with mode 0600.
@@ -214,10 +221,10 @@ mary    | N8vK2pT7YsQa | Mary Smith  | ["staff", "weekly"]
 .Ed
 .Pp
 A template is installed as
-.Pa %%PREFIX%%/etc/kaigi/users.sample .
+.Pa %%PREFIX%%/etc/kaigi/instances/example/users.sample .
 .Sh JWT SECRET
 On first start the rc script creates
-.Pa %%PREFIX%%/etc/kaigi/jwt-secret
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/jwt-secret
 from 32 bytes of kernel-provided random data.
 The resulting 256-bit secret is root-owned, mode 0600, and reused on later
 starts.
@@ -226,7 +233,7 @@ Kaigi consumes it during configuration and removes
 from the Node process environment.
 .Sh LOGGING
 Standard output and error are written to
-.Pa /var/log/kaigi/kaigi.log .
+.Pa /var/log/kaigi/NAME/kaigi.log .
 The package installs a
 .Xr newsyslog 8
 configuration to rotate this log rather than retaining it indefinitely.
@@ -238,24 +245,24 @@ Node process. The supervisor PID is stored alongside kaigi.pid in daemon.pid.
 Point any fail2ban jail at the relevant instance log and scope its firewall
 action to that instance's listening ports if bans should remain independent.
 .Sh FILES
-.Bl -tag -width "%%PREFIX%%/etc/kaigi/kaigi.conf.sample"
-.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf
+.Bl -tag -width "%%PREFIX%%/etc/kaigi/instances/example/kaigi.conf.sample"
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf
 Deployment and site configuration.
-.It Pa %%PREFIX%%/etc/kaigi/kaigi.conf.sample
+.It Pa %%PREFIX%%/etc/kaigi/instances/example/kaigi.conf.sample
 Package-provided deployment example.
 .It Pa %%WWWDIR%%/app/src/config.js
 Package-owned application configuration code.
-.It Pa %%PREFIX%%/etc/kaigi/users
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/users
 Root-only local user database.
-.It Pa %%PREFIX%%/etc/kaigi/users.sample
+.It Pa %%PREFIX%%/etc/kaigi/instances/example/users.sample
 Example local user database.
-.It Pa %%PREFIX%%/etc/kaigi/site-assets
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/site-assets
 Site-owned presentation assets.
-.It Pa %%PREFIX%%/etc/kaigi/jwt-secret
+.It Pa %%PREFIX%%/etc/kaigi/instances/NAME/jwt-secret
 Automatically generated JWT signing secret.
-.It Pa /var/run/kaigi
+.It Pa /var/run/kaigi/NAME
 Runtime state and pid file.
-.It Pa /var/log/kaigi/kaigi.log
+.It Pa /var/log/kaigi/NAME/kaigi.log
 Service log.
 .El
 .Sh SECURITY CONSIDERATIONS
@@ -283,14 +290,14 @@ A site privacy policy link is optional and is configured with
 or
 .Va PRIVACY_POLICY_URL
 in
-.Pa %%PREFIX%%/etc/kaigi/kaigi.conf .
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf .
 If neither is configured, the user interface does not display a Privacy Policy link.
 .Sh SITE COPYRIGHT
 Site-specific material may have a different copyright owner from the Kaigi
 software and its upstream components.  Set
 .Va SITE_COPYRIGHT
 in
-.Pa %%PREFIX%%/etc/kaigi/kaigi.conf
+.Pa %%PREFIX%%/etc/kaigi/instances/NAME/kaigi.conf
 to display an optional site copyright notice in the login footer and local
 About page. Kaigi and upstream software attribution, copyright, license
 and Corresponding Source information remain on the About page.

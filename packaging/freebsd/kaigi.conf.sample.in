@@ -12,14 +12,14 @@
 # present, Kaigi uses its application environment settings or defaults.
 #
 # Secrets are kept outside this non-secret deployment file:
-# - %%PREFIX%%/etc/kaigi/users contains local-user passwords and grants.
+# - %%PREFIX%%/etc/kaigi/instances/NAME/users contains local-user passwords and grants.
 #   Install it root:wheel mode 0600. The rc script reads it as root and exports
 #   HOST_USERS to the daemon; the daemon does not open this file directly.
 # Named instances read this file beneath etc/kaigi/instances/NAME. Configure
 # distinct WEB_LISTEN_PORT, WEB_URL and disjoint MEDIA_MIN_PORT..MEDIA_MAX_PORT
 # allocations for each instance. See kaigi(8). Service-only KAIGI_INSTANCE,
 # KAIGI_CONFIG_DIR and KAIGI_STATE_DIR do not belong in this file.
-# - %%PREFIX%%/etc/kaigi/jwt-secret holds the JWT signing secret. At startup,
+# - %%PREFIX%%/etc/kaigi/instances/NAME/jwt-secret holds the JWT signing secret. At startup,
 #   %%PREFIX%%/etc/rc.d/kaigi creates it if absent, using 32 random bytes
 #   encoded as 64 hexadecimal characters and umask 077 (mode 0600). It reuses
 #   the existing file on later starts and exports its contents as JWT_SECRET
@@ -41,7 +41,7 @@ NODE_ENV=production
 # SITE_LOGO_NAME=logo.svg
 # SITE_LOGO_URL=${SITE_URL}
 
-# Site text is localized in %%PREFIX%%/etc/kaigi/site-translations.json.
+# Site text is localized in %%PREFIX%%/etc/kaigi/instances/NAME/site-translations.json.
 # Start with site-translations.json.sample and edit its language entries.
 # Text settings: SITE_NAME, SITE_DESCRIPTION, SITE_COPYRIGHT, PAGE_TITLE.
 # Public metadata is rendered in the initial HTML, including link previews.
@@ -70,7 +70,8 @@ NODE_ENV=production
 # PRIVACY_POLICY_URL=https://www.example.com/privacy/
 
 # Interface language and language-menu policy.
-# UI_LANGUAGE=en # Initial HTML/branding default; first visits use browser locale
+# Initial HTML/branding language; first visits use browser locale.
+# UI_LANGUAGE=en
 # UI_LANGUAGES=en-CA,fr-CA,ja
 
 
@@ -109,7 +110,7 @@ HOST_USERS_FROM_DB=false
 AUTH_IDLE_TIMEOUT=1800
 AUTH_SESSION_MAX_AGE=28800
 
-# Meeting names and restrictions: %%PREFIX%%/etc/kaigi/meeting-properties.json.
+# Meeting names and restrictions: %%PREFIX%%/etc/kaigi/instances/NAME/meeting-properties.json.
 # Each stable key has a names object (language -> display label) and restrictions array.
 # RP prohibits built-in recording and server recording uploads.
 # Missing/unlisted meetings display their key and have no restrictions.
@@ -129,7 +130,7 @@ HIDE_LOCAL_SCREEN_SHARE_PREVIEW=true
 
 # Optional LDAP authentication supplements the users file; local users win.
 # LDAP support is included in Kaigi and disabled by default.
-# When enabled, all LDAP settings are read from %%PREFIX%%/etc/kaigi/ldap/ldap.conf.
+# When enabled, all LDAP settings are read from %%PREFIX%%/etc/kaigi/instances/NAME/ldap/ldap.conf.
 # When disabled, that file is neither read nor validated.
 # See kaigi-ldap.conf(5). No LDAP environment overrides are used.
 LDAP_ENABLED=false
