@@ -195,7 +195,11 @@ async function main(args) {
         for (const entry of fs.readdirSync(runRoot, { withFileTypes: true })) {
             const name = entry.name === 'kaigi.pid' ? 'default' : entry.name;
             if (name !== 'default' && (!entry.isDirectory() || !/^[a-z][a-z0-9_]{0,31}$/.test(name))) continue;
-            if (operation === 'restart' && selected.split(',').includes(name)) continue;
+            // Only a single selected instance is guaranteed to stop before its
+            // replacement starts. Group restart remains sequential, so other
+            // selected instances' old allocations must still be considered.
+            const selectedNames = selected.split(',').filter(Boolean);
+            if (operation === 'restart' && selectedNames.length === 1 && selectedNames[0] === name) continue;
             const directory = name === 'default' ? runRoot : path.join(runRoot, name);
             const pidfile = path.join(directory, 'kaigi.pid');
             if (!fs.existsSync(pidfile)) continue;

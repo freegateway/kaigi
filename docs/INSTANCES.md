@@ -95,8 +95,11 @@ No credentials appear in command arguments or preflight errors.
 
 Root-owned launch snapshots preserve allocations still used by running instances
 after configuration changes or removal from rc.conf. A pre-safety running instance
-without a snapshot must be stopped once before starting another instance; restart
-can validate the replacement plan for its selected instances first. Snapshots
+without a snapshot must be stopped once before starting another instance. A
+single-instance restart can validate its replacement before stopping it; group
+restart also checks old allocations because other selected instances remain live
+until their turn. Stop the affected group before reallocating ranges that would
+conflict during sequential restart. Snapshots
 include the acknowledged PID and process start time to detect stale identity.
 They contain resource metadata, not credentials. Checks coordinate this
 installation's rc-managed instances, not manually launched processes, other

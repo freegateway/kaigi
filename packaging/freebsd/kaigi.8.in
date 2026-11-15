@@ -145,7 +145,10 @@ The service discards inherited caller environment overrides; use kaigi.conf.
 NODE_ENV defaults to production. Startup metadata is root-owned and contains
 resource allocations, PID and process start time, not credentials. Pre-safety
 running instances lack allocation snapshots: stop them once before starting
-other instances, or restart the selected group after its replacement plan passes.
+other instances. A single-instance restart can validate its replacement first.
+Group restart also checks old allocations that remain live until their turn;
+stop the affected group before reallocating ranges that would conflict during
+sequential restart.
 .Pp
 Explicit stop/status works after removal from the instance list and without
 valid application configuration. Stop without a name also discovers PID

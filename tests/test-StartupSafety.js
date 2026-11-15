@@ -122,7 +122,8 @@ describe('startup safety preflight', function () {
             f.configure('staff', { MEDIA_MIN_PORT: 41000, MEDIA_MAX_PORT: 41100 });
             f.configure('public', { MEDIA_MIN_PORT: 40000, MEDIA_MAX_PORT: 40100 });
             assert.notEqual(f.check({}, 'public').status, 0);
-            assert.equal(f.check({}, 'staff,public', 'restart').status, 0);
+            assert.notEqual(f.check({}, 'staff,public', 'restart').status, 0);
+            assert.equal(f.check({}, 'staff', 'restart').status, 0);
         } finally { f.cleanup(); }
     });
     it('checks readiness nonce, live PID and start identity; stale identities fail closed', () => {
