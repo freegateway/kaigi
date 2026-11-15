@@ -553,6 +553,14 @@ body {
 .init-identity-panel .swal2-input:read-only {
     opacity: 1;
     cursor: default;
+    font: inherit;
+    font-weight: 600;
+    line-height: inherit;
+    color: inherit;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
 }
 
 .init-login-name {

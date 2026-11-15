@@ -56,7 +56,7 @@ describe('public page cleanup', () => {
         }
     });
     it('documents both firewalls without enabling blocking or matching arbitrary client messages', () => {
-        const readme = read('packaging/freebsd/fail2ban/README.md');
+        const readme = read('packaging/freebsd/fail2ban/README.txt');
         for (const text of ['kaigi-ipfw', 'kaigi-pf', 'fail2ban-regex', 'ignoreip', 'jail', 'table']) assert(readme.includes(text));
         const filter = read('packaging/freebsd/fail2ban/kaigi.conf');
         assert(filter.includes('authentication_failed'));
