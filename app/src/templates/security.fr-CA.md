@@ -38,9 +38,9 @@ Kaigi limite les tentatives répétées de connexion et ferme les connexions qui
 
 ## Protection facultative contre les échecs de connexion répétés
 
-L’administrateur peut relier les journaux de sécurité de Kaigi à Fail2ban pour bloquer temporairement les adresses réseau qui soumettent à répétition des identifiants incorrects. Cette mesure ajoute une protection contre les tentatives automatisées de deviner les mots de passe. Elle ne remplace ni l’authentification ni les autorisations de réunion. Plusieurs utilisateurs légitimes peuvent partager une adresse réseau. L’administrateur décide d’activer cette protection et choisit la durée des blocages.
+L’administrateur peut relier les journaux de sécurité de Kaigi à [Fail2ban](https://github.com/fail2ban/fail2ban), qui analyse ces journaux pour détecter les adresses IP qui soumettent à répétition des identifiants incorrects. Fail2ban demande ensuite au pare-feu du système hôte de bloquer temporairement les connexions provenant de ces adresses IP. Cette mesure ajoute une protection contre les tentatives automatisées de deviner les mots de passe. L’administrateur décide d’activer ou non Fail2ban et choisit la durée des blocages par adresse IP.
 
-Kaigi fournit un filtre et des instructions avec des exemples PF et IPFW dans /usr/local/share/kaigi/fail2ban/. Sur un hôte de jails, l’administrateur exécute Fail2ban sur l’hôte et le relie au journal de l’instance et aux règles de pare-feu appropriés. L’installation de Kaigi n’active pas automatiquement les blocages.
+Pour faciliter la configuration de Fail2ban, Kaigi fournit un filtre et des instructions avec des exemples pour les pare-feu PF et IPFW dans /usr/local/share/kaigi/fail2ban/.
 
 ## Ce que ces protections ne couvrent pas
 

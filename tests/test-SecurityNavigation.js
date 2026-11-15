@@ -7,6 +7,24 @@ const security = require('../app/src/SecurityPage');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 
 describe('Security navigation and queued presentation fixes', () => {
+    it('renders the canonical two-paragraph Fail2ban section with an explicit project link', () => {
+        for (const lang of ['en', 'en-CA', 'ja', 'fr-CA']) {
+            const doc = new JSDOM(security.renderSecurity({}, lang)).window.document;
+            const heading = doc.getElementById('security-section-5');
+            const first = heading.nextElementSibling;
+            const second = first.nextElementSibling;
+            assert.equal(first.tagName, 'P');
+            assert.equal(second.tagName, 'P');
+            assert.equal(second.nextElementSibling.id, 'security-section-6');
+            const link = first.querySelector('a[href="https://github.com/fail2ban/fail2ban"]');
+            assert.equal(link.textContent, 'Fail2ban');
+            assert(second.querySelector('.security-path'));
+            if (lang.startsWith('en')) {
+                assert(first.textContent.includes('temporarily block connections from those IP addresses'));
+                assert(second.textContent.startsWith('To facilitate Fail2ban configuration'));
+            }
+        }
+    });
     it('maps every localized section to exactly one numbered contents link without scripts', () => {
         for (const lang of ['en', 'en-CA', 'ja', 'fr-CA']) {
             const doc = new JSDOM(security.renderSecurity({}, lang)).window.document;

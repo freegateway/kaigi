@@ -38,9 +38,9 @@ Kaigi limits repeated login attempts and closes connections that open but fail t
 
 ## Optional protection against repeated failed logins
 
-Administrators can connect Kaigi's security logs to Fail2ban, which temporarily blocks network addresses that repeatedly submit incorrect login credentials. This adds another barrier against automated password guessing. It does not replace Kaigi's authentication or meeting permissions, and shared network addresses can include legitimate users. The administrator chooses whether to enable it and how long blocks last.
+Administrators can connect Kaigi's security logs to [Fail2ban](https://github.com/fail2ban/fail2ban), which scans those logs to detect IP addresses that repeatedly submit incorrect login credentials. Fail2ban then instructs the host system's firewall to temporarily block connections from those IP addresses. This adds another barrier against automated password guessing. The administrator chooses whether to enable Fail2ban and the duration of its IP address blocks.
 
-Kaigi supplies a filter and setup instructions with PF and IPFW examples under /usr/local/share/kaigi/fail2ban/. On jail hosts, the administrator runs Fail2ban on the host and connects it to the appropriate instance log and firewall rules. Installing Kaigi does not activate blocking automatically.
+To facilitate Fail2ban configuration, Kaigi supplies a filter and setup instructions with PF and IPFW firewall examples under /usr/local/share/kaigi/fail2ban/.
 
 ## What these protections do not cover
 
