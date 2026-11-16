@@ -81,6 +81,23 @@ NODE_ENV=production
 # address assigned to this host.
 WEB_LISTEN_HOST=meet.example.com
 WEB_LISTEN_PORT=3010
+# WEB_MODE=direct is the default (Kaigi terminates HTTPS).
+# For a trusted hostname-based HTTPS proxy, set WEB_MODE=proxy and WEB_URL
+# to its exact public origin, e.g. https://staff.meet.example.com (no prefix).
+# Unix backend: remove WEB_LISTEN_PORT and any WEB_LISTEN_IP, then set:
+# WEB_MODE=proxy
+# WEB_URL=https://staff.meet.example.com
+# WEB_LISTEN_SOCKET=/var/run/kaigi/staff/web.sock
+# WEB_SOCKET_MODE=0600
+# Use 0660 only with a deliberately shared service/proxy group and directory
+# traversal permissions. Never use a world-writable socket directory.
+# TCP backend instead: retain an explicit port and WEB_LISTEN_IP, and set
+# WEB_PROXY_IPS to comma-separated exact source IPs of the trusted proxy.
+# WEB_PROXY_IPS=127.0.0.1
+# The proxy must overwrite Host, X-Forwarded-For (one IP), X-Forwarded-Proto
+# (https), and remove Forwarded, X-Forwarded-Host and X-Forwarded-Prefix.
+# Backend certificates are not required in proxy mode. Keep media allocations
+# explicit: the web proxy does NOT carry WebRTC media. See docs/INSTANCES.md.
 # WEB_LISTEN_IP=192.0.2.10
 # WEB_URL=https://${WEB_LISTEN_HOST}:${WEB_LISTEN_PORT}
 # WEB_SSL_CERT=/etc/tls/example/cert.pem

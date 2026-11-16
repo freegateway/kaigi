@@ -1,5 +1,9 @@
 # FreeGateway Kaigi
 
+Deployment supports direct HTTPS or explicitly trusted hostname-based reverse
+proxies with private TCP or Unix-socket backends. URL prefixes are unsupported.
+See [instance deployment](docs/INSTANCES.md) for configuration and permissions.
+
 Kaigi is a privacy-focused, self-hosted video conferencing system from the
 [FreeGateway Project](https://www.freegateway.org/). It gives organizations
 control over their meeting infrastructure, user access and data.

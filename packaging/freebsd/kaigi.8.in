@@ -10,6 +10,12 @@
 .Ar start | stop | restart | status
 .Op Ar instance
 .Sh DESCRIPTION
+.Pp
+Kaigi supports direct HTTPS or hostname-based HTTPS reverse proxy deployment.
+Proxy backends may use a private TCP listener or a Unix domain socket.
+URL prefixes are unsupported. See kaigi.conf(5) and INSTANCES.md for the
+explicit trust boundary, forwarding requirements and socket permissions.
+.Pp
 Kaigi is the FreeGateway Project's self-hosted video conferencing service,
 derived from MiroTalk SFU and built on mediasoup.
 Every participant authenticates and receives access to explicitly authorized

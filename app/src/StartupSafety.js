@@ -65,6 +65,10 @@ function checkPlans(plans, cpuCount = require('node:os').cpus().length) {
         for (const b of plans.slice(i + 1)) {
             if (a.name === b.name) continue;
             for (const x of a.listeners) for (const y of b.listeners) {
+                if (x.protocol === 'unix' || y.protocol === 'unix') {
+                    if (x.protocol === y.protocol && x.path === y.path) throw Error(`Instances ${a.name} and ${b.name}: duplicate web socket path`);
+                    continue;
+                }
                 if (x.protocol === y.protocol && addressOverlaps(x.ip, y.ip) && x.min <= y.max && y.min <= x.max) {
                     throw Error(`Instances ${a.name} and ${b.name}: overlapping ${x.protocol} ${x.kind}/${y.kind} ports ${Math.max(x.min, y.min)}..${Math.min(x.max, y.max)}`);
                 }
@@ -122,21 +126,26 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     }
     inspectionStage = 'network';
     await require('./NetworkConfig').configureFreeBSDNetwork(config);
-    inspectionStage = 'tls';
-    inspectionResource = 'TLS certificate';
-    const cert = fs.readFileSync(path.resolve(__dirname, config.server.ssl.cert));
-    inspectionResource = 'TLS private key';
-    const key = fs.readFileSync(path.resolve(__dirname, config.server.ssl.key));
-    inspectionResource = 'TLS certificate/key pair';
-    require('node:tls').createSecureContext({
-        cert, key,
-    });
+    if (config.webDeployment.mode === 'direct') {
+        inspectionStage = 'tls';
+        inspectionResource = 'TLS certificate';
+        const cert = fs.readFileSync(path.resolve(__dirname, config.server.ssl.cert));
+        inspectionResource = 'TLS private key';
+        const key = fs.readFileSync(path.resolve(__dirname, config.server.ssl.key));
+        inspectionResource = 'TLS certificate/key pair';
+        require('node:tls').createSecureContext({ cert, key });
+    }
+    if (config.webDeployment.socketPath) require('./WebDeployment').validateSocketPath(config.webDeployment.socketPath);
     const media = config.mediasoup.webRtcTransport.listenInfos;
-    const listeners = [{ kind: 'web', protocol: 'tcp', ip: config.server.listen.ip,
-        min: Number(config.server.listen.port), max: Number(config.server.listen.port) },
+    const web = config.webDeployment.socketPath
+        ? { kind: 'web', protocol: 'unix', path: config.webDeployment.socketPath }
+        : { kind: 'web', protocol: 'tcp', ip: config.server.listen.ip,
+            min: Number(config.server.listen.port), max: Number(config.server.listen.port) };
+    const listeners = [web,
         ...media.map(info => ({ kind: 'media', protocol: info.protocol, ip: info.ip,
             min: info.portRange.min, max: info.portRange.max }))];
     for (const listener of listeners) {
+        if (listener.protocol === 'unix') continue;
         if (!net.isIP(listener.ip) || !Number.isInteger(listener.min) || !Number.isInteger(listener.max) ||
             listener.min < 1 || listener.max > 65535 || listener.max < listener.min) throw Error('Invalid listener');
     }

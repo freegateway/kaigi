@@ -197,7 +197,9 @@ const slackSigningSecret = config?.integrations?.slack?.signingSecret || '';
 
 const app = express();
 
-const options = {
+const webDeployment = config.webDeployment || { mode: 'direct', socketPath: '' };
+const webListener = require('./WebDeployment');
+const options = webDeployment.mode === 'proxy' ? {} : {
     cert: fs.readFileSync(path.resolve(__dirname, config?.server?.ssl.cert || '../ssl/cert.pem'), 'utf-8'),
     key: fs.readFileSync(path.resolve(__dirname, config?.server?.ssl.key || '../ssl/key.pem'), 'utf-8'),
 };
@@ -208,19 +210,28 @@ const corsOptions = {
 };
 
 options.handshakeTimeout = 15000;
-const server = httpolyglot.createServer(options, app);
+const webHandler = (req, res) => {
+    if (!webListener.acceptRequest(req, webDeployment)) { res.writeHead(403); res.end('Forbidden'); return; }
+    app(req, res);
+};
+const server = webDeployment.mode === 'proxy' ? require('node:http').createServer(webHandler)
+    : httpolyglot.createServer(options, webHandler);
 
 const io = socketIo(server, {
     maxHttpBufferSize: 1e7,
     transports: ['websocket'],
     cors: corsOptions,
 });
+io.engine.use((req, res, next) => {
+    if (!webListener.acceptRequest(req, webDeployment)) return next(new Error('Forbidden'));
+    next();
+});
 
 const { securityEvent, peerAddress } = require('./SecurityEvents');
 require('./ConnectionSecurity').installConnectionSecurity(server, io);
 
 const host = config?.server?.hostUrl || `http://localhost:${config?.server?.listen?.port || 3010}`;
-const trustProxy = Boolean(config?.server?.trustProxy);
+const trustProxy = webDeployment.mode === 'proxy';
 
 // Fail closed: refuse to start with a missing, weak or publicly known JWT secret.
 let jwtKeys;
@@ -2211,7 +2222,9 @@ function startServer() {
     // ####################################################
 
     function startServer() {
-        server.listen(config?.server?.listen?.port || 3010, config?.server?.listen?.ip || '0.0.0.0', () => {
+        webListener.prepareListener(webDeployment);
+        server.listen(webListener.listenOptions(config), () => {
+            webListener.listenerReady(webDeployment);
             log.log(
                 `%c
     

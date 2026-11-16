@@ -292,7 +292,7 @@ const RTMP_FFMPEG_PATH = process.env.RTMP_FFMPEG_PATH || getFFmpegPath(PLATFORM)
 
 function validateInstanceNetwork() {
     // Each instance explicitly allocates its sockets and public URL.
-    for (const name of ['SERVER_LISTEN_PORT', 'SFU_MIN_PORT', 'SFU_MAX_PORT']) {
+    for (const name of [...(process.env.WEB_LISTEN_SOCKET ? [] : ['SERVER_LISTEN_PORT']), 'SFU_MIN_PORT', 'SFU_MAX_PORT']) {
         const value = process.env[name];
         if (!/^[1-9][0-9]*$/.test(value || '') || Number(value) > 65535) {
             throw new Error(`Named instances require an explicit valid ${name}`);
@@ -313,6 +313,7 @@ validateInstanceNetwork();
 // ==============================================
 
 module.exports = {
+    webDeployment: require('./WebDeployment').settings(),
     runtimePaths,
     meetingRestrictions: meetingSettings.restrictions,
     meetingTranslations: meetingSettings.translations,

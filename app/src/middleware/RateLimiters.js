@@ -5,8 +5,8 @@ const config = require('../config');
 
 const MINUTE_MS = 60 * 1000;
 
-// Extract client IP (only trust X-Forwarded-For when behind a trusted reverse proxy)
-const ipKeyGenerator = (req) => req.socket?.remoteAddress || 'unknown';
+// Only the web deployment boundary may verify a forwarded address.
+const ipKeyGenerator = require('../SecurityEvents').peerAddress;
 
 // Pluralize "N minute(s)" consistently across limiter messages
 const minutesLabel = (n) => `${n} minute${n === 1 ? '' : 's'}`;

@@ -5,6 +5,24 @@
 .Nm kaigi.conf
 .Nd Kaigi deployment configuration
 .Sh DESCRIPTION
+.Ss Web deployment modes
+WEB_MODE defaults to direct, where Kaigi terminates HTTPS.
+Set WEB_MODE=proxy for an explicitly trusted HTTPS reverse proxy.
+WEB_URL must then be an exact HTTPS origin with no path prefix.
+For a Unix backend, set WEB_LISTEN_SOCKET to an absolute socket path,
+and omit WEB_LISTEN_PORT and WEB_LISTEN_IP.
+WEB_SOCKET_MODE accepts 0600 (default) or 0660 for a deliberately shared group.
+Existing socket paths, including stale ones, prevent startup; remove a stale
+socket manually only after confirming that its instance is stopped.
+For a TCP backend, set an explicit WEB_LISTEN_IP and WEB_LISTEN_PORT and list
+exact trusted proxy source addresses in WEB_PROXY_IPS, separated by commas.
+Do not expose backend TCP listeners to untrusted networks.
+The proxy must overwrite Host, X-Forwarded-For (one client IP) and
+X-Forwarded-Proto (https). Remove other forwarding headers.
+Proxy mode requires no backend TLS certificate or key.
+WebRTC media still uses the separately configured media sockets.
+See INSTANCES.md for hostname routing, permissions and validation examples.
+.Pp
 The file
 .Pa %%PREFIX%%/etc/kaigi/NAME/kaigi.conf
 contains non-secret deployment, site, network, localization and presentation
