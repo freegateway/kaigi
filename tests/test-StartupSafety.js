@@ -42,6 +42,23 @@ describe('startup safety preflight', function () {
         assert(!addressOverlaps('127.0.0.1', '127.0.0.2'));
         assert(!addressOverlaps('::1', '127.0.0.1'));
     });
+    it('preflights Unix proxy allocations without TLS files or web TCP reservations', () => {
+        const f = fixture();
+        try {
+            const common = { WEB_MODE: 'proxy', WEB_LISTEN_IP: undefined, WEB_LISTEN_PORT: undefined,
+                WEB_SSL_CERT: '/missing/cert', WEB_SSL_KEY: '/missing/key' };
+            f.configure('staff', { ...common, WEB_LISTEN_SOCKET: path.join(f.run, 'staff.sock') });
+            f.configure('public', { ...common, WEB_LISTEN_SOCKET: path.join(f.run, 'public.sock') });
+            const result = f.check();
+            assert.equal(result.status, 0, result.stderr);
+            const plans = JSON.parse(fs.readFileSync(path.join(f.run, 'preflight.json')));
+            assert(plans.every(plan => plan.listeners.find(item => item.kind === 'web').protocol === 'unix'));
+            f.configure('public', { ...common, WEB_LISTEN_SOCKET: path.join(f.run, 'staff.sock') });
+            assert.match(f.check().stderr, /duplicate web socket/);
+            f.configure('public', { ...common, WEB_LISTEN_SOCKET: path.join(f.run, 'public.sock'), MEDIA_MIN_PORT: 40100 });
+            assert.match(f.check().stderr, /overlapping/);
+        } finally { f.cleanup(); }
+    });
     it('rejects every overlap class, including inclusive range endpoints', () => {
         const plan = (name, kind, min, max = min, ip = '127.0.0.1') => ({ name, config: `/config/${name}`,
             recordings: `/state/${name}`, workers: 1, listeners: [{ kind, min, max, ip, protocol: 'tcp' }] });

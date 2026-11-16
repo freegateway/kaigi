@@ -5,14 +5,11 @@ const Logger = require('../Logger');
 const log = new Logger('RestrictAccessByIP');
 
 const { enabled = false, allowedIPs = [] } = config?.security?.middleware?.IpWhitelist || {};
-const trustProxy = Boolean(config?.server?.trustProxy);
+const { peerAddress } = require('../SecurityEvents');
 
 const restrictAccessByIP = (req, res, next) => {
     if (!enabled) return next();
-    // Security: only honour X-Forwarded-For when behind a trusted reverse proxy;
-    // otherwise the header is attacker-controlled and would bypass the allow-list.
-    const forwarded = trustProxy ? req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'] : null;
-    const clientIP = (forwarded && forwarded.split(',')[0].trim()) || req.socket.remoteAddress || req.ip;
+    const clientIP = peerAddress(req);
     log.debug('Check IP', clientIP);
     if (allowedIPs.includes(clientIP)) {
         next();

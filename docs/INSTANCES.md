@@ -1,5 +1,114 @@
 # Named Kaigi instances
 
+## Hostname-based HTTPS proxy deployment
+
+Kaigi 0.8.0 adds WEB_MODE=proxy; direct HTTPS remains the default. Give each
+instance a separate public HTTPS origin, such as staff.meet.example.com and
+public.meet.example.com, on the same proxy IP/443. URL prefixes are unsupported.
+Proxy connectivity never authenticates a participant or grants meeting access.
+
+Example Unix backend in the staff instance's kaigi.conf:
+
+```
+WEB_MODE=proxy
+WEB_URL=https://staff.meet.example.com
+WEB_LISTEN_SOCKET=/var/run/kaigi/staff/web.sock
+WEB_SOCKET_MODE=0600
+MEDIA_LISTEN_IP=192.0.2.10
+MEDIA_ANNOUNCED_IP=192.0.2.10
+MEDIA_MIN_PORT=40000
+MEDIA_MAX_PORT=40100
+MEDIA_NUM_WORKERS=1
+```
+
+Remove WEB_LISTEN_PORT and WEB_LISTEN_IP from copied samples for Unix mode.
+WEB_LISTEN_HOST is unnecessary when public URL and media addresses are explicit.
+Socket paths must be absolute, normalized, at most 100 bytes and free of symlinks.
+Parents must belong to root or the service user and not be group/world-writable.
+Kaigi does not create arbitrary socket directories; use the rc-managed instance
+runtime directory. Existing paths, even stale sockets, fail startup rather than
+being unlinked. Normal close removes the socket. After a crash, confirm that the
+instance is stopped and inspect the path before manually removing a stale socket.
+
+0600 permits only the service owner. For a different proxy account use 0660,
+deliberately share the service's primary group with the proxy, and permit group
+traversal of the runtime directory, never group write access. Keep secrets
+owner-readable only and prefer separate service accounts per instance. Confirm
+actual user/group and directory permissions on FreeBSD. Jails/chroots require
+deliberate shared filesystem visibility; use TCP otherwise.
+
+For a TCP backend omit WEB_LISTEN_SOCKET and configure instead:
+
+```
+WEB_MODE=proxy
+WEB_URL=https://staff.meet.example.com
+WEB_LISTEN_IP=127.0.0.1
+WEB_LISTEN_PORT=7443
+WEB_PROXY_IPS=127.0.0.1
+```
+
+WEB_PROXY_IPS is a comma-separated list of exact source IPs, not CIDRs or hop
+counts. Bind a specific private/loopback address, use distinct instance ports,
+and firewall backend access. Any local process able to use a trusted source IP
+is inside this trust boundary; Unix permissions can narrow that boundary.
+
+Proxy mode serves backend HTTP/WebSockets without backend certificates. The
+edge must terminate HTTPS, overwrite Host with the exact WEB_URL authority,
+overwrite X-Forwarded-Proto with https, and overwrite X-Forwarded-For with ONE
+actual client IP. Remove Forwarded, X-Forwarded-Host and X-Forwarded-Prefix.
+Do not append forwarding chains or enable legacy TRUST_PROXY. Wrong hosts,
+Origins (when present), non-HTTPS forwarding and prefixes fail closed.
+Verified attribution feeds session checks, rate limits, IP checks and security
+logs. Before initial HTTP headers arrive, timeout logs cannot identify the
+original client; the supplied Fail2ban filter matches failed logins only.
+
+HAProxy configuration outline (adapt certificate, accounts and permissions):
+
+```
+defaults
+    mode http
+    timeout connect 5s
+    timeout client 60s
+    timeout server 60s
+    timeout tunnel 1h
+
+frontend kaigi_https
+    bind :443 ssl crt /usr/local/etc/haproxy/kaigi.pem ssl-min-ver TLSv1.3 ssl-max-ver TLSv1.3
+    acl staff_site hdr(host) -i staff.meet.example.com
+    acl public_site hdr(host) -i public.meet.example.com
+    http-request deny unless staff_site or public_site
+    http-request del-header Forwarded
+    http-request del-header X-Forwarded-Host
+    http-request del-header X-Forwarded-Prefix
+    http-request set-header X-Forwarded-For %[src]
+    http-request set-header X-Forwarded-Proto https
+    use_backend kaigi_staff if staff_site
+    use_backend kaigi_public if public_site
+
+backend kaigi_staff
+    http-request set-header Host staff.meet.example.com
+    server staff unix@/var/run/kaigi/staff/web.sock
+
+backend kaigi_public
+    http-request set-header Host public.meet.example.com
+    server public unix@/var/run/kaigi/public/web.sock
+```
+
+For TCP replace the backend server address with 127.0.0.1:7443, for example.
+Preserve WebSocket upgrades and /socket.io/ without path rewriting. Idle tunnel
+timeouts must accommodate Socket.IO heartbeats; avoid forced short lifetimes or
+closure on reload. This routes each hostname to one instance, not a load-balanced
+cluster, and requires no sticky sessions. WebRTC media still uses each instance's
+separate TCP/UDP allocations; the HTTP proxy does not carry media.
+
+Run npm test on FreeBSD with KAIGI_SKIP_UNIX_TESTS unset. That executes the real
+Unix HTTP/WebSocket lifecycle test. Restricted development sandboxes may set
+KAIGI_SKIP_UNIX_TESTS=1 explicitly, which reports that test pending, not passed.
+Real TCP backend tests cover HTTP, namespace authentication rejection and silent
+namespace expiry. HAProxy configuration, cross-account socket access, jail
+visibility, Poudriere and browser/media behavior require system validation.
+Confirm failed-login logs show the real client before enabling Fail2ban.
+
 One read-only Kaigi installation can serve several independently configured
 processes. The FreeBSD service selects instances; the application never searches
 other instances for missing settings, credentials or branding.

@@ -1,6 +1,8 @@
  'use strict';
 const { isIP } = require('node:net');
 function peerAddress(peer) {
+    const verified = require('./WebDeployment').verifiedAddress(peer);
+    if (verified) return verified;
     const value = peer?.remoteAddress || peer?.socket?.remoteAddress || peer?.conn?.remoteAddress || peer?.handshake?.address;
     if (typeof value !== 'string') return 'unknown';
     const ip = value.startsWith('::ffff:') ? value.slice(7) : value;

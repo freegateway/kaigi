@@ -27,7 +27,7 @@ async function configureFreeBSDNetwork(config, { environment = process.env, look
         return [...new Set(addresses.map(({ address }) => address))];
     };
 
-    if (!explicitWebListenIp && webListenHost) {
+    if (!explicitWebListenIp && webListenHost && config.webDeployment?.mode !== 'proxy') {
         const resolved = await resolveIPv4(webListenHost);
         const local = new Set();
         for (const entries of Object.values(interfaces())) {

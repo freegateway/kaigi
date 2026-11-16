@@ -1,5 +1,27 @@
 # Upstream intake
 
+## Explicit proxy and Unix web listeners (2026-11-16)
+
+Kaigi 0.8.0 adds hostname-only proxy deployment with an exact HTTPS public
+origin, trusted source IPs for TCP backends or filesystem-controlled Unix
+sockets. Direct HTTPS remains the default. No prefix or automatic proxy
+discovery is supported. One overwritten forwarding address is validated before
+HTTP/Engine.IO handling; only private request attribution reaches security logs,
+session/IP checks and rate-limit keys. Authentication and media remain separate.
+
+Unix creation starts owner-only, applies optional 0660 after listening and rejects
+unsafe paths or existing sockets rather than unlinking them. Preflight records
+Unix allocations separately from TCP and detects duplicate paths while retaining
+media collision checks. Proxy mode requires no backend TLS files. Maintain
+readiness after listener setup. No upstream features or dependencies are adopted.
+
+The development environment rejected Unix binding with EPERM; retain the real
+Unix HTTP/WebSocket regression for FreeBSD execution. The explicit development
+opt-out KAIGI_SKIP_UNIX_TESTS=1 must not be mistaken for a passing Unix test.
+HAProxy examples and FreeBSD lifecycle/cross-account permissions remain untested.
+The companion port must include the flat-layout changes, restore archive tests,
+remove its per-instance echo banner, and update the application/dependency pin.
+
 ## Browser recording audio reconciliation (2026-11-16)
 
 Kaigi 0.7.2 selectively adapts upstream

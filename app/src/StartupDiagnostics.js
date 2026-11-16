@@ -3,6 +3,7 @@
 // Only catalogued reasons and bounded identifiers cross the inspector boundary.
 // Never forward an exception message, file contents, configured value or stack.
 const reasons = Object.freeze({
+    proxy: 'invalid WEB_MODE/proxy/socket settings; require an HTTPS root WEB_URL, a private socket or explicit trusted proxy IPs and bind address, and a safe socket path',
     unknown: 'validation failed; check this resource',
     missing: 'file is missing', unreadable: 'file is not readable by the service account',
     access: 'access denied', file: 'cannot access file', unsafe: 'file must be regular and not group/world-writable',
@@ -70,7 +71,7 @@ function diagnose(error, stage, resource) {
     if (error?.code === 'ENOENT') result.reason = 'missing';
     else if (['EACCES', 'EPERM'].includes(error?.code)) result.reason = 'access';
     else if (['EISDIR', 'ENOTDIR', 'ELOOP'].includes(error?.code)) result.reason = 'file';
-    if (['jwt', 'origin'].includes(error?.startupReason)) result.reason = error.startupReason;
+    if (['jwt', 'origin', 'proxy'].includes(error?.startupReason)) result.reason = error.startupReason;
     if (error?.startupReason === 'jwt') result.resource = 'jwt-secret';
     if (error?.name === 'LdapError') { result.resource = 'ldap/ldap.conf'; result.reason = 'policy'; }
     return result;
