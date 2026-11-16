@@ -22,6 +22,9 @@ module.exports = class Peer {
             peer_lobby,
         } = peer_info;
 
+        // Peer metadata is shared with other participants; credentials are never public metadata.
+        delete peer_info.peer_token;
+
         this.id = socket_id;
         this.peer_info = peer_info;
         this.peer_uuid = peer_uuid;
