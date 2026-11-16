@@ -113,7 +113,7 @@
 # LDAP_MAPPING_KEY=<name or dn>
 
 # Default groups and group-to-meeting grants are in:
-# %%PREFIX%%/etc/kaigi/instances/NAME/ldap/group-meetings.json
+# %%PREFIX%%/etc/kaigi/NAME/ldap/group-meetings.json
 # defaultGroups is an array of stable group keys, used only when no groups are returned.
 # groupMeetings maps stable group keys to arrays of exact meeting keys.
 # Mapped mode uses the union of all matching grants; direct mode uses group keys as meetings.

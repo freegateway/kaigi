@@ -73,9 +73,9 @@ must define their recording, log retention and privacy policies. See
 ## One or several named instances
 
 Every deployment explicitly names at least one instance. All configuration lives
-under `/usr/local/etc/kaigi/instances/NAME/`; there is no default instance or
+under `/usr/local/etc/kaigi/NAME/`; there is no default instance or
 top-level configuration fallback. The package supplies inactive templates and
-provisioning instructions under `instances/example/`, not usable credentials.
+provisioning instructions under `example/`, not usable credentials.
 
 Instances share read-only application files but have separate accounts, signing
 secrets, configuration, branding, browser origins, navigation cookies, logs and

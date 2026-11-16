@@ -10,10 +10,10 @@ Choose an instance name: at most 32 lowercase letters, digits and underscores,
 beginning with a letter. For example, use staff. The destination directory must
 not already exist. As root, copy the example directory:
 
-cp -R %%PREFIX%%/etc/kaigi/instances/example %%PREFIX%%/etc/kaigi/instances/staff
-mv %%PREFIX%%/etc/kaigi/instances/staff/kaigi.conf.sample %%PREFIX%%/etc/kaigi/instances/staff/kaigi.conf
-mv %%PREFIX%%/etc/kaigi/instances/staff/users.sample %%PREFIX%%/etc/kaigi/instances/staff/users
-chmod 0600 %%PREFIX%%/etc/kaigi/instances/staff/users
+cp -R %%PREFIX%%/etc/kaigi/example %%PREFIX%%/etc/kaigi/staff
+mv %%PREFIX%%/etc/kaigi/staff/kaigi.conf.sample %%PREFIX%%/etc/kaigi/staff/kaigi.conf
+mv %%PREFIX%%/etc/kaigi/staff/users.sample %%PREFIX%%/etc/kaigi/staff/users
+chmod 0600 %%PREFIX%%/etc/kaigi/staff/users
 
 Edit kaigi.conf for the web IP/port, public URL, TLS certificate/key and media
 IP/range. Every instance needs disjoint TCP/UDP allocations on overlapping bind

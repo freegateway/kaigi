@@ -1,5 +1,15 @@
 # Upstream intake
 
+## Flat named-instance configuration (2026-11-16)
+
+Kaigi 0.7.0 removes the redundant instances/ configuration layer. Service
+preflight resolves each explicitly selected name directly below etc/kaigi;
+the companion port provisions inactive templates under etc/kaigi/example.
+There is no directory discovery, implicit default or old-layout fallback.
+Runtime state, PID and log directories remain unchanged. LDAP relative file
+resolution remains anchored to each instance's ldap/ directory. This deployment
+change adopts no upstream runtime features or dependencies.
+
 ## Peer credential privacy (2026-11-16)
 
 Kaigi 0.6.6 adapts upstream 5a5ff401a5c0f025fdbeaf22b031c833f23e55f7.

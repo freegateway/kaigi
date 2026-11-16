@@ -16,7 +16,7 @@ describe('instance-relative LDAP file paths', () => {
     };
     it('resolves secret and CA paths independently for each instance, never against cwd', () => {
         for (const name of ['staff', 'public']) {
-            const directory = `/usr/local/etc/kaigi/instances/${name}/ldap`;
+            const directory = `/usr/local/etc/kaigi/${name}/ldap`;
             const config = ldapConfig(values, path.join(directory, 'group-meetings.json'));
             assert.equal(config.bindPasswordFile, path.join(directory, 'bind-secret'));
             assert.equal(config.caFile, path.join(directory, 'certs/ca.pem'));
@@ -32,7 +32,7 @@ describe('instance-relative LDAP file paths', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kaigi-ldap-paths-'));
         try {
             for (const name of ['staff', 'public']) {
-                const directory = path.join(root, 'instances', name);
+                const directory = path.join(root, name);
                 fs.mkdirSync(path.join(directory, 'ldap'), { recursive: true });
                 fs.writeFileSync(path.join(directory, 'kaigi.conf'), 'LDAP_ENABLED=true\nWEB_LISTEN_PORT=7443\nWEB_URL=https://localhost:7443\nMEDIA_MIN_PORT=40000\nMEDIA_MAX_PORT=40100\n');
                 const settings = { ...values };
