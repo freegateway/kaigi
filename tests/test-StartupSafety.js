@@ -15,7 +15,7 @@ describe('startup safety preflight', function () {
         const config = path.join(root, 'config'), state = path.join(root, 'state'), run = path.join(root, 'run');
         fs.mkdirSync(run);
         function configure(name, options = {}) {
-            const directory = path.join(config, 'instances', name);
+            const directory = path.join(config, name);
             fs.mkdirSync(directory, { recursive: true });
             fs.mkdirSync(path.join(state, name), { recursive: true });
             const values = { WEB_LISTEN_IP: '127.0.0.1', WEB_LISTEN_PORT: name === 'staff' ? 7443 : 8443,
@@ -84,7 +84,7 @@ describe('startup safety preflight', function () {
             assert.notEqual(result.status, 0);
             assert.match(result.stderr, /Instance staff: configuration validation failed \(kaigi.conf\).*MEDIA_MAX_PORT must not be below MEDIA_MIN_PORT/);
             f.configure('staff');
-            fs.appendFileSync(path.join(f.config, 'instances/staff/kaigi.conf'), '\nPASSWORD=do-not-print-this\nBAD LINE do-not-print-this');
+            fs.appendFileSync(path.join(f.config, 'staff/kaigi.conf'), '\nPASSWORD=do-not-print-this\nBAD LINE do-not-print-this');
             result = f.check();
             assert.notEqual(result.status, 0);
             assert.match(result.stderr, /kaigi.conf, line \d+.*expected SETTING=value/);
@@ -92,7 +92,7 @@ describe('startup safety preflight', function () {
             f.configure('staff', { LDAP_ENABLED: 'true' });
             result = f.check();
             assert.match(result.stderr, /ldap\/ldap.conf.*file is missing/);
-            fs.unlinkSync(path.join(f.config, 'instances/staff/users'));
+            fs.unlinkSync(path.join(f.config, 'staff/users'));
             result = f.check();
             assert.match(result.stderr, /Instance staff: credentials validation failed \(users\): file is missing/);
         } finally { f.cleanup(); }
@@ -100,9 +100,9 @@ describe('startup safety preflight', function () {
     it('never treats top-level configuration as an instance fallback', () => {
         const f = fixture();
         try {
-            fs.copyFileSync(path.join(f.config, 'instances/staff/kaigi.conf'), path.join(f.config, 'kaigi.conf'));
-            fs.copyFileSync(path.join(f.config, 'instances/staff/users'), path.join(f.config, 'users'));
-            fs.unlinkSync(path.join(f.config, 'instances/staff/kaigi.conf'));
+            fs.copyFileSync(path.join(f.config, 'staff/kaigi.conf'), path.join(f.config, 'kaigi.conf'));
+            fs.copyFileSync(path.join(f.config, 'staff/users'), path.join(f.config, 'users'));
+            fs.unlinkSync(path.join(f.config, 'staff/kaigi.conf'));
             assert.notEqual(f.check().status, 0);
         } finally { f.cleanup(); }
     });
@@ -129,9 +129,9 @@ describe('startup safety preflight', function () {
                 assert(!result.stderr.includes('missing-secret-password-value'));
             }
             f.configure('public');
-            const invalidAccount = spawnSync(process.execPath, [helper, 'inspect', 'public', path.join(f.config, 'instances/public'),
+            const invalidAccount = spawnSync(process.execPath, [helper, 'inspect', 'public', path.join(f.config, 'public'),
                 path.join(f.state, 'public'), 'kaigi_no_such_test_account_69483', String(os.userInfo().gid)], {
-                encoding: 'utf8', env: { PATH: process.env.PATH, KAIGI_INSTANCE: 'public', KAIGI_CONFIG_DIR: path.join(f.config, 'instances/public'), KAIGI_STATE_DIR: path.join(f.state, 'public') },
+                encoding: 'utf8', env: { PATH: process.env.PATH, KAIGI_INSTANCE: 'public', KAIGI_CONFIG_DIR: path.join(f.config, 'public'), KAIGI_STATE_DIR: path.join(f.state, 'public') },
             });
             assert.notEqual(invalidAccount.status, 0);
             fs.symlinkSync(f.state, path.join(f.state, 'public/recordings'));
@@ -195,7 +195,7 @@ describe('startup safety preflight', function () {
             const result = spawnSync(process.execPath, ['tests/fixtures/instance-server.cjs'], {
                 cwd: path.resolve(__dirname, '..'), encoding: 'utf8', timeout: 10000,
                 env: { PATH: process.env.PATH, KAIGI_INSTANCE: 'staff',
-                    KAIGI_CONFIG_DIR: path.join(f.config, 'instances/staff'), KAIGI_STATE_DIR: path.join(f.state, 'staff'),
+                    KAIGI_CONFIG_DIR: path.join(f.config, 'staff'), KAIGI_STATE_DIR: path.join(f.state, 'staff'),
                     JWT_SECRET: 'fixture-never-deploy-012345678901234567890', HOST_USERS: 'example|password|Example|["approved"]',
                     KAIGI_READY_FILE: ready, KAIGI_STARTUP_NONCE: 'fixture', KAIGI_TEST_WORKER_FAIL: '1' },
             });
@@ -215,7 +215,7 @@ describe('startup safety preflight', function () {
             const result = spawnSync(process.execPath, ['tests/fixtures/instance-server.cjs'], {
                 cwd: path.resolve(__dirname, '..'), encoding: 'utf8', timeout: 10000,
                 env: { PATH: process.env.PATH, KAIGI_INSTANCE: 'staff',
-                    KAIGI_CONFIG_DIR: path.join(f.config, 'instances/staff'), KAIGI_STATE_DIR: path.join(f.state, 'staff'),
+                    KAIGI_CONFIG_DIR: path.join(f.config, 'staff'), KAIGI_STATE_DIR: path.join(f.state, 'staff'),
                     JWT_SECRET: 'fixture-never-deploy-012345678901234567890', HOST_USERS: 'example|password|Example|["approved"]',
                     KAIGI_READY_FILE: ready, KAIGI_STARTUP_NONCE: 'fixture' },
             });

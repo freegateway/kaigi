@@ -186,7 +186,7 @@ async function main(args) {
         const plans = [];
         for (let i = 0; i < instances.length; i += 3) {
             const [name, user, group] = instances.slice(i, i + 3);
-            const config = path.join(configRoot, 'instances', name);
+            const config = path.join(configRoot, name);
             const state = path.join(stateRoot, name);
             const environment = cleanEnvironment({ PATH: process.env.PATH, NODE_ENV: process.env.NODE_ENV || 'production',
                 KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config, ...(state ? { KAIGI_STATE_DIR: state } : {}) });

@@ -93,8 +93,8 @@ notes are not included in snapshots. These checks supplement, not replace,
 live-session and admission checks.
 
 - Local accounts and allowed meetings are configured in the root-only
-  `etc/kaigi/instances/NAME/users` file. The rc script reads it at startup. It creates a
-  persistent random JWT signing secret in `etc/kaigi/instances/NAME/jwt-secret` on first
+  `etc/kaigi/NAME/users` file. The rc script reads it at startup. It creates a
+  persistent random JWT signing secret in `etc/kaigi/NAME/jwt-secret` on first
   start. Keep both files owned by root and mode 0600.
 - JWT secrets must contain at least 32 characters and must not use the published
   default. Authentication, recording-upload and RTMP tokens use independently
@@ -142,7 +142,7 @@ live-session and admission checks.
   local browser token and its server-side session. See `kaigi.conf(5)` for
   defaults and disabling either limit.
 - The application `config.js` under `www/kaigi/app/src` is package-owned
-  code. Configure supported behavior in `etc/kaigi/instances/NAME/kaigi.conf` instead.
+  code. Configure supported behavior in `etc/kaigi/NAME/kaigi.conf` instead.
 
 ## Administrator choices and boundaries
 
@@ -322,7 +322,7 @@ defaults to false. Local authentication and password-free sessions do not requir
 LDAP. MiroTalk is maintained independently in its own port.
 
 Only LDAP_ENABLED remains in kaigi.conf. The remaining settings live in
-/usr/local/etc/kaigi/instances/NAME/ldap/ldap.conf, with ldap.conf.sample installed using
+/usr/local/etc/kaigi/NAME/ldap/ldap.conf, with ldap.conf.sample installed using
 package sample-file preservation. Supporting files are ldap/bind-secret,
 ldap/group-meetings.json. No bind secret is generated or installed;
 administrators create it with the protected permissions documented above.

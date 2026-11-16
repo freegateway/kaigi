@@ -39,7 +39,7 @@ is absent or empty. Directories are never automatically enabled. Stop an instanc
 before removing its name; explicit stop/status also works afterward.
 
 The package supplies only templates under
-`/usr/local/etc/kaigi/instances/example/`, including a provisioning README.
+`/usr/local/etc/kaigi/example/`, including a provisioning README.
 Copy that directory to a new name, rename `kaigi.conf.sample` and `users.sample`
 to `kaigi.conf` and `users`, and configure network/TLS settings and real accounts.
 Rename optional translations, meeting properties, CSS and LDAP examples only as
@@ -47,7 +47,7 @@ needed. The package never installs active accounts/configuration or a JWT secret
 Updates replace the templates, not your deployed instance files. No directory
 name, including `example`, has special runtime meaning.
 
-Each named instance needs its own `etc/kaigi/instances/NAME` directory containing
+Each named instance needs its own `etc/kaigi/NAME` directory containing
 its configuration and users. Root reads `users` and `jwt-secret` at service
 startup; keep those files mode 0600. The service account reads the non-secret
 application configuration, its LDAP settings and public site assets. Grant only
