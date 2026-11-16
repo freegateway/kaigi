@@ -59,19 +59,27 @@ describe('startup safety preflight', function () {
             assert.match(f.check().stderr, /overlapping/);
         } finally { f.cleanup(); }
     });
-    it('preflights default session sockets with no explicit web port', () => {
+    it('loads default session sockets with no explicit web port independently of host runtime paths', () => {
         const f = fixture();
         try {
             const common = { WEB_MODE: 'proxy', WEB_LISTEN_IP: undefined, WEB_LISTEN_PORT: undefined };
             f.configure('staff', common);
             f.configure('public', common);
-            const result = f.check();
-            assert.equal(result.status, 0, result.stderr);
-            const plans = JSON.parse(fs.readFileSync(path.join(f.run, 'preflight.json')));
-            for (const plan of plans) {
-                const listener = plan.listeners.find(item => item.kind === 'web');
-                assert.equal(listener.protocol, 'unix');
-                assert.equal(listener.path, `/var/run/kaigi/${plan.name}/session/${plan.name}.socket`);
+            // Exercise the real configuration loader in fresh processes without
+            // validating a FreeBSD runtime path against the CI host filesystem.
+            // Ubuntu's /var/run is normally a symlink; real path validation is
+            // covered by the temporary-path preflight and socket safety tests.
+            for (const name of ['staff', 'public']) {
+                const result = spawnSync(process.execPath, ['-e',
+                    'process.stdout.write(JSON.stringify(require("./app/src/config").webDeployment))'], {
+                    cwd: path.resolve(__dirname, '..'), encoding: 'utf8', timeout: 10000,
+                    env: cleanEnvironment({ PATH: process.env.PATH, KAIGI_INSTANCE: name,
+                        KAIGI_CONFIG_DIR: path.join(f.config, name), KAIGI_STATE_DIR: path.join(f.state, name) }),
+                });
+                assert.equal(result.status, 0, result.stderr);
+                const deployment = JSON.parse(result.stdout);
+                assert.equal(deployment.mode, 'proxy');
+                assert.equal(deployment.socketPath, `/var/run/kaigi/${name}/session/${name}.socket`);
             }
         } finally { f.cleanup(); }
     });

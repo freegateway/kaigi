@@ -81,6 +81,9 @@ describe('explicit web deployment boundary', function () {
             assert.throws(() => web.validateSocketPath(file));
             fs.unlinkSync(file); fs.symlinkSync(path.join(dir, 'missing'), file);
             assert.throws(() => web.validateSocketPath(file));
+            const linkedParent = path.join(dir, 'linked-parent');
+            fs.symlinkSync(path.join(dir, 'missing-parent'), linkedParent);
+            assert.throws(() => web.validateSocketPath(path.join(linkedParent, 'web.sock')));
             fs.unlinkSync(file); fs.chmodSync(dir, 0o777);
             assert.throws(() => web.validateSocketPath(file));
         } finally { fs.rmSync(dir, { recursive: true, force: true }); }
