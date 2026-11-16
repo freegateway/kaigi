@@ -1,5 +1,23 @@
 # Upstream intake
 
+## Browser recording audio reconciliation (2026-11-16)
+
+Kaigi 0.7.2 selectively adapts upstream
+3bc0c7b3ebfde104c35047f9b6b91d48b7df9d0d. Maintain one recording output track
+while reconciling live participant, local microphone and screen-audio sources.
+Refresh on audio attachment, removal and microphone replacement; release the
+participant mixer on startup failure or stop. Repeated mix initialization reuses
+the output instead of leaving an old destination/gain graph behind. Never stop
+live source tracks merely to release the recording mixer. Keep the separate
+system/tab-audio mixer, recording permission gate and save-before-exit behavior.
+No server-side capture feature, dependencies, presenter authority, proxy policy
+or native mediasoup changes are adopted.
+
+Tests execute the shipped browser classes with Web Audio/MediaStream doubles,
+including production attachment/removal paths, late joins, replacement, ended
+tracks, stable output, disabled recording and failed setup. Existing exit and
+security suites remain applicable; this is not browser capture or FreeBSD testing.
+
 ## Sanitizer dependency maintenance (2026-11-16)
 
 Kaigi 0.7.1 selectively adopts DOMPurify 3.4.18 and jsdom 31.0.1 from the
