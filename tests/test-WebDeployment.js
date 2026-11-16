@@ -19,6 +19,16 @@ const proxyEnv = { WEB_MODE: 'proxy', WEB_URL: 'https://meet.example', WEB_LISTE
 
 describe('explicit web deployment boundary', function () {
     this.timeout(6000);
+    it('derives private named-instance sockets without changing direct or TCP listeners', () => {
+        const environment = { WEB_MODE: 'proxy', WEB_URL: 'https://meet.example', KAIGI_INSTANCE: 'staff' };
+        assert.equal(web.settings(environment).socketPath, '/var/run/kaigi/staff/session/staff.socket');
+        assert.equal(web.settings({ ...environment, WEB_LISTEN_SOCKET: '/run/custom.sock' }).socketPath, '/run/custom.sock');
+        assert.equal(web.settings({ ...proxyEnv, KAIGI_INSTANCE: 'staff' }).socketPath, '');
+        assert.equal(web.settings({ KAIGI_INSTANCE: 'staff' }).mode, 'direct');
+        for (const instance of ['', '../staff', 'staff/public']) {
+            assert.throws(() => web.settings({ ...environment, KAIGI_INSTANCE: instance }));
+        }
+    });
     it('requires exact HTTPS root deployment and an explicit trust boundary', () => {
         for (const overrides of [
             { WEB_URL: 'https://meet.example/staff' }, { WEB_URL: 'http://meet.example' },
@@ -71,6 +81,9 @@ describe('explicit web deployment boundary', function () {
             assert.throws(() => web.validateSocketPath(file));
             fs.unlinkSync(file); fs.symlinkSync(path.join(dir, 'missing'), file);
             assert.throws(() => web.validateSocketPath(file));
+            const linkedParent = path.join(dir, 'linked-parent');
+            fs.symlinkSync(path.join(dir, 'missing-parent'), linkedParent);
+            assert.throws(() => web.validateSocketPath(path.join(linkedParent, 'web.sock')));
             fs.unlinkSync(file); fs.chmodSync(dir, 0o777);
             assert.throws(() => web.validateSocketPath(file));
         } finally { fs.rmSync(dir, { recursive: true, force: true }); }

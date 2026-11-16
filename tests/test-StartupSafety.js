@@ -59,6 +59,30 @@ describe('startup safety preflight', function () {
             assert.match(f.check().stderr, /overlapping/);
         } finally { f.cleanup(); }
     });
+    it('loads default session sockets with no explicit web port independently of host runtime paths', () => {
+        const f = fixture();
+        try {
+            const common = { WEB_MODE: 'proxy', WEB_LISTEN_IP: undefined, WEB_LISTEN_PORT: undefined };
+            f.configure('staff', common);
+            f.configure('public', common);
+            // Exercise the real configuration loader in fresh processes without
+            // validating a FreeBSD runtime path against the CI host filesystem.
+            // Ubuntu's /var/run is normally a symlink; real path validation is
+            // covered by the temporary-path preflight and socket safety tests.
+            for (const name of ['staff', 'public']) {
+                const result = spawnSync(process.execPath, ['-e',
+                    'process.stdout.write(JSON.stringify(require("./app/src/config").webDeployment))'], {
+                    cwd: path.resolve(__dirname, '..'), encoding: 'utf8', timeout: 10000,
+                    env: cleanEnvironment({ PATH: process.env.PATH, KAIGI_INSTANCE: name,
+                        KAIGI_CONFIG_DIR: path.join(f.config, name), KAIGI_STATE_DIR: path.join(f.state, name) }),
+                });
+                assert.equal(result.status, 0, result.stderr);
+                const deployment = JSON.parse(result.stdout);
+                assert.equal(deployment.mode, 'proxy');
+                assert.equal(deployment.socketPath, `/var/run/kaigi/${name}/session/${name}.socket`);
+            }
+        } finally { f.cleanup(); }
+    });
     it('rejects every overlap class, including inclusive range endpoints', () => {
         const plan = (name, kind, min, max = min, ip = '127.0.0.1') => ({ name, config: `/config/${name}`,
             recordings: `/state/${name}`, workers: 1, listeners: [{ kind, min, max, ip, protocol: 'tcp' }] });
