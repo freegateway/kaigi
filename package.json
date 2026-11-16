@@ -1,6 +1,6 @@
 {
     "name": "kaigi",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "description": "FreeGateway Kaigi: privacy-hardened FreeBSD video conferencing",
     "main": "Server.js",
     "scripts": {
@@ -47,7 +47,7 @@
         "compression": "1.8.2",
         "cors": "2.8.6",
         "crypto-js": "4.2.0",
-        "dompurify": "^3.4.17",
+        "dompurify": "3.4.18",
         "dotenv": "^18.0.8",
         "express": "5.3.0",
         "express-openid-connect": "^3.4.0",
@@ -57,8 +57,9 @@
         "httpolyglot": "0.1.2",
         "ical-generator": "^11.1.2",
         "js-yaml": "^5.5.0",
-        "jsdom": "^31.0.0",
+        "jsdom": "31.0.1",
         "jsonwebtoken": "^9.0.3",
+        "ldapts": "9.2.0",
         "mediasoup": "^3.32.2",
         "mediasoup-client": "3.26.0",
         "mime-types": "^3.0.2",
@@ -67,8 +68,7 @@
         "sanitize-filename": "^1.6.4",
         "socket.io": "4.8.4",
         "swagger-ui-express": "5.0.1",
-        "uuid": "14.0.3",
-        "ldapts": "9.2.0"
+        "uuid": "14.0.3"
     },
     "devDependencies": {
         "esbuild": "^0.28.2",

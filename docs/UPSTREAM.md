@@ -1,5 +1,30 @@
 # Upstream intake
 
+## Sanitizer dependency maintenance (2026-11-16)
+
+Kaigi 0.7.1 selectively adopts DOMPurify 3.4.18 and jsdom 31.0.1 from the
+upstream range reviewed through 7969f63a390eb1e881512a9c5027397557531593.
+Only these two locked dependency versions change; existing overrides and all
+transitive versions remain unchanged. No native canvas dependency is introduced.
+
+Primary comparisons:
+https://github.com/cure53/DOMPurify/compare/3.4.17...3.4.18
+https://github.com/jsdom/jsdom/compare/v31.0.0...v31.0.1
+
+DOMPurify changes attribute checks, template-marker handling, hook configuration
+isolation and internal implementation. Kaigi supplies strings, keeps its existing
+allowlist and attribute hook, and does not enable template mode or node-input
+sanitization. The latter APIs receive defensive dependency regression coverage,
+not new application use. Keep fail-closed exception handling and inert jsdom
+defaults without scripts or external resource loading. jsdom changes include
+selector/style optimization, connectedness tracking and tabindex parsing.
+
+No standalone DOMPurify browser asset is shipped or loaded by Kaigi. The vendored
+jsPDF HTML plugin references an optional DOMPurify global/module but does not
+embed a sanitizer copy; no browser bundle is replaced. No listener, session,
+authorization, localization, proxy policy or mediasoup worker changes.
+The companion port must update the two npm distfiles, checksums and application pin.
+
 ## Flat named-instance configuration (2026-11-16)
 
 Kaigi 0.7.0 removes the redundant instances/ configuration layer. Service
