@@ -2506,6 +2506,9 @@ function startServer() {
                 browser_version,
             } = data.peer_info;
 
+            // Consume the credential locally, never retain it in shared peer metadata.
+            delete data.peer_info.peer_token;
+
             let is_presenter = peer_presenter;
             let authenticatedUsername = null;
 

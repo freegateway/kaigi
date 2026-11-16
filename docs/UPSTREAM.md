@@ -1,5 +1,14 @@
 # Upstream intake
 
+## Peer credential privacy (2026-11-16)
+
+Kaigi 0.6.6 adapts upstream 5a5ff401a5c0f025fdbeaf22b031c833f23e55f7.
+Extract the join credential for authentication, then remove it from shared
+metadata before peer construction or webhook dispatch. The Peer constructor
+also strips the credential defensively. Preserve live-session binding, exact
+meeting grants, revocation and the no-presenter policy. No dependency changes.
+Reviewed upstream through 7969f63a390eb1e881512a9c5027397557531593.
+
 ## Canonical Security prose (2026-11-15)
 
 Kaigi 0.6.5 adopts the approved security_page11.md English body, keeping the
