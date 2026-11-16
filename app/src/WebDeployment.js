@@ -19,7 +19,15 @@ function proxyError() {
 function settings(environment = process.env) {
     const mode = environment.WEB_MODE || 'direct';
     if (!['direct', 'proxy'].includes(mode)) throw proxyError();
-    const socketPath = environment.WEB_LISTEN_SOCKET || '';
+    let socketPath = environment.WEB_LISTEN_SOCKET || '';
+    // A named proxy instance without TCP settings uses its private session socket.
+    if (mode === 'proxy' && !socketPath && !environment.WEB_LISTEN_IP &&
+        !environment.SERVER_LISTEN_IP && !environment.WEB_LISTEN_PORT &&
+        !environment.SERVER_LISTEN_PORT && !environment.WEB_PROXY_IPS) {
+        const instance = environment.KAIGI_INSTANCE;
+        if (!/^[a-z][a-z0-9_]{0,31}$/.test(instance || '')) throw proxyError();
+        socketPath = `/var/run/kaigi/${instance}/session/${instance}.socket`;
+    }
     const trusted = (environment.WEB_PROXY_IPS || '').split(',').filter(Boolean);
     const socketMode = environment.WEB_SOCKET_MODE || '0600';
     if (!['0600', '0660'].includes(socketMode)) throw proxyError();

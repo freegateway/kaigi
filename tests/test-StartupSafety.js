@@ -59,6 +59,22 @@ describe('startup safety preflight', function () {
             assert.match(f.check().stderr, /overlapping/);
         } finally { f.cleanup(); }
     });
+    it('preflights default session sockets with no explicit web port', () => {
+        const f = fixture();
+        try {
+            const common = { WEB_MODE: 'proxy', WEB_LISTEN_IP: undefined, WEB_LISTEN_PORT: undefined };
+            f.configure('staff', common);
+            f.configure('public', common);
+            const result = f.check();
+            assert.equal(result.status, 0, result.stderr);
+            const plans = JSON.parse(fs.readFileSync(path.join(f.run, 'preflight.json')));
+            for (const plan of plans) {
+                const listener = plan.listeners.find(item => item.kind === 'web');
+                assert.equal(listener.protocol, 'unix');
+                assert.equal(listener.path, `/var/run/kaigi/${plan.name}/session/${plan.name}.socket`);
+            }
+        } finally { f.cleanup(); }
+    });
     it('rejects every overlap class, including inclusive range endpoints', () => {
         const plan = (name, kind, min, max = min, ip = '127.0.0.1') => ({ name, config: `/config/${name}`,
             recordings: `/state/${name}`, workers: 1, listeners: [{ kind, min, max, ip, protocol: 'tcp' }] });

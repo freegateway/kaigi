@@ -9,11 +9,14 @@
 WEB_MODE defaults to direct, where Kaigi terminates HTTPS.
 Set WEB_MODE=proxy for an explicitly trusted HTTPS reverse proxy.
 WEB_URL must then be an exact HTTPS origin with no path prefix.
-For a Unix backend, set WEB_LISTEN_SOCKET to an absolute socket path,
-and omit WEB_LISTEN_PORT and WEB_LISTEN_IP.
+For a Unix backend, omit WEB_LISTEN_PORT, WEB_LISTEN_IP and WEB_PROXY_IPS.
+The default socket is /var/run/kaigi/NAME/session/NAME.socket.
+WEB_LISTEN_SOCKET can override it with an absolute socket path.
 WEB_SOCKET_MODE accepts 0600 (default) or 0660 for a deliberately shared group.
-Existing socket paths, including stale ones, prevent startup; remove a stale
-socket manually only after confirming that its instance is stopped.
+The rc service recreates its application-owned session directory only after
+confirming that the instance and supervisor have stopped. PID files and startup
+metadata remain in the root-owned parent. Custom socket paths outside session
+remain administrator-managed; existing sockets there prevent startup.
 For a TCP backend, set an explicit WEB_LISTEN_IP and WEB_LISTEN_PORT and list
 exact trusted proxy source addresses in WEB_PROXY_IPS, separated by commas.
 Do not expose backend TCP listeners to untrusted networks.

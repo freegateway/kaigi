@@ -19,6 +19,16 @@ const proxyEnv = { WEB_MODE: 'proxy', WEB_URL: 'https://meet.example', WEB_LISTE
 
 describe('explicit web deployment boundary', function () {
     this.timeout(6000);
+    it('derives private named-instance sockets without changing direct or TCP listeners', () => {
+        const environment = { WEB_MODE: 'proxy', WEB_URL: 'https://meet.example', KAIGI_INSTANCE: 'staff' };
+        assert.equal(web.settings(environment).socketPath, '/var/run/kaigi/staff/session/staff.socket');
+        assert.equal(web.settings({ ...environment, WEB_LISTEN_SOCKET: '/run/custom.sock' }).socketPath, '/run/custom.sock');
+        assert.equal(web.settings({ ...proxyEnv, KAIGI_INSTANCE: 'staff' }).socketPath, '');
+        assert.equal(web.settings({ KAIGI_INSTANCE: 'staff' }).mode, 'direct');
+        for (const instance of ['', '../staff', 'staff/public']) {
+            assert.throws(() => web.settings({ ...environment, KAIGI_INSTANCE: instance }));
+        }
+    });
     it('requires exact HTTPS root deployment and an explicit trust boundary', () => {
         for (const overrides of [
             { WEB_URL: 'https://meet.example/staff' }, { WEB_URL: 'http://meet.example' },

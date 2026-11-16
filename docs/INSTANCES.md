@@ -12,7 +12,7 @@ Example Unix backend in the staff instance's kaigi.conf:
 ```
 WEB_MODE=proxy
 WEB_URL=https://staff.meet.example.com
-WEB_LISTEN_SOCKET=/var/run/kaigi/staff/web.sock
+WEB_LISTEN_SOCKET=/var/run/kaigi/staff/session/staff.socket
 WEB_SOCKET_MODE=0600
 MEDIA_LISTEN_IP=192.0.2.10
 MEDIA_ANNOUNCED_IP=192.0.2.10
@@ -25,10 +25,14 @@ Remove WEB_LISTEN_PORT and WEB_LISTEN_IP from copied samples for Unix mode.
 WEB_LISTEN_HOST is unnecessary when public URL and media addresses are explicit.
 Socket paths must be absolute, normalized, at most 100 bytes and free of symlinks.
 Parents must belong to root or the service user and not be group/world-writable.
-Kaigi does not create arbitrary socket directories; use the rc-managed instance
-runtime directory. Existing paths, even stale sockets, fail startup rather than
-being unlinked. Normal close removes the socket. After a crash, confirm that the
-instance is stopped and inspect the path before manually removing a stale socket.
+Omitting WEB_LISTEN_SOCKET as well as the TCP settings defaults to
+/var/run/kaigi/NAME/session/NAME.socket. The rc service creates session/ with
+the instance's service ownership and mode 0750, while its parent stays root-owned
+to protect PID files and startup metadata. Readiness directories also live inside
+session/. Before startup and after a confirmed stop, rc removes stale session
+contents only if both the recorded application and supervisor processes are gone.
+Custom socket paths outside session/ remain administrator-managed; existing
+socket paths there prevent startup. Normal listener close removes its socket.
 
 0600 permits only the service owner. For a different proxy account use 0660,
 deliberately share the service's primary group with the proxy, and permit group
@@ -87,11 +91,11 @@ frontend kaigi_https
 
 backend kaigi_staff
     http-request set-header Host staff.meet.example.com
-    server staff unix@/var/run/kaigi/staff/web.sock
+    server staff unix@/var/run/kaigi/staff/session/staff.socket
 
 backend kaigi_public
     http-request set-header Host public.meet.example.com
-    server public unix@/var/run/kaigi/public/web.sock
+    server public unix@/var/run/kaigi/public/session/public.socket
 ```
 
 For TCP replace the backend server address with 127.0.0.1:7443, for example.
