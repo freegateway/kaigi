@@ -31,3 +31,37 @@ test('real WebSocket authentication preserves an active transport and closes sil
  await wait(1450);assert(ready);assert.equal(a.readyState,WS.OPEN);assert(closed);
  a.close();b.close();await new Promise(resolve=>io.close(resolve));delete process.env.CONNECTION_INITIAL_TIMEOUT;delete process.env.SOCKET_AUTH_TIMEOUT;
 });
+
+
+// Exercise real Node timeout dispatch, rather than emitting a synthetic event.
+test('ordinary keep-alive expires quietly while stalled HTTP requests stay logged', async () => {
+ const old = process.env.HTTP_KEEPALIVE_TIMEOUT;
+ const idle = process.env.HTTP_IDLE_TIMEOUT;
+ process.env.HTTP_KEEPALIVE_TIMEOUT='1';
+ process.env.HTTP_IDLE_TIMEOUT='1';
+ const events=[];
+ const server=http.createServer((q,r)=>{if(q.url!=='/stall')r.end('ok');});
+ installConnectionSecurity(server,{engine:new EventEmitter()},(...event)=>events.push(event));
+ const sockets=[];
+ try {
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  async function exchange(request) {
+   const socket=net.connect(server.address().port,'127.0.0.1');
+   sockets.push(socket);
+   socket.resume();
+   const closed=new Promise((resolve,reject)=>{socket.once('close',resolve);socket.once('error',reject);});
+   socket.write(request);
+   await closed;
+  }
+  await exchange('GET / HTTP/1.1\r\nHost: localhost\r\n\r\n');
+  assert.equal(events.length,0);
+  await exchange('GET /stall HTTP/1.1\r\nHost: localhost\r\n\r\n');
+  assert.equal(events.length,1);
+  assert.equal(events[0][2],'http_idle');
+ } finally {
+  for(const socket of sockets)socket.destroy();
+  await new Promise(resolve=>server.close(resolve));
+  if(old===undefined)delete process.env.HTTP_KEEPALIVE_TIMEOUT;else process.env.HTTP_KEEPALIVE_TIMEOUT=old;
+  if(idle===undefined)delete process.env.HTTP_IDLE_TIMEOUT;else process.env.HTTP_IDLE_TIMEOUT=idle;
+ }
+});
