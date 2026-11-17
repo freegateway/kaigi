@@ -385,7 +385,10 @@ Last media port.
 Default: 40100.
 .It Ev MEDIA_NUM_WORKERS
 Optional mediasoup worker count.
-When omitted, Kaigi derives the worker count from the available CPUs.
+When omitted, service launches divide the available CPUs by the number of
+configured Kaigi instances, rounding down with a minimum of one worker each.
+Explicit counts take precedence; the aggregate CPU warning remains enabled.
+Interactive launches default to the available CPU count.
 .El
 .Pp
 The FreeBSD port does not contact public IP-discovery services.

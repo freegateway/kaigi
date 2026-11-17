@@ -282,7 +282,12 @@ const NUM_CPUS = os.cpus().length;
 if (process.env.SFU_NUM_WORKERS !== undefined && (!/^[1-9][0-9]*$/.test(process.env.SFU_NUM_WORKERS) || !Number.isSafeInteger(Number(process.env.SFU_NUM_WORKERS)))) {
     throw new Error('MEDIA_NUM_WORKERS must be a positive integer');
 }
-const NUM_WORKERS = Math.min(process.env.SFU_NUM_WORKERS || NUM_CPUS, NUM_CPUS);
+const instanceCount = process.env.KAIGI_INSTANCE_COUNT || '1';
+if (!/^[1-9][0-9]*$/.test(instanceCount) || !Number.isSafeInteger(Number(instanceCount))) {
+    throw new Error('Invalid service instance count');
+}
+const automaticWorkers = Math.max(1, Math.floor(NUM_CPUS / Number(instanceCount)));
+const NUM_WORKERS = Math.min(process.env.SFU_NUM_WORKERS || automaticWorkers, NUM_CPUS);
 
 // ==============================================
 // 3. FFmpeg Path Configuration

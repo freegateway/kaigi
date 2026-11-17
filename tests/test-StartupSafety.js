@@ -34,6 +34,41 @@ describe('startup safety preflight', function () {
         }
         return { root, config, state, run, configure, check, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
     }
+    it('keeps the reported adjacent ranges independent in real inspectors', () => {
+        const f = fixture();
+        try {
+            f.configure('staff', { MEDIA_MIN_PORT: 56001, MEDIA_MAX_PORT: 60000 });
+            f.configure('public', { MEDIA_MIN_PORT: 52000, MEDIA_MAX_PORT: 56000 });
+            let result = f.check();
+            assert.equal(result.status, 0, result.stderr);
+            const plans = JSON.parse(fs.readFileSync(path.join(f.run, 'preflight.json')));
+            assert.equal(plans[0].listeners.find(x => x.kind === 'media').min, 56001);
+            assert.equal(plans[1].listeners.find(x => x.kind === 'media').max, 56000);
+            f.configure('public', { MEDIA_MIN_PORT: 52000, MEDIA_MAX_PORT: 56001 });
+            result = f.check();
+            assert.notEqual(result.status, 0);
+            assert.match(result.stderr, /56001\.\.56001/);
+            assert.match(result.stderr, /staff configured 56001\.\.60000; public configured 52000\.\.56001/);
+        } finally { f.cleanup(); }
+    });
+    it('shares automatic workers across every configured instance and preserves overrides', () => {
+        const f = fixture();
+        try {
+            f.configure('staff', { MEDIA_NUM_WORKERS: undefined });
+            f.configure('public', { MEDIA_NUM_WORKERS: undefined });
+            let result = f.check();
+            assert.equal(result.status, 0, result.stderr);
+            let plans = JSON.parse(fs.readFileSync(path.join(f.run, 'preflight.json')));
+            const expected = Math.max(1, Math.floor(os.cpus().length / 2));
+            assert(plans.every(plan => plan.workers === expected));
+            f.configure('staff', { MEDIA_NUM_WORKERS: 1 });
+            result = f.check();
+            assert.equal(result.status, 0, result.stderr);
+            plans = JSON.parse(fs.readFileSync(path.join(f.run, 'preflight.json')));
+            assert.equal(plans[0].workers, 1);
+            assert.equal(plans[1].workers, expected);
+        } finally { f.cleanup(); }
+    });
     it('compares IPv4, wildcard, IPv6 and mapped addresses conservatively', () => {
         assert(addressOverlaps('0.0.0.0', '127.0.0.1'));
         assert(addressOverlaps('::', '127.0.0.1'));
@@ -192,7 +227,9 @@ describe('startup safety preflight', function () {
                 started: execFileSync('/bin/ps', ['-p', String(process.pid), '-o', 'lstart='], { encoding: 'utf8', env: { TZ: 'UTC', LC_ALL: 'C' } }).trim() }));
             f.configure('staff', { MEDIA_MIN_PORT: 41000, MEDIA_MAX_PORT: 41100 });
             f.configure('public', { MEDIA_MIN_PORT: 40000, MEDIA_MAX_PORT: 40100 });
-            assert.notEqual(f.check({}, 'public').status, 0);
+            const conflict = f.check({}, 'public');
+            assert.notEqual(conflict.status, 0);
+            assert.match(conflict.stderr, /staff running 40000\.\.40100/);
             assert.notEqual(f.check({}, 'staff,public', 'restart').status, 0);
             assert.equal(f.check({}, 'staff', 'restart').status, 0);
         } finally { f.cleanup(); }

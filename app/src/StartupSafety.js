@@ -70,7 +70,7 @@ function checkPlans(plans, cpuCount = require('node:os').cpus().length) {
                     continue;
                 }
                 if (x.protocol === y.protocol && addressOverlaps(x.ip, y.ip) && x.min <= y.max && y.min <= x.max) {
-                    throw Error(`Instances ${a.name} and ${b.name}: overlapping ${x.protocol} ${x.kind}/${y.kind} ports ${Math.max(x.min, y.min)}..${Math.min(x.max, y.max)}`);
+                    throw Error(`Instances ${a.name} and ${b.name}: overlapping ${x.protocol} ${x.kind}/${y.kind} ports ${Math.max(x.min, y.min)}..${Math.min(x.max, y.max)} (${a.name} ${a.allocation || 'configured'} ${x.min}..${x.max}; ${b.name} ${b.allocation || 'configured'} ${y.min}..${y.max})`);
                 }
             }
             for (const x of [a.config, a.recordings]) for (const y of [b.config, b.recordings]) {
@@ -198,7 +198,7 @@ async function main(args) {
             const config = path.join(configRoot, name);
             const state = path.join(stateRoot, name);
             const environment = cleanEnvironment({ PATH: process.env.PATH, NODE_ENV: process.env.NODE_ENV || 'production',
-                KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config, ...(state ? { KAIGI_STATE_DIR: state } : {}) });
+                KAIGI_INSTANCE_COUNT: String(instances.length / 3), KAIGI_INSTANCE: name, KAIGI_CONFIG_DIR: config, ...(state ? { KAIGI_STATE_DIR: state } : {}) });
             const result = spawnSync(process.execPath, [__filename, 'inspect', name, config, state, user, group], {
                 env: environment, encoding: 'utf8', timeout: 15000, maxBuffer: 1048576,
             });
@@ -234,7 +234,7 @@ async function main(args) {
             if (!fs.existsSync(snapshot)) throw Error(`Instance ${name}: running allocation is unknown; stop it before upgrading startup safety`);
             const plan = readMetadata(snapshot);
             if (plan.pid !== pid || !plan.started || plan.started !== processStamp(pid)) throw Error(`Instance ${name}: stale process identity; inspect its PID file`);
-            active.push(plan);
+            active.push({ ...plan, allocation: 'running' });
         }
         const warning = checkPlans([...plans, ...active]);
         if (warning) process.stderr.write(`kaigi: warning: ${warning}\n`);
