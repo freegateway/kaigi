@@ -10,6 +10,7 @@ function installConnectionSecurity(server, io, event = securityEvent) {
     const initial = seconds('CONNECTION_INITIAL_TIMEOUT', 15);
     const auth = seconds('SOCKET_AUTH_TIMEOUT', 30);
     const timers = new WeakMap();
+    const states = new WeakMap();
     function clear(socket) {
         for (const s of [socket, socket?._parent]) {
             if (s && timers.has(s)) { clearTimeout(timers.get(s)); timers.delete(s); }
@@ -24,9 +25,30 @@ function installConnectionSecurity(server, io, event = securityEvent) {
         timer.unref?.(); timers.set(socket, timer);
         socket.once('close', () => clear(socket));
     });
-    server.on('request', req => clear(req.socket));
+    server.on('request', (req, res) => {
+        clear(req.socket);
+        const state = states.get(req.socket) || { active: 0, served: false };
+        states.set(req.socket, state);
+        state.active++;
+        state.served = true;
+        let finished = false;
+        const complete = () => {
+            if (finished) return;
+            finished = true;
+            state.active--;
+            if (state.active === 0) state.idleBytesRead = req.socket.bytesRead;
+        };
+        res.once('finish', complete);
+        res.once('close', complete);
+    });
     server.on('upgrade', req => { clear(req.socket); req.socket.setTimeout(0); });
-    server.on('timeout', socket => { event('connection_timeout', socket, 'http_idle'); socket.destroy(); });
+    server.on('timeout', socket => {
+        const state = states.get(socket);
+        // A completed response followed by idle keep-alive expiry is routine.
+        // Partial subsequent requests remain subject to Node's header deadline.
+        if (!state?.served || state.active > 0 || socket.bytesRead !== state.idleBytesRead) event('connection_timeout', socket, 'http_idle');
+        socket.destroy();
+    });
     io.engine.on('connection', connection => {
         const timer = setTimeout(() => { event('authentication_timeout', connection, 'socket_deadline'); connection.close(); }, auth);
         timer.unref?.();
