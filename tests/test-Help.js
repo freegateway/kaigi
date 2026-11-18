@@ -85,8 +85,8 @@ describe('public help guide and inert illustrations', () => {
         const about = new JSDOM(read('public/views/about.html')).window.document;
         const document = new JSDOM(help.renderHelp(brand, 'ja')).window.document;
         assert.equal(document.querySelector('select, form, #preMeetingLanguage'), null);
-        const back = document.querySelector('a.button[href="/login"]');
-        assert.equal(back.className, about.querySelector('a[href="/login"]').className);
+        const back = document.querySelector('a.button[href="/"]');
+        assert.equal(back.className, about.querySelector('a.button[href="/"]').className);
         assert.equal(back.textContent, require('../public/lang/ja.json').about.back);
     });
 
@@ -106,7 +106,7 @@ describe('public help guide and inert illustrations', () => {
             assert.equal(document.documentElement.lang, language);
             assert.equal(document.documentElement.dataset.helpLanguage, language);
             assert.equal(
-                document.querySelector('a.button[href="/login"]').textContent,
+                document.querySelector('a.button[href="/"]').textContent,
                 require('../public/lang/' + language + '.json').about.back
             );
         }

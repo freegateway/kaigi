@@ -257,14 +257,15 @@ meeting grants. Those grants enforce both creation and joining. LDAP group and
 account changes take effect at the next login; LDAP_SESSION_MAX_AGE bounds their
 lifetime, with the shorter existing AUTH_SESSION_MAX_AGE also applied when set.
 Existing idle expiry, active-meeting activity and logout/revocation remain.
-Restarting the daemon invalidates existing sessions. No LDAP password is cached,
-logged or used for subsequent meeting joins.
+Restarting the daemon invalidates existing sessions. No user LDAP password is cached, logged or used for subsequent meeting joins.
+The restricted search-account secret is retained only in server memory.
 
 LDAP_BIND_PASSWORD_FILE names a regular non-symlink file; relative paths resolve
 against the named instance's ldap/ directory, while explicit absolute paths remain
 unchanged. The file must be
-readable by the daemon, at most 4096 bytes, with no group-write or other access
-(mode 0600 owned by the daemon, or 0640 with an appropriate daemon group).
+root-owned, root-only (mode 0600), and at most 4096 bytes. The privileged
+service bootstrap loads it once before dropping to kaigi:kaigi; authentication
+never rereads it. Restart the service after rotating the secret.
 Store a single password, optionally followed by one newline. LDAP credentials
 are never included in the browser configuration. LDAP input accepts up to 256
 username and 4096 password characters; local accounts retain their existing

@@ -615,7 +615,7 @@ class RoomClient {
             successCallback();
         }).catch((error) => {
             console.warn('Unable to enter meeting', error);
-            window.location.replace('/login?select=1');
+            window.location.replace('/?select=1');
         });
     }
 
@@ -2155,7 +2155,7 @@ class RoomClient {
 
         if (!confirmResult.isConfirmed) return;
 
-        window.location.replace('/login?select=1');
+        window.location.replace('/?select=1');
     }
 
     // ####################################################
@@ -2526,7 +2526,7 @@ class RoomClient {
             Array.from(query.keys()).length === 1 && /^[a-f0-9-]{36}$/.test(selection || '')) {
             return '/meeting?selection=' + selection;
         }
-        return '/login?select=1';
+        return '/?select=1';
     }
 
     // ####################################################
@@ -12007,7 +12007,7 @@ class RoomClient {
         }).then(() => {
             // Login required to join room
             endRoomSession();
-            openURL('/login?select=1');
+            openURL('/?select=1');
         });
     }
 

@@ -23,7 +23,7 @@ describe('Kaigi 0.5.4 privacy and help', () => {
     it('uses crawler exclusions without altering title or preview metadata', async () => {
         const app = express();
         app.use(require('../app/src/middleware/CrawlerPolicy'));
-        app.get('/login', (_req, res) => res.send('<title>Custom title</title>'));
+        app.get('/', (_req, res) => res.send('<title>Custom title</title>'));
         const server = app.listen(0, '127.0.0.1');
         await new Promise(resolve => server.once('listening', resolve));
         const base = `http://127.0.0.1:${server.address().port}`;
@@ -31,7 +31,7 @@ describe('Kaigi 0.5.4 privacy and help', () => {
             const robots = await fetch(base + '/robots.txt');
             assert.equal(await robots.text(), 'User-agent: *\nDisallow: /\n');
             assert.equal((await fetch(base + '/sitemap.xml')).status, 404);
-            const page = await fetch(base + '/login');
+            const page = await fetch(base + '/');
             assert.equal(page.headers.get('x-robots-tag'), 'noindex, nofollow');
             assert.equal(await page.text(), '<title>Custom title</title>');
             const source = fs.readFileSync(path.join(__dirname, '../app/src/Server.js'), 'utf8');

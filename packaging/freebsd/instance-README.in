@@ -43,3 +43,20 @@ Preflight validates all configured instances before start/restart. State and
 recordings live under /var/db/kaigi/NAME; PID files under /var/run/kaigi/NAME;
 logs under /var/log/kaigi/NAME. No files at the top level of etc/kaigi configure
 an instance. See kaigi(8), kaigi.conf(5), kaigi-ldap.conf(5) and INSTANCES.md.
+
+Service identity and LDAP secrets: the package creates the unprivileged
+kaigi user and group. The service defaults to kaigi:kaigi and retains global
+and per-instance daemon_user/daemon_group overrides. The root bootstrap loads
+the root-owned mode-0600 LDAP bind secret once, then initializes supplementary
+groups and drops to the configured group and user before starting the server
+or mediasoup workers. Rotation requires restart. No secret is passed in argv,
+new environment variables, launch plans or readiness files.
+For interactive LDAP launches, the protected secret must be preloaded by the
+service bootstrap; do not relax its permissions.
+
+For HAProxy Unix-socket access, use WEB_SOCKET_MODE=0660 and grant the proxy
+service account membership in the configured Kaigi group. Restart the proxy
+to acquire that membership. Keep state directories mode 0700 and credentials
+root-owned mode 0600. Before upgrading an existing deployment, stop Kaigi and
+migrate ownership of each instance's writable state to the chosen service user;
+do not change ownership of credentials or application code.

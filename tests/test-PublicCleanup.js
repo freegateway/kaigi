@@ -18,7 +18,7 @@ describe('public page cleanup', () => {
             assert(doc.querySelector('footer.public-footer'));
             assert(doc.querySelector('link[href="/css/public-page.css"]'));
             assert.equal(doc.querySelector('style'), null);
-            assert(doc.querySelector('#publicBack.button.button-primary[href="/login"]'));
+            assert(doc.querySelector('#publicBack.button.button-primary[href="/"]'));
         }
         assert(!read('public/views/Room.html').includes('/css/public-page.css'));
         const css = read('public/css/public-page.css');
@@ -41,7 +41,7 @@ describe('public page cleanup', () => {
     it('goes Back only for a same-origin referrer and usable history; otherwise keeps the login fallback', () => {
         for (const [referrer, length, expected] of [
             ['https://kaigi.invalid/meeting', 2, 1], ['https://outside.invalid/', 2, 0], ['', 2, 0],
-            ['https://kaigi.invalid/login', 1, 0],
+            ['https://kaigi.invalid/', 1, 0],
         ]) {
             let handler, prevented = 0, back = 0;
             vm.runInNewContext(read('public/js/Help.js'), {

@@ -13,7 +13,7 @@ describe('Kaigi operator and attendee branding', () => {
     it('preserves operator branding on supported pages with local credits/privacy footers', () => {
         for (const page of ['login', 'landing', 'newroom', 'permission', '404', 'privacy']) {
             const dom = new JSDOM(read(`public/views/${page}.html`), {
-                runScripts: 'outside-only', url: 'https://meet.example/login',
+                runScripts: 'outside-only', url: 'https://meet.example/',
             });
             const { window } = dom;
             try {

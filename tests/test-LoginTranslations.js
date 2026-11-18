@@ -10,7 +10,7 @@ describe('login translation sources and live switching', () => {
     let dom;
     async function load(lang) {
         dom = new JSDOM(read('public/views/login.html'), {
-            url: 'https://kaigi.invalid/login',
+            url: 'https://kaigi.invalid/',
             runScripts: 'outside-only',
             virtualConsole: new VirtualConsole(),
         });

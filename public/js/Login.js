@@ -85,7 +85,7 @@ function getAuthenticatedSessionConfig() {
     };
 }
 
-async function terminateAuthenticatedSession(target = '/login?logged_out=1') {
+async function terminateAuthenticatedSession(target = '/?logged_out=1') {
     const token = window.sessionStorage.peer_token;
     if (token) {
         try {
@@ -113,7 +113,7 @@ async function touchAuthenticatedSession() {
         });
         if (!response.ok) {
             clearAuthenticatedSession();
-            window.location.replace('/login?session_expired=1');
+            window.location.replace('/?session_expired=1');
             return false;
         }
         authSessionLastTouch = Date.now();
@@ -148,11 +148,11 @@ function startAuthenticatedSessionMonitor() {
     window.setInterval(() => {
         const now = Date.now();
         if (maxAgeMs > 0 && startedAt > 0 && now - startedAt >= maxAgeMs) {
-            void terminateAuthenticatedSession('/login?session_expired=1');
+            void terminateAuthenticatedSession('/?session_expired=1');
             return;
         }
         if (idleMs > 0 && now - authSessionLastActivity >= idleMs) {
-            void terminateAuthenticatedSession('/login?session_expired=1');
+            void terminateAuthenticatedSession('/?session_expired=1');
         }
     }, checkInterval);
 
@@ -252,7 +252,7 @@ function restoreAuthenticatedRoomSelector() {
 }
 
 function logout() {
-    void terminateAuthenticatedSession('/login?logged_out=1');
+    void terminateAuthenticatedSession('/?logged_out=1');
 }
 
 joinSelectRoomBtn.onclick = (e) => {
@@ -331,7 +331,7 @@ function login() {
         hideLoginError();
 
         axios
-            .post('/login', {
+            .post('/auth/session/login', {
                 username: username,
                 password: password,
             })
@@ -433,7 +433,7 @@ async function selectAuthorizedMeeting(meeting) {
             method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${window.sessionStorage.peer_token || ''}` },
             body: JSON.stringify({ meeting }),
         });
-        if (response.status === 401) { await terminateAuthenticatedSession('/login?session_expired=1'); return; }
+        if (response.status === 401) { await terminateAuthenticatedSession('/?session_expired=1'); return; }
         if (!response.ok) { showLoginError('This room is not allowed for this user'); return; }
         const data = await response.json();
         if (!/^\/meeting\?selection=[a-f0-9-]{36}$/.test(data.navigation)) throw new Error('Invalid meeting navigation');

@@ -70,7 +70,7 @@ describe('server reconnect authorization boundaries', () => {
             assert.equal((await request()).status, 403);
             session.allowed = true;
             sessions.clear();
-            assert.deepEqual(await request(), { status: 302, location: '/login' });
+            assert.deepEqual(await request(), { status: 302, location: '/' });
         } finally {
             server.closeAllConnections();
             await new Promise((resolve) => server.close(resolve));

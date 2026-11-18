@@ -96,7 +96,7 @@ function renderSecurity(input = {}, requested = 'en') {
 <a href="/" class="help-identity"><img class="about-local-logo" src="${escape(logo)}" alt=""><span hidden>${name}</span></a>
 <h1>${name}</h1><p>${escape(values.SITE_DESCRIPTION ?? brand.site?.description ?? '')}</p>
 <h2>${copy[0]}</h2>${prose(text)}
-<p><a class="button button-primary" href="/login" id="publicBack">${copy[1]}</a></p></main></div>
+<p><a class="button button-primary" href="/" id="publicBack">${copy[1]}</a></p></main></div>
 <footer class="public-footer"><a href="/help">${copy[2]}</a><a href="/about">${copy[3]}</a><span>Kaigi ${escape(version)}</span><span>${escape(values.SITE_COPYRIGHT ?? brand.site?.copyright ?? '')}</span></footer></body></html>`;
 }
 

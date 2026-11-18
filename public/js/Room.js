@@ -60,7 +60,7 @@ let survey = {
 
 let redirect = {
     enabled: true,
-    url: '/login?select=1',
+    url: '/?select=1',
 };
 
 let recCodecs = null;
@@ -365,7 +365,7 @@ async function terminateAuthenticatedSession(expired = true) {
     }
     clearAuthenticatedSession();
     bypassBeforeUnloadOnce = true;
-    window.location.replace(expired ? '/login?session_expired=1' : '/login');
+    window.location.replace(expired ? '/?session_expired=1' : '/');
 }
 
 async function touchAuthenticatedSession() {
@@ -379,7 +379,7 @@ async function touchAuthenticatedSession() {
         if (!response.ok) {
             clearAuthenticatedSession();
             bypassBeforeUnloadOnce = true;
-            window.location.replace('/login?session_expired=1');
+            window.location.replace('/?session_expired=1');
             return false;
         }
         authSessionLastTouch = Date.now();
@@ -806,7 +806,7 @@ function getQueryParam(param) {
 function getRoomId() {
     const node = document.getElementById('authorizedMeeting');
     const roomId = node ? JSON.parse(node.textContent).meeting : null;
-    if (typeof roomId !== 'string' || !roomId) { window.location.replace('/login'); throw new Error('No authorized meeting selection'); }
+    if (typeof roomId !== 'string' || !roomId) { window.location.replace('/'); throw new Error('No authorized meeting selection'); }
     return roomId;
 }
 
@@ -5582,8 +5582,8 @@ function handleRoomClientEvents() {
 // ####################################################
 
 function initLeaveMeeting() {
-    if (!rc) return openURL('/login?select=1');
-    return completeRoomExit(false, false, '/login?select=1');
+    if (!rc) return openURL('/?select=1');
+    return completeRoomExit(false, false, '/?select=1');
 }
 
 async function leaveRoom(allowCancel = true, disconnectAll = false, ejectReason = '') {
@@ -5674,7 +5674,7 @@ function redirectOnLeave(disconnectAll = false, ejectReason = '') {
     isExiting = true;
     endRoomSession();
     rc.exitRoom(disconnectAll);
-    redirect && redirect.enabled ? openURL(redirect.url) : openURL('/login?select=1');
+    redirect && redirect.enabled ? openURL(redirect.url) : openURL('/?select=1');
 }
 
 function userLog(icon, message, position = 'top-end', timer = 3000) {
@@ -10138,7 +10138,7 @@ function parseDurationToSeconds(duration) {
 }
 
 function navigateToRoom(room, extraParams = {}) {
-    window.location.replace('/login?select=1');
+    window.location.replace('/?select=1');
 }
 
 function checkBreakoutRoom() {
