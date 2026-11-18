@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Transcripción de Whisper detenida",
         "You cannot change your own role": "No puedes cambiar tu propio rol",
         "You cannot send files to yourself.": "No puedes enviarte archivos a ti mismo.",
-        "Recording is disabled for this meeting": "La grabación está desactivada para esta reunión"
+        "Recording is disabled for this meeting": "La grabación está desactivada para esta reunión",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

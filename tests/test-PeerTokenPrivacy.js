@@ -53,7 +53,7 @@ describe('peer token privacy', function () {
         io.on('connection', socket => {
             socket.room_id = 'meeting';
             vm.runInNewContext(section("        socket.on('join'", "        socket.on('getRouterRtpCapabilities'"), {
-                socket, roomExists: () => true, getIpSocket: () => '127.0.0.1', checkXSS, Validator,
+                socket, config: { server: { hostUrl: 'https://meet.example' } }, roomExists: () => true, getIpSocket: () => '127.0.0.1', checkXSS, Validator,
                 getRoom: () => room, hostCfg: { user_auth: true }, isValidToken: async token => !!sessions[token],
                 authenticatedSession, sessionAllowsRoom: async () => grant,
                 Peer: class extends Peer {
@@ -108,7 +108,7 @@ describe('peer token privacy', function () {
                 assert(!text.includes('private-token'));
                 assert(!text.includes('peer_token'));
             }
-            for (const peer of peers.values()) assert.equal(peer.peer_presenter, false);
+            for (const peer of peers.values()) { assert.equal(peer.peer_presenter, false); assert.equal(peer.peer_info.peer_id, peer.id); }
             assert.equal(await bob('join', join('alice-private-token')), 'unauthorized');
             grant = false;
             assert.equal(await bob('join', join('bob-private-token')), 'notAllowed');

@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper ट्रान्सक्रिप्शन थांबवले",
         "You cannot change your own role": "तुम्ही स्वतःची भूमिका बदलू शकत नाही",
         "You cannot send files to yourself.": "तुम्ही स्वतःला फाइल्स पाठवू शकत नाही.",
-        "Recording is disabled for this meeting": "Recording is disabled for this meeting"
+        "Recording is disabled for this meeting": "Recording is disabled for this meeting",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

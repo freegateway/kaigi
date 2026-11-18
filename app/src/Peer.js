@@ -3,9 +3,11 @@
 const { parseScalabilityMode } = require('mediasoup');
 const Logger = require('./Logger');
 const log = new Logger('Peer');
+const { avatarURL } = require('./PeerIdentity');
 
 module.exports = class Peer {
-    constructor(socket_id, data) {
+    constructor(socket_id, data, siteOrigin) {
+        this.siteOrigin = siteOrigin;
         const { peer_info } = data;
 
         const {
@@ -24,12 +26,14 @@ module.exports = class Peer {
 
         // Peer metadata is shared with other participants; credentials are never public metadata.
         delete peer_info.peer_token;
+        peer_info.peer_id = socket_id;
+        peer_info.peer_avatar = avatarURL(peer_avatar, siteOrigin);
 
         this.id = socket_id;
         this.peer_info = peer_info;
         this.peer_uuid = peer_uuid;
         this.peer_name = peer_name;
-        this.peer_avatar = peer_avatar;
+        this.peer_avatar = peer_info.peer_avatar;
         this.peer_presenter = peer_presenter;
         this.peer_audio = peer_audio;
         this.peer_video = peer_video;
@@ -54,7 +58,7 @@ module.exports = class Peer {
     // ####################################################
 
     updatePeerInfo(data) {
-        log.debug('Update peer info', data);
+        log.debug('Update peer info', { type: data.type });
         switch (data.type) {
             case 'audio':
             case 'audioType':
@@ -99,6 +103,7 @@ module.exports = class Peer {
                 this.peer_lobby = data.status;
                 break;
             case 'avatar':
+                data.status = avatarURL(data.status, this.siteOrigin);
                 this.peer_info.peer_avatar = data.status;
                 this.peer_avatar = data.status;
                 break;

@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper లిప్యంతరీకరణ ఆగిపోయింది",
         "You cannot change your own role": "మీరు మీ స్వంత పాత్రను మార్చలేరు",
         "You cannot send files to yourself.": "మీరు మీకే ఫైల్‌లను పంపలేరు.",
-        "Recording is disabled for this meeting": "Recording is disabled for this meeting"
+        "Recording is disabled for this meeting": "Recording is disabled for this meeting",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

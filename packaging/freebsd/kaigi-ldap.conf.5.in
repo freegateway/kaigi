@@ -149,3 +149,12 @@ localized alert and is denied a login session.
 .Sh SEE ALSO
 .Xr kaigi.conf 5 ,
 .Xr kaigi 8
+.Pp
+Startup and runtime administrator diagnostics identify the LDAP operation,
+configuration setting, and a catalogued failure reason without exposing secrets.
+For a bind-secret failure the diagnostic includes the configured file path,
+actual numeric owner and mode when available.
+The bind-secret must be a regular root-owned file with exactly mode 0600;
+changing ownership to the runtime kaigi account is not required or permitted.
+Restart the instance after correcting the file or rotating its contents.
+Login responses remain generic; consult the instance log for diagnostic detail.

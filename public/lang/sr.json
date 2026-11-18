@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper transkripcija je zaustavljena",
         "You cannot change your own role": "Ne možete promeniti svoju ulogu",
         "You cannot send files to yourself.": "Ne možete slati datoteke sebi.",
-        "Recording is disabled for this meeting": "Снимање је онемогућено за овај састанак"
+        "Recording is disabled for this meeting": "Снимање је онемогућено за овај састанак",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

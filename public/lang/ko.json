@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper 전사가 중지되었습니다",
         "You cannot change your own role": "자신의 역할은 변경할 수 없습니다",
         "You cannot send files to yourself.": "자신에게 파일을 보낼 수 없습니다.",
-        "Recording is disabled for this meeting": "이 회의에서는 녹화가 비활성화되어 있습니다"
+        "Recording is disabled for this meeting": "이 회의에서는 녹화가 비활성화되어 있습니다",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

@@ -27,6 +27,10 @@ function start() {
 
 if (require.main === module) {
     try { start(); }
-    catch { console.error('kaigi: privileged service initialization failed'); process.exitCode = 1; }
+    catch (error) {
+        const { diagnose, formatDiagnostic } = require('./StartupDiagnostics');
+        console.error(`kaigi: ${formatDiagnostic(diagnose(error, 'configuration', 'kaigi.conf')) || 'privileged service initialization failed'}`);
+        process.exitCode = 1;
+    }
 }
 module.exports = { dropPrivileges };

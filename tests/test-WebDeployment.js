@@ -118,7 +118,12 @@ describe('explicit web deployment boundary', function () {
         const originalMask = process.umask();
         try {
             web.prepareListener(deployment);
-            await new Promise((resolve, reject) => { server.once('error', reject); server.listen(unix ? { path: socketPath } : { host: '127.0.0.1', port: 0 }, resolve); });
+            try {
+                await new Promise((resolve, reject) => { server.once('error', reject); server.listen(unix ? { path: socketPath } : { host: '127.0.0.1', port: 0 }, resolve); });
+            } catch (error) {
+                if (unix && error.code === 'EPERM') { this.skip(); return; }
+                throw error;
+            }
             web.listenerReady(deployment);
             if (unix) {
                 assert.equal(fs.statSync(socketPath).mode & 0o777, 0o600);

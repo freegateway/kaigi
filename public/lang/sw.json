@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Unukuzi wa Whisper umesimamishwa",
         "You cannot change your own role": "Huwezi kubadilisha jukumu lako mwenyewe",
         "You cannot send files to yourself.": "Huwezi kutuma faili kwako mwenyewe.",
-        "Recording is disabled for this meeting": "Recording is disabled for this meeting"
+        "Recording is disabled for this meeting": "Recording is disabled for this meeting",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

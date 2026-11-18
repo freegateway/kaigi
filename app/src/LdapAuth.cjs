@@ -4,8 +4,9 @@ const path = require('node:path');
 const { constants } = require('node:fs');
 const net = require('node:net');
 const { Client, Filter, FilterParser, PasswordPolicyControl } = require('ldapts');
+const diagnostics = require('./LdapDiagnostics');
 class LdapError extends Error {
-    constructor(code, message) { super(message); this.name = 'LdapError'; this.code = code; }
+    constructor(code, message) { super(message); this.name = 'LdapError'; this.code = code; this.ldapDiagnostic = diagnostics.diagnostic(code, message); }
 }
 const fail = (code, message) => { throw new LdapError(code, message); };
 // Render resolved settings without logging credential contents or URL credentials.
@@ -50,11 +51,13 @@ const safeCause = (error) => {
     const name = String(error?.name ?? 'Error');
     return /^[A-Z0-9_]{1,64}$/.test(code) ? code : /^[A-Za-z]{1,64}$/.test(name) ? name : 'Error';
 };
-const io = async (description, action) => {
+const io = async (description, action, metadata = {}) => {
     try { return await action(); }
     catch (error) {
         if (error instanceof LdapError) throw error;
-        fail('DIRECTORY_UNAVAILABLE', `${description} failed (${safeCause(error)}). Check filesystem file/directory permissions, LDAP directory service availability, and LDAP transport configuration.`);
+        const failure = new LdapError('DIRECTORY_UNAVAILABLE', 'LDAP operation failed');
+        failure.ldapDiagnostic = diagnostics.diagnostic('DIRECTORY_UNAVAILABLE', '', { ...metadata, cause: safeCause(error), ...(description.startsWith('Reading LDAP_TLS_CA_FILE') ? { operation: 'ca-file', setting: 'LDAP_TLS_CA_FILE' } : {}) });
+        throw failure;
     }
 };
 const text = (v) => typeof v === 'string' && v.length > 0 && !v.includes('\0');
@@ -86,7 +89,11 @@ class MeetingPolicy {
         Object.defineProperty(this, 'mode', { writable: false });
     }
     async reload(filename, audit = () => {}) {
-        const fail = (code, message) => contextualFail({ LDAP_MEETING_MODE: this.mode, LDAP_MAPPING_KEY: this.#key })(code, `${message} File=${JSON.stringify(filename)}.`);
+        const fail = (code, message) => {
+            const error = new LdapError(code, message);
+            error.ldapDiagnostic = diagnostics.diagnostic(code, message, { operation: 'mapping', file: filename });
+            throw error;
+        };
         audit('info', 'LDAP group-meeting policy load started', { filename, meetingMode: this.mode, mappingKey: this.#key });
         let data;
         try {
@@ -95,7 +102,10 @@ class MeetingPolicy {
                 if (this.mode === 'mapped') fail('INVALID_POLICY', 'group-meetings.json is missing; mapped mode requires groupMeetings grants.');
                 data = { defaultGroups: [], groupMeetings: {} };
             } else data = parseJSON(source, filename);
-        } catch (error) { if (error instanceof LdapError) throw error; fail('INVALID_POLICY', `Cannot load group-meetings.json: ${error.message}`); }
+        } catch (error) { if (error instanceof LdapError) throw error;
+            const failure = new LdapError('INVALID_POLICY', 'Cannot load group-meetings.json');
+            failure.ldapDiagnostic = diagnostics.diagnostic('INVALID_POLICY', 'Cannot load group-meetings.json', { operation: 'mapping', file: filename, cause: safeCause(error) });
+            throw failure; }
         if (!isObject(data) || Object.keys(data).some(key => !['defaultGroups', 'groupMeetings'].includes(key)) || !Array.isArray(data.defaultGroups) || !isObject(data.groupMeetings)) fail('INVALID_POLICY', 'group-meetings.json requires exactly defaultGroups (array) and groupMeetings (object).');
         const validGroup = this.mode === 'mapped' && this.#key === 'dn' ? text : room;
         if (!data.defaultGroups.every(validGroup) || new Set(data.defaultGroups).size !== data.defaultGroups.length) fail('INVALID_POLICY', 'group-meetings.json defaultGroups must contain unique, valid group keys.');
@@ -145,16 +155,25 @@ function initializeBindSecret(config) {
     const filename = config.bindPasswordFile;
     if (startupSecrets.has(filename)) return;
     const sync = require('node:fs');
-    const fd = sync.openSync(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    let fd;
+    const problem = (code, extra = {}) => {
+        const error = new LdapError(code, diagnostics.format(diagnostics.diagnostic(code)));
+        error.ldapDiagnostic = diagnostics.diagnostic(code, '', { operation: 'bind-secret', file: filename, ...extra });
+        throw error;
+    };
     try {
+        fd = sync.openSync(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
         const stat = sync.fstatSync(fd);
-        if (!stat.isFile() || stat.uid !== 0 || stat.size > 4096 || (stat.mode & 0o077)) {
-            fail('UNSAFE_SECRET_FILE', 'LDAP bind secret must be root-owned, root-only and a regular file of at most 4096 bytes.');
+        if (!stat.isFile() || stat.uid !== 0 || stat.size > 4096 || (stat.mode & 0o7777) !== 0o600) {
+            problem('UNSAFE_SECRET_FILE', { uid: stat.uid, mode: stat.mode & 0o7777 });
         }
         const secret = sync.readFileSync(fd, 'utf8').replace(/\r?\n$/, '');
-        if (!text(secret)) fail('INVALID_CONFIG', 'LDAP bind secret must be nonempty without NUL characters.');
+        if (!text(secret)) problem('SECRET_CONTENT');
         startupSecrets.set(filename, secret);
-    } finally { sync.closeSync(fd); }
+    } catch (error) {
+        if (error instanceof LdapError) throw error;
+        problem(({ ENOENT: 'SECRET_MISSING', EACCES: 'SECRET_ACCESS', EPERM: 'SECRET_ACCESS', ELOOP: 'SECRET_SYMLINK' })[error.code] || 'SECRET_IO', { cause: error.code });
+    } finally { if (fd !== undefined) sync.closeSync(fd); }
 }
 class LdapAuthenticator {
     #config; #policy; #factory;
@@ -195,7 +214,7 @@ class LdapAuthenticator {
         const fail = contextualFail(configSettings(c));
         const tlsOptions = { minVersion: c.tlsMinVersion, rejectUnauthorized: true };
         if (c.tlsServerName) tlsOptions.servername = c.tlsServerName;
-        if (c.transport !== 'ldap-plain' && c.caFile) tlsOptions.ca = await io(`Reading LDAP_TLS_CA_FILE=${JSON.stringify(c.caFile)}`, () => fs.readFile(c.caFile));
+        if (c.transport !== 'ldap-plain' && c.caFile) tlsOptions.ca = await io(`Reading LDAP_TLS_CA_FILE=${JSON.stringify(c.caFile)}`, () => fs.readFile(c.caFile), { file: c.caFile });
         const options = { url: c.url, connectTimeout: c.connectTimeout, timeout: c.timeout, autoRebind: false, strictDN: true };
         if (c.transport === 'ldaps') options.tlsOptions = tlsOptions;
         if (c.transport === 'ldap-starttls') {
@@ -228,7 +247,10 @@ class LdapAuthenticator {
         const c = this.#config;
         let searchClient, userClient;
         let stage = 'Reading LDAP_BIND_PASSWORD_FILE';
-        const setStage = (value) => { stage = value; audit('info', 'LDAP login step', { operation: operation() }); };
+        let operationId = 'bind-secret';
+        const setStage = (value) => { stage = value;
+            operationId = value.startsWith('Connecting') ? 'connect' : value.startsWith('Binding search') ? 'search-bind' : value.startsWith('Binding the unique') ? 'user-bind' : value.startsWith('Searching user') ? 'user-search' : value.startsWith('Searching LDAP group') ? 'group-search' : value.startsWith('Checking LDAP group') ? 'group-unique-search' : value.startsWith('Resolving') ? 'groups' : value.startsWith('Assigning') ? 'mapping' : operationId;
+            audit('info', 'LDAP login step', { operation: operation() }); };
         const operation = () => `${stage}; ${settingsContext(configSettings(c), [...new Set((stage.match(/\bLDAP_[A-Z_]+\b/g) || []).concat(['LDAP_TRANSPORT', 'LDAP_URL']))])}`;
         try {
             setStage(stage);
@@ -285,11 +307,16 @@ class LdapAuthenticator {
             const directoryDisplayName = scalar(entry, c.displayNameAttribute, false);
             return { username: canonicalUsername, displayName: directoryDisplayName || canonicalUsername, dn, groups, rooms: assignedRooms, ldapAttributes: { username: { name: c.usernameAttribute, value: canonicalUsername }, displayName: { name: c.displayNameAttribute, value: directoryDisplayName ?? null } } };
         } catch (error) {
-            if (error instanceof LdapError) throw error;
-            fail('DIRECTORY_UNAVAILABLE', `${operation()} failed (${safeCause(error)}). Check LDAP directory service availability, LDAP transport/TLS configuration, filesystem file permissions, and search-account ACLs.`);
+            if (error instanceof LdapError) {
+                error.ldapDiagnostic.operation ||= operationId;
+                throw error;
+            }
+            const failure = new LdapError('DIRECTORY_UNAVAILABLE', 'LDAP operation failed');
+            failure.ldapDiagnostic = diagnostics.diagnostic('DIRECTORY_UNAVAILABLE', '', { operation: operationId, cause: safeCause(error) });
+            throw failure;
         } finally {
             audit('info', 'LDAP connection cleanup started');
-            await Promise.all([searchClient, userClient].filter(Boolean).map((client) => client.unbind().catch((error) => { audit('warn', 'LDAP connection cleanup failed', { cause: safeCause(error) }); })));
+            await Promise.all([searchClient, userClient].filter(Boolean).map((client) => client.unbind().catch((error) => { audit('warn', 'LDAP connection cleanup failed', { message: diagnostics.format(diagnostics.diagnostic('DIRECTORY_UNAVAILABLE', '', { operation: 'cleanup', cause: safeCause(error) })) }); })));
             audit('info', 'LDAP connection cleanup completed');
         }
     }
@@ -414,7 +441,7 @@ function createLdapBackend(config, { onEvent = () => {} } = {}) {
                 await policy.reload(config.groupMeetingsFile, audit);
                 return await authenticator.authenticate(username, password, audit);
             } catch (error) {
-                audit('warn', 'LDAP login failed', { code: error.code || 'LDAP_ERROR', message: error instanceof LdapError ? error.message : `LDAP operation failed (${safeCause(error)}).` });
+                audit('warn', 'LDAP login failed', { code: error.code || 'LDAP_ERROR', message: diagnostics.format(error.ldapDiagnostic || diagnostics.diagnostic('DIRECTORY_UNAVAILABLE', '', { cause: safeCause(error) })) });
                 throw error;
             }
         },

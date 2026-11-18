@@ -824,3 +824,41 @@ Validation: 491 Mocha tests and 23 security tests passed on Linux/Node 24.22.1.
 A CSS/DOM regression checks automatic horizontal margins, grid centring and
 isolation from the standalone logo. Actual browser rendering, 150% scaling and
 FreeBSD testing remain unverified.
+
+## 2026-11-18 — Scoped security and audio fixes
+
+Adapted `f9c2fe64`, `31a67491` and `79a2258c`: participant IDs are owned by
+Socket.IO, chat/update identities come from stored peers, and avatar joins and
+updates are canonicalized before retention/relay. Kaigi retains same-origin
+avatars only. Chat header values use DOM attributes/text; participant IDs are
+checked before inline-handler rendering. Transcription and presenter/lobby
+features remain disabled.
+
+Updated all retained runtime `ws` consumers through an exact 8.23.0 override
+for the automatic-Pong memory exhaustion fix. The lockfile and port must both
+resolve the fixed runtime package; `@types/ws` is a separate type-only package.
+No native mediasoup update is included.
+
+Adapted `14c89607`: recording upload capabilities are issued at recording start
+for one server-generated opaque filename and bound to the login session and
+conference lifetime. Every chunk/finalization checks live authorization and
+recording policy. Same-file operations are serialized and successful finalization
+closes the capability. Browser saves retain their own capability until all final
+chunks are saved. Presenter/ban and cloud integration changes are excluded.
+
+Adapted `9d1b819c`: restore native noise suppression when RNNoise is not selected,
+serialize live changes and meter the selected microphone from its existing input.
+Input replacement preserves mute state. Failed recapture closes the ended audio
+producer and gives a recovery notice instead of silently retaining a dead input.
+Real browser/device testing remains required, especially on Chromium/macOS.
+
+Kaigi-specific fixes provide catalogued LDAP administrator diagnostics across the
+startup inspector boundary and runtime login failures, including root ownership
+and exact mode 0600 for bind-secret files. No secret contents or arbitrary LDAP
+server errors are rendered. Browser 400/403/404/500 pages provide server-rendered
+English, Canadian French and Japanese text, a root sign-in link and local absolute
+assets. JSON API errors remain JSON; `/login` remains retired.
+
+Deferred `9916d9be` and `9447f184` calendar invitations pending organizational
+SOGo/Kojo design. They remain in the project watch queue, not this implementation.
+RTCStats, server capture and presenter moderation remain deferred/excluded.

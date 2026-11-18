@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Транскрипцію пошепки зупинено",
         "You cannot change your own role": "Ви не можете змінити свою власну роль",
         "You cannot send files to yourself.": "Ви не можете надсилати файли собі.",
-        "Recording is disabled for this meeting": "Recording is disabled for this meeting"
+        "Recording is disabled for this meeting": "Recording is disabled for this meeting",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

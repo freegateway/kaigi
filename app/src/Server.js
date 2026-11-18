@@ -256,15 +256,6 @@ const JWT_VERIFY_OPTIONS = { algorithms: ['HS256'] };
 // Lifetime of the per-session server recording upload token (must outlive long recordings)
 const recUploadTokenExp = config?.media?.recording?.uploadTokenExp || '24h';
 
-// Create a signed upload token bound to a specific room. It proves the requester
-// actually passed the Socket.IO `join` auth for that room before allowing writes
-// to the recording directory via the /recSync* endpoints.
-function createRecUploadToken(roomId, recordingKey) {
-    return jwt.sign({ scope: 'rec-upload', roomId: String(roomId), recordingKey: String(recordingKey) }, jwtKeys.recUpload, {
-        expiresIn: recUploadTokenExp,
-    });
-}
-
 // Create a signed token bound to a room, authorizing the /rtmp streamer page opened by
 // that peer to call the RTMP HTTP endpoints without sharing the server-wide apiSecret.
 function createRtmpStreamToken(roomId) {
@@ -488,6 +479,7 @@ const filesPath = [
 
 const htmlInjector = new HtmlInjector(filesPath, config.ui.brand);
 
+const { sendError } = require('./BrowserErrors');
 const authHost = new Host(); // Authenticated IP by Login
 const authSessions = new Map();
 
@@ -718,11 +710,11 @@ function startServer() {
     app.use((req, res, next) => {
         let pathname;
         try { pathname = decodeURIComponent(req.path).replace(/\\/g, '/').toLowerCase(); }
-        catch { return res.status(400).end(); }
-        if (path.posix.normalize(pathname).startsWith('/views/')) return res.status(403).end();
+        catch { return sendError(req, res, 400); }
+        if (path.posix.normalize(pathname).startsWith('/views/')) return sendError(req, res, 403);
         const normalized = path.posix.normalize(pathname);
         if ((normalized === '/site-assets' || normalized.startsWith('/site-assets/')) && !/^\/site-assets(?:\/|$)/i.test(req.path)) {
-            return res.status(404).end();
+            return sendError(req, res, 404);
         }
         next();
     });
@@ -1289,7 +1281,7 @@ function startServer() {
                 authSession: authSessionClientState(session),
             });
         } catch (error) {
-            log.warn('Authentication failed', { loginName: username, ip, attemptId, code: error.code || 'AUTH_FAILED', message: error.message });
+            log.warn('Authentication failed', { loginName: username, ip, attemptId, code: error.code || 'AUTH_FAILED', message: error.name === 'LdapError' ? require('./LdapDiagnostics').format(error.ldapDiagnostic) : 'Authentication backend failed' });
             if (error.code === 'NO_MEETING_GRANTS') { securityEvent('login_rejected', req, 'no_meeting_grants'); return res.status(403).json({ code: 'NO_MEETING_GRANTS', message: 'No meetings are assigned to your account.' }); }
             securityEvent(error.code === 'INVALID_CREDENTIALS' ? 'authentication_failed' : 'authentication_error', req, error.code === 'INVALID_CREDENTIALS' ? 'invalid_credentials' : 'backend_error');
             return res.status(401).json({ message: 'unauthorized' });
@@ -1324,7 +1316,7 @@ function startServer() {
     }
 
     function getRoomIdFromFilename(fileName, req) {
-        if (typeof fileName !== 'string' || !req.recUploadKey || fileName.split('_')[1] !== req.recUploadKey) throw new Error('Invalid recording reference');
+        if (typeof fileName !== 'string' || fileName !== req.recUploadFileName) throw new Error('Invalid recording reference');
         return req.recUploadRoomId;
     }
 
@@ -1336,34 +1328,12 @@ function startServer() {
         return null;
     }
 
-    // Authorize /recSync* requests: recording must be enabled and the caller must
-    // present a valid, unexpired upload token issued on join. The room the token was
-    // issued for is stored on req; the filename must match its opaque conference reference.
-    function checkRecUploadToken(req, res, next) {
-        if (!serverRecordingEnabled) {
-            return res.status(403).json({ error: 'Recording disabled' });
-        }
-        try {
-            const token = getRecUploadToken(req);
-            if (!token) {
-                return res.status(401).json({ error: 'Missing upload token' });
-            }
-            const decoded = jwt.verify(token, jwtKeys.recUpload, JWT_VERIFY_OPTIONS);
-            if (!decoded || decoded.scope !== 'rec-upload' || !decoded.roomId || !decoded.recordingKey) {
-                return res.status(401).json({ error: 'Invalid upload token' });
-            }
-            req.recUploadRoomId = String(decoded.roomId);
-            req.recUploadKey = String(decoded.recordingKey);
-            if (roomList.get(req.recUploadRoomId)?.sessionId !== req.recUploadKey) return res.status(401).json({ error: 'Recording session expired' });
-            if (!recordingAllowedIn(req.recUploadRoomId)) {
-                return res.status(403).json({ error: 'Recording disabled for this meeting' });
-            }
-            next();
-        } catch (err) {
-            log.warn('[recSync] Rejected upload with invalid token', { error: err.message });
-            return res.status(401).json({ error: 'Invalid or expired upload token' });
-        }
-    }
+    const recordingCapabilities = require('./RecordingCapabilities')({
+        key: jwtKeys.recUpload, expiresIn: recUploadTokenExp, rooms: roomList,
+        requireSession: requireAuthSession, allowsRoom: sessionAllowsRoom,
+        recordingAllowed: recordingAllowedIn, enabled: serverRecordingEnabled,
+    });
+    const checkRecUploadToken = recordingCapabilities.authorize;
 
     function deleteFile(filePath) {
         if (!fs.existsSync(filePath)) return false;
@@ -1774,7 +1744,7 @@ function startServer() {
         }
     }, STREAM_TIMEOUT_MS);
 
-    app.get('/:roomId', (req, res) => res.status(404).end());
+    app.get('/:roomId', (req, res) => sendError(req, res, 404));
 
     // ####################################################
     // REST API
@@ -2047,8 +2017,7 @@ function startServer() {
 
     // not match any of page before, so 404 not found
     app.use((req, res) => {
-        res.status(404);
-        htmlInjector.injectHtml(views.notFound, res);
+        sendError(req, res, 404);
     });
 
     // Global error handler for URIError and other errors
@@ -2059,7 +2028,7 @@ function startServer() {
                 ip: getIP(req),
                 error: err.message,
             });
-            return res.status(400).send({ status: 400, message: 'Invalid URL encoding' });
+            return sendError(req, res, 400);
         }
         // Handle other errors
         log.error('Unhandled error', {
@@ -2067,7 +2036,7 @@ function startServer() {
             error: err.message,
             stack: err.stack,
         });
-        res.status(500).send({ status: 500, message: 'Internal server error' });
+        sendError(req, res, 500);
     });
 
     // ####################################################
@@ -2357,6 +2326,7 @@ function startServer() {
     });
 
     io.on('connection', (socket) => {
+        recordingCapabilities.attach(socket);
         socket.use((packet, next) => {
             const event = packet[0];
             // Breakout rooms are not part of Kaigi. Deny every inherited operation,
@@ -2494,6 +2464,7 @@ function startServer() {
 
             const room = getRoom(socket);
 
+            data.peer_info.peer_id = socket.id;
             const {
                 peer_name,
                 peer_id,
@@ -2595,7 +2566,7 @@ function startServer() {
                 room.removePeer(socket.id);
             }
 
-            room.addPeer(new Peer(socket.id, data));
+            room.addPeer(new Peer(socket.id, data, config.server.hostUrl));
 
             const activeRooms = getActiveRooms();
 
@@ -2707,7 +2678,7 @@ function startServer() {
             // Issue a per-session, room-bound token authorizing this peer to upload
             // its own server recording chunks via the /recSync* endpoints.
             if (serverRecordingEnabled && roomJson.recordingAllowed) {
-                roomJson.recUploadToken = createRecUploadToken(room.id, room.sessionId);
+                // File capabilities are issued when recording starts, never on join.
             }
 
             // Same for the /rtmp streamer page (camera/screen -> RTMP).
@@ -3449,6 +3420,7 @@ function startServer() {
             );
             if (!isPresenter) return;
 
+            delete data.peer_avatar;
             data.room = room.toJson();
 
             log.debug('Room lobby', {
@@ -3746,6 +3718,8 @@ function startServer() {
 
             if (rejectProtectedPeerInfo(data)) return;
             if (data.type === 'recording' && !recordingAllowedIn(socket.room_id)) return;
+            data.peer_id = socket.id;
+            data.peer_name = peer.peer_name;
             peer.updatePeerInfo(data);
 
             if (data.broadcast) {
@@ -4619,7 +4593,10 @@ function startServer() {
                 return;
             }
 
-            log.debug('message', data);
+            data.peer_id = socket.id;
+            data.peer_name = peer.peer_name;
+            data.peer_avatar = peer.peer_avatar || false;
+            log.debug('message', { peer_id: socket.id });
 
             // Enforce moderator chat restrictions server-side
             const isPublicMessage = data.to_peer_id === 'all';

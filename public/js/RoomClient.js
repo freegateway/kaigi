@@ -722,7 +722,7 @@ class RoomClient {
 
                 // Store the per-session token used to authorize server recording uploads
                 this.recordingAllowed = room.recordingAllowed !== false;
-                this.recUploadToken = this.recordingAllowed ? room.recUploadToken || '' : '';
+                this.recUploadToken = ''; // Issued for one file when recording starts.
                 if (!this.recordingAllowed) {
                     document.documentElement.classList.add('meeting-recording-disabled');
                     document.getElementById('meetingRecordingPolicy').hidden = false;
@@ -3360,9 +3360,11 @@ class RoomClient {
 
             processor.setNoiseSuppression(localStorageSettings.mic_noise_suppression);
             switchNoiseSuppression.checked = processor.noiseSuppressionEnabled;
+            this.syncNativeNoiseSuppression(processor).catch(() => this.userLog('warning', 'Microphone input was lost; select a microphone to resume audio', 'top-end', 6000));
             processor.onError = (error) => {
                 console.warn('RNNoise processing failed:', error);
-                this.fallbackRNNoiseSuppression(stream, processor, request).catch((err) => {
+                // The raw mic may have been re-captured to switch browser noise suppression
+                this.fallbackRNNoiseSuppression(processor.mediaStream || stream, processor, request).catch((err) => {
                     console.warn('RNNoise fallback failed:', err);
                 });
             };
@@ -3421,6 +3423,94 @@ class RoomClient {
         return stream;
     }
 
+    isRNNoiseSuppressionSelected() {
+        return !!(
+            BUTTONS.settings.customNoiseSuppression &&
+            this.isRNNoiseSupported &&
+            localStorageSettings.mic_noise_suppression
+        );
+    }
+
+    setNoiseSuppression(enabled) {
+        const processor = this.RNNoiseProcessor;
+        if (!processor) return;
+        processor.setNoiseSuppression(enabled);
+        return this.syncNativeNoiseSuppression(processor);
+    }
+
+    // RNNoise and browser noise suppression are mutually exclusive on the raw capture track:
+    // native suppression is turned off while RNNoise suppresses, and back on when RNNoise is switched off.
+    // Updates are chained so rapid toggles always settle on the latest RNNoise state.
+    syncNativeNoiseSuppression(processor = this.RNNoiseProcessor) {
+        const isCurrent = () => !!processor && processor === this.RNNoiseProcessor && processor.isProcessing !== false;
+        const run = async () => {
+            if (!isCurrent()) return;
+            const track = processor.mediaStream?.getAudioTracks?.()[0];
+            if (!track || track.readyState === 'ended' || typeof track.applyConstraints !== 'function') return;
+            const wanted = !processor.noiseSuppressionEnabled;
+            if (track.getSettings?.().noiseSuppression === wanted) return;
+            const supported = track.getCapabilities?.().noiseSuppression;
+            if (Array.isArray(supported) && !supported.includes(wanted)) {
+                console.warn('Browser noise suppression cannot be changed on this device', { wanted, supported });
+                return;
+            }
+            try {
+                await track.applyConstraints({ ...track.getConstraints?.(), noiseSuppression: wanted });
+            } catch (err) {
+                console.warn('Browser noise suppression could not be updated live:', err);
+            }
+            if (!isCurrent()) return;
+            const applied = track.getSettings?.().noiseSuppression;
+            if (applied === undefined || applied === wanted) return;
+            // Chromium ignores audio processing changes via applyConstraints (crbug.com/390804131): re-capture the mic
+            await this.recaptureNoiseSuppressionInput(processor, track, wanted, isCurrent);
+        };
+        const sync = async () => {
+            await run();
+            if (!isCurrent()) return;
+            console.log('Noise suppression state', {
+                rnnoise: processor.noiseSuppressionEnabled,
+                native:
+                    processor.mediaStream?.getAudioTracks?.()[0]?.getSettings?.().noiseSuppression ?? 'not reported',
+            });
+        };
+        this.nativeNoiseSuppressionSync = (this.nativeNoiseSuppressionSync || Promise.resolve()).then(sync, sync);
+        return this.nativeNoiseSuppressionSync;
+    }
+
+    async recaptureNoiseSuppressionInput(processor, track, wanted, isCurrent) {
+        const deviceId = track.getSettings?.().deviceId;
+        const getMic = (id) => {
+            const { audio } = this.getAudioConstraints(id);
+            return navigator.mediaDevices.getUserMedia({ audio: { ...audio, noiseSuppression: wanted } });
+        };
+        // Chromium hands back the already open source (and its processing) while the old track is live: release it first
+        track.stop();
+        let stream;
+        try {
+            stream = await getMic(deviceId);
+        } catch (err) {
+            console.warn('Microphone re-capture failed, retrying without device id:', err);
+            try {
+                stream = await getMic();
+            } catch (retryErr) {
+                console.warn('Browser noise suppression could not be updated:', retryErr);
+                this.disableRNNoiseSuppression();
+                this.closeProducer(RoomClient.mediaType.audio, 'noiseSuppressionInputLost');
+                this.syncRecordingAudio();
+                throw new Error('Microphone input was lost; select a microphone to resume audio');
+            }
+        }
+        if (!isCurrent() || processor.mediaStream?.getAudioTracks?.()[0] !== track || !processor.replaceInput(stream)) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+        }
+        const applied = stream.getAudioTracks()[0]?.getSettings?.().noiseSuppression;
+        if (applied !== undefined && applied !== wanted) {
+            console.warn('Browser noise suppression did not change', { wanted, applied });
+        }
+    }
+
     disableRNNoiseSuppression(stopInput = true) {
         this.noiseSuppressionRequest++;
         const processor = this.RNNoiseProcessor;
@@ -3440,8 +3530,8 @@ class RoomClient {
     // ####################################################
 
     getAudioConstraints(deviceId) {
-        // If custom RNNoise is enabled but not supported, fall back to built-in WebRTC noise suppression
-        const useBuiltInNoiseSuppression = !BUTTONS.settings.customNoiseSuppression || !this.isRNNoiseSupported;
+        // Use built-in WebRTC noise suppression unless RNNoise is available and selected by the user
+        const useBuiltInNoiseSuppression = !this.isRNNoiseSuppressionSelected();
 
         const audioConstraints = {
             echoCancellation: true,
@@ -3821,6 +3911,15 @@ class RoomClient {
 
     producerExist(type) {
         return this.producerLabel.has(type);
+    }
+
+    // Raw microphone track (before RNNoise), so other consumers never need to open the device a second time
+    getMicrophoneInputTrack() {
+        if (!this.producerLabel.has(mediaType.audio)) return null;
+        const processor = this.RNNoiseProcessor;
+        const stream = processor?.isProcessing ? processor.mediaStream : this.localAudioStream;
+        const track = stream?.getAudioTracks?.()[0];
+        return track?.readyState === 'live' ? track : null;
     }
 
     closeThenProduce(type, deviceId = null, swapCamera = false) {
@@ -9851,6 +9950,7 @@ class RoomClient {
     }
 
     startRecording() {
+        if (this._recordingStarting) return;
         if (!this.recordingAllowed) {
             this.userLog('info', 'Recording is disabled for this meeting', 'top-end');
             return;
@@ -9987,6 +10087,33 @@ class RoomClient {
     }
 
     initRecording() {
+        if (this.recording.recSyncServerRecording) {
+            const recorder = this.mediaRecorder;
+            const generation = this._recordingStartGeneration = (this._recordingStartGeneration || 0) + 1;
+            this._recordingStarting = true;
+            return this.socket.request('getRecUploadToken').then((capability) => {
+                if (!capability?.fileName || !capability?.token) throw new Error('Recording not authorized');
+                if (this.mediaRecorder !== recorder || this._recordingStartGeneration !== generation || this.socket.connected === false) throw new Error('Recording cancelled');
+                this.recServerFileName = capability.fileName;
+                this.recUploadToken = capability.token;
+                this.beginRecording();
+            }).catch(() => {
+                if (this.mediaRecorder !== recorder) return;
+                this.releaseRecordingAudioMixer();
+                this.recScreenStream?.getVideoTracks?.().forEach(track => track.stop());
+                this.recScreenAudioTracks?.forEach(track => track.stop());
+                this.recScreenAudioTracks = [];
+                this.screenAudioRecorder?.stopMixedAudioStream();
+                this.screenAudioRecorder = null;
+                this.mediaRecorder = null;
+                this._isRecording = false;
+                this.handleRecordingError('Unable to start server recording', false);
+            }).finally(() => { this._recordingStarting = false; });
+        }
+        this.beginRecording();
+    }
+
+    beginRecording() {
         this._isRecording = true;
         this.handleMediaRecorder();
         this.event(_EVENTS.startRec);
@@ -10069,6 +10196,8 @@ class RoomClient {
                 pending: true,
                 uploadQueue: Promise.resolve(),
                 uploadError: null,
+                fileName: this.recServerFileName,
+                token: this.recUploadToken,
             };
             session.promise = new Promise((resolve, reject) => {
                 session.resolve = resolve;
@@ -10078,7 +10207,7 @@ class RoomClient {
                 this.handleRecordingError('Recording save failed: ' + error.message);
             });
             this._recordingSave = session;
-            this.recServerFileName = this.getServerRecFileName();
+            if (!this.recording.recSyncServerRecording) this.recServerFileName = this.getServerRecFileName();
             this.mediaRecorder.addEventListener('start', this.handleMediaRecorderStart);
             this.mediaRecorder.addEventListener('dataavailable', (evt) => this.handleMediaRecorderData(evt, session));
             this.mediaRecorder.addEventListener('stop', (evt) => this.handleMediaRecorderStop(evt, session));
@@ -10130,7 +10259,7 @@ class RoomClient {
                 // Serialize complete blobs as well as their chunks to preserve the encoded byte order.
                 session.uploadQueue = session.uploadQueue
                     .then(() => {
-                        if (!session.uploadError) return this.syncRecordingInCloud(evt.data);
+                        if (!session.uploadError) return this.syncRecordingInCloud(evt.data, session);
                     })
                     .catch((error) => {
                         session.uploadError = error;
@@ -10143,7 +10272,7 @@ class RoomClient {
         }
     }
 
-    async syncRecordingInCloud(data) {
+    async syncRecordingInCloud(data, session = this._recordingSave) {
         const arrayBuffer = await data.arrayBuffer();
         const chunkSize = this.recSyncChunkSize;
         const totalChunks = Math.ceil(arrayBuffer.byteLength / chunkSize);
@@ -10151,12 +10280,12 @@ class RoomClient {
             const chunk = arrayBuffer.slice(chunkIndex * chunkSize, (chunkIndex + 1) * chunkSize);
             try {
                 const response = await axios.post(
-                    `${this.recording.recSyncServerEndpoint}/recSync?fileName=` + this.recServerFileName,
+                    `${this.recording.recSyncServerEndpoint}/recSync?fileName=` + session.fileName,
                     chunk,
                     {
                         headers: {
                             'Content-Type': 'application/octet-stream',
-                            Authorization: `Bearer ${this.recUploadToken}`,
+                            Authorization: `Bearer ${session.token}`,
                         },
                     }
                 );
@@ -10197,18 +10326,18 @@ class RoomClient {
                 // Option S3: pass duration to your existing finalize endpoint (preferred if it uploads to S3)
                 if (this.recording.recSyncServerToS3) {
                     await axios.post(`${this.recording.recSyncServerEndpoint}/recSyncFinalize`, null, {
-                        params: { fileName: this.recServerFileName, durationMs },
-                        headers: { Authorization: `Bearer ${this.recUploadToken}` },
+                        params: { fileName: session.fileName, durationMs },
+                        headers: { Authorization: `Bearer ${session.token}` },
                     });
                     console.log('Finalized (with duration fix) and uploaded to S3');
                     if (recShowInfo) userLog('success', 'Recording successfully uploaded to S3.', 'top-end', 3000);
                 } else {
                     // Option Disk: if you don’t use S3 finalize, call a dedicated “fix” endpoint
                     await axios.post(`${this.recording.recSyncServerEndpoint}/recSyncFixWebm`, null, {
-                        params: { fileName: this.recServerFileName, durationMs },
-                        headers: { Authorization: `Bearer ${this.recUploadToken}` },
+                        params: { fileName: session.fileName, durationMs },
+                        headers: { Authorization: `Bearer ${session.token}` },
                     });
-                    console.log('Server-side WEBM duration fixed for', this.recServerFileName);
+                    console.log('Server-side WEBM duration fixed for', session.fileName);
                 }
                 this.handleServerRecordingStop();
             } else {
@@ -10455,6 +10584,7 @@ class RoomClient {
     }
 
     stopRecording() {
+        this._recordingStartGeneration = (this._recordingStartGeneration || 0) + 1;
         if (this.mediaRecorder) {
             this.toggleVideoAudioTabs(false);
             // Capture the elapsed time text BEFORE stopRec event resets it to '0s'
@@ -13352,7 +13482,7 @@ class RoomClient {
         if (!BUTTONS.settings.customNoiseSuppression || !this.isRNNoiseSupported) return;
         localStorageSettings.mic_noise_suppression = enabled;
         if (switchNoiseSuppression) switchNoiseSuppression.checked = enabled;
-        this.RNNoiseProcessor?.setNoiseSuppression(enabled);
+        this.setNoiseSuppression(enabled)?.catch(() => this.userLog('warning', 'Microphone input was lost; select a microphone to resume audio', 'top-end', 6000));
         this.userLog(enabled ? 'success' : 'warning', message, 'top-end', 6000);
     }
 
@@ -13791,16 +13921,23 @@ class RoomClient {
                       : `${status}`;
             return `
                 <a data-toggle="modal" data-target="#view_info">
-                    <img src="${imgSrc}" alt="avatar" />
+                    <img alt="avatar" />
                 </a>
                 <div class="chat-about">
                     ${categoryHTML}
-                    <h6 class="mb-0">${truncatedTitle}</h6>
+                    <h6 class="mb-0"></h6>
                     <span class="status">
                         ${icons.statusCircle(status)} ${statusText}
                     </span>
                 </div>
             `;
+        };
+
+        const setChatAbout = (imgSrc, title, ...args) => {
+            chatAbout.innerHTML = generateChatAboutHTML('', '', ...args);
+            chatAbout.querySelector('img')?.setAttribute('src', imgSrc);
+            const heading = chatAbout.querySelector('h6');
+            if (heading) heading.textContent = String(title || '');
         };
 
         // CURRENT SELECTED PEER
@@ -13833,7 +13970,7 @@ class RoomClient {
                     return userLog('warning', 'The moderator does not allow you to chat with ChatGPT', 'top-end', 6000);
                 }
                 isChatGPTOn = true;
-                chatAbout.innerHTML = generateChatAboutHTML(image.chatgpt, 'ChatGPT', 'online', '', 'AI ASSISTANT');
+                setChatAbout(image.chatgpt, 'ChatGPT', 'online', '', 'AI ASSISTANT');
                 this.getId('chatGPTMessages').style.display = 'block';
                 break;
             case 'DeepSeek':
@@ -13846,21 +13983,21 @@ class RoomClient {
                     );
                 }
                 isDeepSeekOn = true;
-                chatAbout.innerHTML = generateChatAboutHTML(image.deepSeek, 'DeepSeek', 'online', '', 'AI ASSISTANT');
+                setChatAbout(image.deepSeek, 'DeepSeek', 'online', '', 'AI ASSISTANT');
                 this.getId('deepSeekMessages').style.display = 'block';
                 break;
             case 'all':
                 if (this._moderator.chat_cant_publicly) {
                     return userLog('warning', 'The moderator does not allow you to chat publicly', 'top-end', 6000);
                 }
-                chatAbout.innerHTML = generateChatAboutHTML(image.all, 'Public chat', 'online', participantsCount);
+                setChatAbout(image.all, 'Public chat', 'online', participantsCount);
                 this.getId('chatPublicMessages').style.display = 'block';
                 break;
             default:
                 if (this._moderator.chat_cant_privately) {
                     return userLog('warning', 'The moderator does not allow you to chat privately', 'top-end', 6000);
                 }
-                chatAbout.innerHTML = generateChatAboutHTML(avatarImg, peer_name);
+                setChatAbout(avatarImg, peer_name);
                 chatPrivateMessages.style.display = 'block';
                 for (let i = 0; i < messagePrivateListItems.length; i++) {
                     const li = messagePrivateListItems[i];
