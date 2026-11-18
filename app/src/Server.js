@@ -966,7 +966,7 @@ function startServer() {
                 authorizedIPs: authHost.getAuthorizedIPs(),
             });
         }
-        res.redirect('/login?logged_out=1'); // Clear browser auth state and return to login
+        res.redirect('/?logged_out=1'); // Clear browser auth state and return to login
     });
 
     // Favicon
@@ -987,16 +987,10 @@ function startServer() {
         res.status(200).json({ message: config?.ui?.themes ? config.ui.themes : false });
     });
 
-    // main page
+    // Login and authenticated meeting selection share the site root.
     app.get('/', OIDCAuth, (req, res) => {
-        //log.debug('/ - hostCfg ----->', hostCfg);
-        if (!OIDC.enabled && hostCfg.protected) {
-            hostCfg.authenticated = false;
-            res.redirect('/login');
-            return;
-        } else {
-            return htmlInjector.injectHtml(views.landing, res);
-        }
+        res.set('Cache-Control', 'no-store');
+        return htmlInjector.injectHtml(OIDC.enabled ? views.landing : views.login, res);
     });
 
     // Route to display rtmp streamer
@@ -1014,7 +1008,7 @@ function startServer() {
 
         if (!OIDC.enabled && hostCfg.protected) {
             hostCfg.authenticated = false;
-            res.redirect('/login');
+            res.redirect('/');
             return;
         } else {
             htmlInjector.injectHtml(views.newRoom, res);
@@ -1213,7 +1207,7 @@ function startServer() {
         res.set('Referrer-Policy', 'no-referrer');
         let session;
         try { session = navigationSession(req); }
-        catch { res.clearCookie(navigationCookie, navigationCookieOptions); return res.redirect('/login'); }
+        catch { res.clearCookie(navigationCookie, navigationCookieOptions); return res.redirect('/'); }
         if (Object.keys(req.query).length !== 1) return res.status(403).send('Meeting access denied.');
         const selection = req.query.selection;
         const meeting = typeof selection === 'string' && /^[a-f0-9-]{36}$/.test(selection) ? session.meetingSelections?.get(selection) : null;
@@ -1251,26 +1245,18 @@ function startServer() {
 
     // Reject the upstream host-wait flow; users must sign in and select an authorized meeting.
     app.get('/whoAreYou/:roomId', (req, res) => {
-        return res.redirect('/login');
-    });
-
-    // handle login if user_auth enabled
-    app.get('/login', (req, res) => {
-        if (hostCfg.protected || hostCfg.user_auth) {
-            return htmlInjector.injectHtml(views.login, res);
-        }
-        res.redirect('/');
+        return res.redirect('/');
     });
 
     // handle logged on host protected
-    app.get('/logged', (req, res) => res.redirect('/login'));
+    app.get('/logged', (req, res) => res.redirect('/'));
 
     // ####################################################
     // AXIOS
     // ####################################################
 
     // handle login on host protected
-    app.post('/login', loginLimiter, async (req, res) => {
+    app.post('/auth/session/login', loginLimiter, async (req, res) => {
         const ip = getIP(req);
         const { username, password } = req.body || {};
         const attemptId = randomUUID();
@@ -2061,6 +2047,7 @@ function startServer() {
 
     // not match any of page before, so 404 not found
     app.use((req, res) => {
+        res.status(404);
         htmlInjector.injectHtml(views.notFound, res);
     });
 

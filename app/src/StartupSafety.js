@@ -104,8 +104,11 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     inspectionResource = 'service account';
     const commandOptions = { encoding: 'utf8', timeout: 1000, stdio: ['ignore', 'pipe', 'pipe'] };
     const uid = Number(execFileSync('/usr/bin/id', ['-u', user], commandOptions).trim());
-    const gid = Number(execFileSync('/usr/bin/id', ['-g', user], commandOptions).trim());
-    execFileSync('/usr/bin/getent', ['group', group], commandOptions);
+    const gid = Number(execFileSync('/usr/bin/getent', ['group', group], commandOptions).trim().split(':')[2]);
+    inspectionStage = 'configuration';
+    inspectionResource = 'kaigi.conf';
+    const config = require('./config');
+    if (config.security?.ldap?.enabled) require('./LdapAuth.cjs').initializeBindSecret(config.security.ldap);
     if (process.getuid?.() === 0) {
         process.initgroups(user, gid);
         process.setgid(gid);
@@ -114,7 +117,6 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     inspectionStage = 'configuration';
     inspectionResource = 'kaigi.conf';
     fs.accessSync(path.join(configDirectory, 'kaigi.conf'), fs.constants.R_OK);
-    const config = require('./config');
     try { require('./JwtSecret').getJwtKeys(config.security.jwt.key); }
     catch { const error = Error(); error.startupReason = 'jwt'; throw error; }
     try { require('./middleware/ResourcePolicy').buildResourcePolicy(config.server.hostUrl); }

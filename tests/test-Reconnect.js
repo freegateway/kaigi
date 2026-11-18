@@ -181,11 +181,11 @@ describe('authenticated reconnect lifecycle', () => {
             '?room=private',
         ]) {
             h.context.window.location.search = search;
-            assert.equal(h.client.getReconnectDirectJoinURL(), '/login?select=1');
+            assert.equal(h.client.getReconnectDirectJoinURL(), '/?select=1');
         }
         h.client.socket.connected = false;
         h.context.window.location.search = selection.slice(8);
-        assert.equal(h.client.getReconnectDirectJoinURL(), '/login?select=1');
+        assert.equal(h.client.getReconnectDirectJoinURL(), '/?select=1');
     });
     it('stores only short-lived per-tab media flags, preserving the snapshot before teardown', () => {
         const h = harness();

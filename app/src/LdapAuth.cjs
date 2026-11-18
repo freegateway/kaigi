@@ -139,6 +139,23 @@ class MeetingPolicy {
         return rooms(granted);
     }
 }
+const startupSecrets = new Map();
+function initializeBindSecret(config) {
+    if (!config?.enabled && !config?.bindPasswordFile) return;
+    const filename = config.bindPasswordFile;
+    if (startupSecrets.has(filename)) return;
+    const sync = require('node:fs');
+    const fd = sync.openSync(filename, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+        const stat = sync.fstatSync(fd);
+        if (!stat.isFile() || stat.uid !== 0 || stat.size > 4096 || (stat.mode & 0o077)) {
+            fail('UNSAFE_SECRET_FILE', 'LDAP bind secret must be root-owned, root-only and a regular file of at most 4096 bytes.');
+        }
+        const secret = sync.readFileSync(fd, 'utf8').replace(/\r?\n$/, '');
+        if (!text(secret)) fail('INVALID_CONFIG', 'LDAP bind secret must be nonempty without NUL characters.');
+        startupSecrets.set(filename, secret);
+    } finally { sync.closeSync(fd); }
+}
 class LdapAuthenticator {
     #config; #policy; #factory;
     constructor(config, policy, { clientFactory = (options) => new Client(options) } = {}) {
@@ -170,6 +187,7 @@ class LdapAuthenticator {
                 if (!attribute(c.userGroupAttribute) || (policy.mode === 'mapped' && c.mappingKey !== 'name')) fail('INVALID_CONFIG', 'User-entry groups require a valid LDAP_USER_GROUP_ATTRIBUTE and LDAP_MAPPING_KEY=name in mapped mode.');
             } else if (!text(c.groupBase) || !text(c.groupFilter) || !c.groupFilter.includes('{member}') || !attribute(c.groupNameAttribute) || ((policy.mode === 'direct' || c.mappingKey === 'name') && (!text(c.groupUniqueFilter) || !c.groupUniqueFilter.includes('{group}')))) fail('INVALID_CONFIG', 'Group search requires LDAP_GROUP_BASE, LDAP_GROUP_FILTER with {member}, and LDAP_GROUP_NAME_ATTRIBUTE. Direct mode and name mappings also require LDAP_GROUP_UNIQUE_FILTER with {group}.');
         }
+        initializeBindSecret(c);
         this.#config = Object.freeze(c); this.#policy = policy; this.#factory = clientFactory;
     }
     async #connection() {
@@ -214,14 +232,7 @@ class LdapAuthenticator {
         const operation = () => `${stage}; ${settingsContext(configSettings(c), [...new Set((stage.match(/\bLDAP_[A-Z_]+\b/g) || []).concat(['LDAP_TRANSPORT', 'LDAP_URL']))])}`;
         try {
             setStage(stage);
-            let secret;
-            const handle = await fs.open(c.bindPasswordFile, constants.O_RDONLY | constants.O_NOFOLLOW);
-            try {
-                const stat = await handle.stat();
-                if (!stat.isFile() || stat.size > 4096 || (stat.mode & 0o027)) fail('UNSAFE_SECRET_FILE', `LDAP_BIND_PASSWORD_FILE ${c.bindPasswordFile} must be a regular file no larger than 4096 bytes with no group-write or other access; use mode 0600 or 0640 and appropriate ownership.`);
-                secret = (await handle.readFile('utf8')).replace(/\r?\n$/, '');
-            } finally { await handle.close(); }
-            if (!text(secret)) fail('INVALID_CONFIG', `LDAP_BIND_PASSWORD_FILE ${c.bindPasswordFile} must contain one nonempty password without NUL characters.`);
+            const secret = startupSecrets.get(c.bindPasswordFile);
             setStage('Connecting search account using LDAP_TRANSPORT and LDAP_URL');
             searchClient = await this.#connection();
             setStage('Binding search account using LDAP_BIND_DN and LDAP_BIND_PASSWORD_FILE');
@@ -409,4 +420,4 @@ function createLdapBackend(config, { onEvent = () => {} } = {}) {
         },
     };
 }
-module.exports = { ldapConfig, createLdapBackend, LdapAuthenticator, MeetingPolicy, LdapError };
+module.exports = { initializeBindSecret, ldapConfig, createLdapBackend, LdapAuthenticator, MeetingPolicy, LdapError };

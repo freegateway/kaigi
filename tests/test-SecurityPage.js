@@ -101,7 +101,7 @@ describe('security page and initial browser language', () => {
             [['ja-JP'], 'fr-CA', 'fr-CA'],
         ]) {
             const dom = new JSDOM('<body><div id="preMeetingLanguage"></div></body>', {
-                url: 'https://kaigi.invalid/login',
+                url: 'https://kaigi.invalid/',
                 runScripts: 'outside-only',
             });
             const window = dom.window;

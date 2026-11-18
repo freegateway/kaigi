@@ -311,3 +311,10 @@ in
 to display an optional site copyright notice in the login footer and local
 About page. Kaigi and upstream software attribution, copyright, license
 and Corresponding Source information remain on the About page.
+
+.Pp
+The service defaults to kaigi:kaigi. Global and per-instance account overrides
+remain available. LDAP bind secrets must be root-owned mode 0600; the privileged
+service bootstrap loads them once before dropping privileges. Restart for
+secret rotation. Existing writable state must be migrated to the selected
+service account while stopped; keep credentials root-owned.

@@ -26,7 +26,7 @@
 # LDAP_BIND_DN=<restricted search account DN>
 
 # !!! REQUIRED: password file path, relative to this instance's ldap/ directory
-# or explicitly absolute. No default. Use mode 0600 or 0640 with appropriate ownership.
+# or explicitly absolute. No default. Use root ownership and mode 0600. Loaded once at service startup; restart to rotate.
 # LDAP_BIND_PASSWORD_FILE=bind-secret
 
 # ====================================================================

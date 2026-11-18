@@ -24,11 +24,11 @@ describe('login rate-limit dependency maintenance', () => {
         const { loginLimiter } = createRateLimiters({ getRequesterKey: () => 'test' });
         const app = express();
         app.use(express.json());
-        app.post('/login', loginLimiter, (req, res) => res.sendStatus(req.body.ok ? 200 : 401));
+        app.post('/', loginLimiter, (req, res) => res.sendStatus(req.body.ok ? 200 : 401));
         try {
             await withServer(app, async (url) => {
                 const attempt = (ok) =>
-                    fetch(url + '/login', {
+                    fetch(url + '/', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: 'account', ok }),

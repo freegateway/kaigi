@@ -33,7 +33,8 @@ Directory URL including the selected protocol, host and explicit port. ldap-plai
 .It Va LDAP_BIND_DN
 Restricted search-account DN.
 .It Va LDAP_BIND_PASSWORD_FILE
-Path to a protected search-account password file readable by the daemon.
+Path to a root-owned search-account password file with mode 0600.
+The service loads it once before dropping privileges; restart to rotate it.
 Relative paths resolve against this instance's ldap directory, not the working
 directory. Explicit absolute paths remain unchanged. For example, use bind-secret.
 .It Va LDAP_USER_BASE

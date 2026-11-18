@@ -150,7 +150,7 @@ describe('instance boundaries', function () {
             for (let attempt = 0; attempt < 200; attempt++) {
                 if (child.exitCode !== null) throw Error(`Instance exited: ${output}`);
                 try {
-                    if ((await request(port, '/login')).status === 200) {
+                    if ((await request(port, '/')).status === 200) {
                         assert.deepEqual(JSON.parse(fs.readFileSync(path.join(config, 'ready.json'), 'utf8')), { pid: child.pid, nonce: name });
                         return { port, child };
                     }
@@ -179,21 +179,25 @@ describe('instance boundaries', function () {
         try {
             const staff = await start('staff'), publicSite = await start('public');
             for (const [server, name] of [[staff, 'staff'], [publicSite, 'public']]) {
-                assert.match((await request(server.port, '/login')).text, new RegExp(name));
-                assert.match((await request(server.port, '/login')).text, new RegExp(`${name} description`));
+                assert.match((await request(server.port, '/')).text, new RegExp(name));
+                assert.match((await request(server.port, '/')).text, new RegExp(`${name} description`));
+                assert.equal((await request(server.port, '/')).status, 200);
+                assert.equal((await request(server.port, '/')).headers['cache-control'], 'no-store');
+                assert.equal((await request(server.port, '/login')).status, 404);
+                assert.equal((await request(server.port, '/login', { username: name, password: 'password' })).status, 404);
                 assert.equal((await request(server.port, '/site-assets/logo.txt')).text, name);
                 assert.equal((await request(server.port, '/site-assets/missing.txt')).status, 404);
                 assert.equal((await request(server.port, '/%73ite-assets/logo.txt')).status, 404);
                 assert.equal((await request(server.port, '/site-assets/%2e%2e/users')).status, 404);
                 assert(fs.existsSync(path.join(directory, 'state', name, 'recordings')));
             }
-            const a = await request(staff.port, '/login', { username: 'staff', password: 'password' });
-            const b = await request(publicSite.port, '/login', { username: 'public', password: 'password' });
+            const a = await request(staff.port, '/auth/session/login', { username: 'staff', password: 'password' });
+            const b = await request(publicSite.port, '/auth/session/login', { username: 'public', password: 'password' });
             assert.equal(a.status, 200); assert.equal(b.status, 200);
             assert.deepEqual(a.json().meetingTranslations, { staff: { en: 'staff meeting' } });
             assert.deepEqual(b.json().meetingTranslations, { public: { en: 'public meeting' } });
             const aToken = a.json().message, bToken = b.json().message;
-            assert.equal((await request(publicSite.port, '/login', { username: 'staff', password: 'password' })).status, 401);
+            assert.equal((await request(publicSite.port, '/auth/session/login', { username: 'staff', password: 'password' })).status, 401);
             const aCookie = a.headers['set-cookie'][0].split(';')[0];
             const bCookie = b.headers['set-cookie'][0].split(';')[0];
             assert.match(aCookie, /^__Host-kaigi_staff_session=/);
