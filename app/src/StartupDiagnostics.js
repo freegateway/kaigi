@@ -73,12 +73,16 @@ function diagnose(error, stage, resource) {
     else if (['EISDIR', 'ENOTDIR', 'ELOOP'].includes(error?.code)) result.reason = 'file';
     if (['jwt', 'origin', 'proxy'].includes(error?.startupReason)) result.reason = error.startupReason;
     if (error?.startupReason === 'jwt') result.resource = 'jwt-secret';
-    if (error?.name === 'LdapError') { result.resource = 'ldap/ldap.conf'; result.reason = 'policy'; }
+    if (error?.name === 'LdapError') { result.resource = 'ldap/ldap.conf'; result.reason = 'policy'; result.ldap = error.ldapDiagnostic; }
     return result;
 }
 
 function formatDiagnostic(data) {
     if (!data || !stages.has(data.stage) || !resources.has(data.resource) || !Object.hasOwn(reasons, data.reason)) return null;
+    if (data.ldap) {
+        const detail = require('./LdapDiagnostics').format(data.ldap);
+        if (detail) return `${data.stage} validation failed (${data.resource}): ${detail}`;
+    }
     const aliases = { SERVER_LISTEN_PORT: 'WEB_LISTEN_PORT', SFU_MIN_PORT: 'MEDIA_MIN_PORT', SFU_MAX_PORT: 'MEDIA_MAX_PORT' };
     const name = typeof data.setting === 'string' && settingPattern.test(data.setting) ? data.setting : null;
     const setting = name ? `: ${Object.hasOwn(aliases, name) ? aliases[name] : name}` : '';

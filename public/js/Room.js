@@ -4321,7 +4321,7 @@ function handleSelects() {
         localStorageSettings.mic_noise_suppression = enabled;
         localStorageSettings.mic_noise_suppression_user_set = true;
         lS.setSettings(localStorageSettings);
-        if (rc.RNNoiseProcessor) rc.RNNoiseProcessor.setNoiseSuppression(enabled);
+        rc.setNoiseSuppression(enabled)?.catch(() => userLog('warning', 'Microphone input was lost; select a microphone to resume audio', 'top-end', 6000));
         userLog(enabled ? 'success' : 'info', `Noise suppression ${enabled ? 'enabled' : 'disabled'}`, 'top-end', 1800);
         e.target.blur();
     };
@@ -6203,12 +6203,20 @@ function setupQuickDeviceSwitchDropdowns() {
 
     // Live audio input level meters shown next to each microphone in the audio device menu.
     // Uses a single AudioContext and one analyser per device; runs only while the menu is open.
+    // The selected microphone is metered from the live mic track: Chrome (macOS) can't open a device
+    // that is already capturing with different audio processing (NotReadableError), and a second open
+    // capture would also pin the processing of the next mic re-capture.
     const audioMeterManager = {
         active: false,
         rafId: null,
         audioContext: null,
-        meters: new Map(), // deviceId -> { stream, source, analyser, dataArray }
+        meters: new Map(), // deviceId -> { stream, track, shared, source, analyser, dataArray }
         barTargets: new Map(), // deviceId -> [barEl, ...]
+        failed: new Set(), // devices that could not be opened, not retried until the menu reopens
+        pending: new Set(),
+        groupIds: new Map(),
+        holdSelected: false, // a mic switch is in progress: never open the selected device
+        lastRefresh: 0,
 
         async ensureContext() {
             const AC = window.AudioContext || window.webkitAudioContext;
@@ -6220,7 +6228,7 @@ function setupQuickDeviceSwitchDropdowns() {
                 try {
                     await this.audioContext.resume();
                 } catch (err) {
-                    /* ignore */
+                    // Ignore unavailable device metadata or already released resources.
                 }
             }
             return this.audioContext;
@@ -6233,23 +6241,81 @@ function setupQuickDeviceSwitchDropdowns() {
             });
         },
 
+        async loadGroupIds() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                this.groupIds.clear();
+                devices
+                    .filter((d) => d.kind === 'audioinput' && d.deviceId)
+                    .forEach((d) => this.groupIds.set(d.deviceId, d.groupId));
+            } catch (err) {
+                // Ignore unavailable device metadata or already released resources.
+            }
+        },
+
+        // The selected microphone, or the default/communications alias pointing to the same device
+        isSelectedMicrophone(deviceId) {
+            const selected = microphoneSelect?.value;
+            if (!selected) return false;
+            if (deviceId === selected) return true;
+            const aliases = ['default', 'communications'];
+            if (!aliases.includes(deviceId) && !aliases.includes(selected)) return false;
+            const groupId = this.groupIds.get(deviceId);
+            return !!groupId && groupId === this.groupIds.get(selected);
+        },
+
+        isMicrophoneOpen() {
+            return audio || this.holdSelected || rc.producerExist(RoomClient.mediaType.audio);
+        },
+
         async start(entries) {
             if (!isAudioContextSupported()) return;
             this.active = true;
             this.setBarTargets(entries);
-            for (const { deviceId } of entries) {
-                if (deviceId && !this.meters.has(deviceId)) {
-                    await this.createMeter(deviceId);
-                }
-            }
+            await this.loadGroupIds();
+            await this.refresh();
             if (this.active && !this.rafId) {
                 this.rafId = requestAnimationFrame(() => this.tick());
             }
         },
 
-        async createMeter(deviceId) {
+        async refresh() {
+            this.lastRefresh = Date.now();
+            for (const deviceId of Array.from(this.barTargets.keys())) {
+                if (!this.active) return;
+                await this.syncMeter(deviceId);
+            }
+        },
+
+        async syncMeter(deviceId) {
+            if (this.pending.has(deviceId)) return;
+            const selected = this.isSelectedMicrophone(deviceId);
+            const liveTrack = selected ? rc.getMicrophoneInputTrack() : null;
+            const meter = this.meters.get(deviceId);
+            if (meter) {
+                const stale =
+                    meter.track.readyState === 'ended' ||
+                    (meter.shared ? meter.track !== liveTrack : selected && this.isMicrophoneOpen());
+                if (!stale) return;
+                this.release(deviceId);
+            }
+            if (selected && this.isMicrophoneOpen()) {
+                if (liveTrack) await this.addMeter(deviceId, new MediaStream([liveTrack]), liveTrack, true);
+                return;
+            }
+            if (this.failed.has(deviceId)) return;
+            this.pending.add(deviceId);
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
+                await this.createMeter(deviceId);
+            } finally {
+                this.pending.delete(deviceId);
+            }
+        },
+
+        async createMeter(deviceId) {
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         deviceId: { exact: deviceId },
                         echoCancellation: false,
@@ -6257,29 +6323,65 @@ function setupQuickDeviceSwitchDropdowns() {
                         autoGainControl: false,
                     },
                 });
-                if (!this.active) {
-                    stream.getTracks().forEach((t) => t.stop());
-                    return;
-                }
-                const ctx = await this.ensureContext();
-                if (!ctx) {
-                    stream.getTracks().forEach((t) => t.stop());
-                    return;
-                }
-                const source = ctx.createMediaStreamSource(stream);
-                const analyser = ctx.createAnalyser();
-                analyser.fftSize = 256;
-                analyser.smoothingTimeConstant = 0.6;
-                source.connect(analyser);
-                const dataArray = new Uint8Array(analyser.fftSize);
-                this.meters.set(deviceId, { stream, source, analyser, dataArray });
             } catch (err) {
+                this.failed.add(deviceId);
                 console.warn('Audio meter init failed for device', deviceId, err);
+                return;
             }
+            // The menu closed, or this device became the open microphone, while the capture was starting
+            if (!this.active || (this.isSelectedMicrophone(deviceId) && this.isMicrophoneOpen())) {
+                stream.getTracks().forEach((t) => t.stop());
+                return;
+            }
+            const added = await this.addMeter(deviceId, stream, stream.getAudioTracks()[0], false);
+            if (!added) stream.getTracks().forEach((t) => t.stop());
+        },
+
+        async addMeter(deviceId, stream, track, shared) {
+            const ctx = await this.ensureContext();
+            if (!ctx || !this.active || !track || this.meters.has(deviceId)) return false;
+            const source = ctx.createMediaStreamSource(stream);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.6;
+            source.connect(analyser);
+            const dataArray = new Uint8Array(analyser.fftSize);
+            this.meters.set(deviceId, { stream, track, shared, source, analyser, dataArray });
+            return true;
+        },
+
+        // Shared meters only tap the live mic track: never stop it
+        release(deviceId) {
+            const meter = this.meters.get(deviceId);
+            if (!meter) return;
+            this.meters.delete(deviceId);
+            try {
+                meter.source.disconnect();
+            } catch (err) {
+                // Ignore unavailable device metadata or already released resources.
+            }
+            if (!meter.shared) {
+                try {
+                    meter.stream.getTracks().forEach((t) => t.stop());
+                } catch (err) {
+                    // Ignore unavailable device metadata or already released resources.
+                }
+            }
+        },
+
+        // Called before switching microphone from the menu, so the new mic is never already open for the meter
+        prepareMicrophoneSwitch(deviceId) {
+            if (audio || rc.producerExist(RoomClient.mediaType.audio)) this.holdSelected = true;
+            this.release(deviceId);
         },
 
         tick() {
             if (!this.active) return;
+            // The live mic track changes on device switches and noise suppression re-captures
+            if (Date.now() - this.lastRefresh > 500) this.refresh();
+            this.barTargets.forEach((barEls, deviceId) => {
+                if (!this.meters.has(deviceId)) barEls.forEach((bar) => bar.classList.remove('active'));
+            });
             this.meters.forEach((meter, deviceId) => {
                 const barEls = this.barTargets.get(deviceId);
                 if (!barEls || !barEls.length) return;
@@ -6303,25 +6405,15 @@ function setupQuickDeviceSwitchDropdowns() {
                 cancelAnimationFrame(this.rafId);
                 this.rafId = null;
             }
-            this.meters.forEach((meter) => {
-                try {
-                    meter.source.disconnect();
-                } catch (err) {
-                    /* ignore */
-                }
-                try {
-                    meter.stream.getTracks().forEach((t) => t.stop());
-                } catch (err) {
-                    /* ignore */
-                }
-            });
-            this.meters.clear();
+            Array.from(this.meters.keys()).forEach((deviceId) => this.release(deviceId));
             this.barTargets.clear();
+            this.failed.clear();
+            this.holdSelected = false;
             if (this.audioContext && this.audioContext.state !== 'closed') {
                 try {
                     this.audioContext.close();
                 } catch (err) {
-                    /* ignore */
+                    // Ignore unavailable device metadata or already released resources.
                 }
             }
             this.audioContext = null;
@@ -6433,6 +6525,7 @@ function setupQuickDeviceSwitchDropdowns() {
 
             btn.addEventListener('click', () => {
                 if (selectEl.value === opt.value) return;
+                if (meterCollector) audioMeterManager.prepareMicrophoneSwitch(opt.value);
                 selectEl.value = opt.value;
                 selectEl.dispatchEvent(new Event('change'));
             });
@@ -8507,6 +8600,7 @@ function getParticipantsList(peers) {
     // PEERS IN THE CURRENT ROOM
     for (const peer of Array.from(peers.keys())) {
         const peer_info = peers.get(peer).peer_info;
+        if (!/^[\w-]+$/.test(peer_info?.peer_id || '')) continue;
         console.log('PEER-INFO------->', peer_info);
         const peer_name = peer_info.peer_name;
         const peer_avatar = peer_info.peer_avatar;
@@ -8807,6 +8901,7 @@ function setParticipantsTippy(peers) {
         //
         for (let peer of Array.from(peers.keys())) {
             const peer_info = peers.get(peer).peer_info;
+        if (!/^[\w-]+$/.test(peer_info?.peer_id || '')) continue;
             const peer_id = peer_info.peer_id;
 
             const peerAudioBtn = rc.getId(peer_id + '___pAudio');

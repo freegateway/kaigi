@@ -1,0 +1,8 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; background: #151922; color: #eef1f6; }
+body { margin: 0; padding: 1.5rem; }
+main { max-width: 42rem; margin: 8vh auto; padding: 1.5rem; border: 1px solid #53617a; border-radius: .6rem; }
+.brand { color: #a7c9ff; font-weight: bold; }
+h1 { font-size: clamp(1.4rem, 4vw, 2rem); overflow-wrap: anywhere; }
+p { line-height: 1.6; }
+a { display: inline-block; color: #b4d2ff; padding: .75rem 0; }
+a:focus-visible { outline: 3px solid #b4d2ff; outline-offset: 4px; }

@@ -1,6 +1,6 @@
 {
     "name": "kaigi",
-    "version": "0.8.1",
+    "version": "0.8.4",
     "description": "FreeGateway Kaigi: privacy-hardened FreeBSD video conferencing",
     "main": "Server.js",
     "scripts": {
@@ -83,6 +83,7 @@
         "proxy-addr": "2.0.8",
         "source-map-js": "1.2.2",
         "joi": "17.13.9",
-        "follow-redirects": "1.16.2"
+        "follow-redirects": "1.16.2",
+        "ws": "8.23.0"
     }
 }

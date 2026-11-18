@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Đã dừng phiên âm Whisper",
         "You cannot change your own role": "Bạn không thể thay đổi vai trò của chính mình",
         "You cannot send files to yourself.": "Bạn không thể gửi tệp cho chính mình.",
-        "Recording is disabled for this meeting": "Recording is disabled for this meeting"
+        "Recording is disabled for this meeting": "Recording is disabled for this meeting",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

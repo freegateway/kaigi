@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper metin dökümü durduruldu",
         "You cannot change your own role": "Kendi rolünüzü değiştiremezsiniz",
         "You cannot send files to yourself.": "Kendinize dosya gönderemezsiniz.",
-        "Recording is disabled for this meeting": "Bu toplantı için kayıt devre dışı bırakılmıştır"
+        "Recording is disabled for this meeting": "Bu toplantı için kayıt devre dışı bırakılmıştır",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

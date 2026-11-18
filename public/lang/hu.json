@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper-átírás leállítva",
         "You cannot change your own role": "A saját szerepkörödet nem módosíthatod",
         "You cannot send files to yourself.": "Nem küldhetsz fájlokat saját magadnak.",
-        "Recording is disabled for this meeting": "Ebben a megbeszélésben a felvétel le van tiltva"
+        "Recording is disabled for this meeting": "Ebben a megbeszélésben a felvétel le van tiltva",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

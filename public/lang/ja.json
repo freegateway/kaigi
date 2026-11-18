@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper 文字起こしを停止しました",
         "You cannot change your own role": "自分の役割は変更できません",
         "You cannot send files to yourself.": "自分自身にファイルを送信することはできません.",
-        "Recording is disabled for this meeting": "この会議では録画が無効になっています"
+        "Recording is disabled for this meeting": "この会議では録画が無効になっています",
+        "Microphone input was lost; select a microphone to resume audio": "マイク入力が失われました。音声を再開するにはマイクを選択してください。"
     },
     "about": {
         "back": "戻る",

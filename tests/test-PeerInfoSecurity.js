@@ -215,4 +215,14 @@ describe('protected peer info over Socket.IO', function () {
         assert.notEqual(state.peer.peer_recording, true);
         assert.equal(state.broadcasts.length, 0);
     });
+    it('binds avatar-update identity to the sending connection and drops external avatars', async () => {
+        send('updatePeerInfo', { type: 'avatar', status: 'https://external.example/avatar.png', peer_id: 'forged-peer', peer_name: 'forged-name', broadcast: true });
+        await barrier();
+        assert.equal(state.peer.peer_avatar, false);
+        const data = state.broadcasts.at(-1)[2];
+        assert.equal(data.peer_id, state.socket.id);
+        assert.equal(data.peer_name, state.peer.peer_name);
+        assert.equal(data.status, false);
+    });
+
 });

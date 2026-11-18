@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper-transcriptie gestopt",
         "You cannot change your own role": "Je kunt je eigen rol niet wijzigen",
         "You cannot send files to yourself.": "Je kunt geen bestanden naar jezelf sturen.",
-        "Recording is disabled for this meeting": "Opnemen is uitgeschakeld voor deze vergadering"
+        "Recording is disabled for this meeting": "Opnemen is uitgeschakeld voor deze vergadering",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

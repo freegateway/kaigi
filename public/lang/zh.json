@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Whisper 转录已停止",
         "You cannot change your own role": "您不能更改自己的角色",
         "You cannot send files to yourself.": "您不能向自己发送文件.",
-        "Recording is disabled for this meeting": "此会议已禁用录制"
+        "Recording is disabled for this meeting": "此会议已禁用录制",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",

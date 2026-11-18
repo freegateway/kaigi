@@ -1496,7 +1496,8 @@
         "Whisper transcription stopped": "Transkripsi Whisper dihentikan",
         "You cannot change your own role": "Anda tidak dapat mengubah peran Anda sendiri",
         "You cannot send files to yourself.": "Anda tidak dapat mengirim file ke diri sendiri.",
-        "Recording is disabled for this meeting": "Perekaman dinonaktifkan untuk rapat ini"
+        "Recording is disabled for this meeting": "Perekaman dinonaktifkan untuk rapat ini",
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
     },
     "about": {
         "back": "Back",
