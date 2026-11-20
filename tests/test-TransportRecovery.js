@@ -469,6 +469,7 @@ describe('test-TransportRecovery', () => {
                 getId: () => null,
                 closeDeadTransport: RoomClientProto.closeDeadTransport,
                 detachProducersForRecovery: RoomClientProto.detachProducersForRecovery,
+				syncSettingsVideoPreview: RoomClientProto.syncSettingsVideoPreview,
                 initProducerTransport: async function () {
                     const transport = typeof newTransport === 'function' ? newTransport() : newTransport;
                     if (transport) this.producerTransport = transport;

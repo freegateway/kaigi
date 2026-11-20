@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "Si cette option est activée, Whisper côté serveur améliore la précision de la transcription",
         "When enabled, your transcription will be sent to all participants": "Lorsque cette option est activée, votre transcription est envoyée à tous les participants",
         "White annotation color": "Couleur d’annotation blanche",
-        "Yellow annotation color": "Couleur d’annotation jaune"
+        "Yellow annotation color": "Couleur d’annotation jaune",
+        "Camera preview": "Aperçu de la caméra"
     },
     "buttons": {
         "Hide password": "Masquer le mot de passe",
@@ -465,9 +466,9 @@
         "YouTube Live": "YouTube en direct",
         "End meeting for all": "Terminer la réunion pour tous",
         "Join meeting": "Rejoindre la réunion",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Se connecter",
+        "Log out": "Se déconnecter",
+        "Logging in…": "Connexion en cours…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Se déconnecter",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "Aucune réunion n’est attribuée à votre compte. Veuillez contacter votre administrateur.",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "En attente du serveur. Vous pourriez devoir vous connecter de nouveau.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "Un présentateur est nécessaire pour démarrer la réunion. Veuillez réessayer plus tard.",
         "Add to board": "Ajouter au tableau",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "Tous les participants seront déconnectés. Le motif, le cas échéant, leur sera affiché.",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "Salle d'attente activée et aucun présentateur disponible",
         "Lock room": "Verrouiller la salle",
         "Lock room?": "Verrouiller la salle?",
-        "Login": "Se connecter",
+        "Log in": "Se connecter",
         "Meeting date and time": "Date et heure de la réunion",
         "Microphone blocked": "Micro bloqué",
         "Microphone busy": "Micro occupé",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Verrou d’éveil désactivé",

@@ -99,7 +99,7 @@ describe('authenticated reconnect lifecycle', () => {
         h.client.updateReconnectAlert(15000, 3);
         const banner = h.records.find(record => record.state === 'planned');
         assert.equal(banner.meta, 'Attempt 3/120 — retry in 15s');
-        assert.equal(banner.message, 'Waiting for the server. You may need to login again.');
+        assert.equal(banner.message, 'Waiting for the server. You may need to log in again.');
         h.context.Client.prototype.showReconnectAlert.call(h.client, '<arbitrary reason>');
         assert.equal(h.records.at(-1).message, 'Connection interrupted. Trying to reconnect.');
         assert.deepEqual(h.navigation, []);
@@ -170,7 +170,7 @@ describe('authenticated reconnect lifecycle', () => {
         h.client.handleDisconnect('io server disconnect');
         assert.equal(h.records.filter((x) => x === 'connect').length, 1);
         assert.equal(h.records.filter((x) => Array.isArray(x) && x[0] === 'attempts').length, 1);
-        assert.equal(h.records.find((x) => x.title)?.message, 'Waiting for the server. You may need to login again.');
+        assert.equal(h.records.find((x) => x.title)?.message, 'Waiting for the server. You may need to log in again.');
     });
     it('constructs only opaque authorized-selection URLs or the login chooser', () => {
         const h = harness();
@@ -249,7 +249,7 @@ describe('authenticated reconnect lifecycle', () => {
         for (const locale of ['en', 'en-CA', 'fr-CA', 'ja']) {
             const t = JSON.parse(read('public/lang/' + locale + '.json')).dialogs;
             assert.ok(t['Server restarting']);
-            assert.ok(t['Waiting for the server. You may need to login again.']);
+            assert.ok(t['Waiting for the server. You may need to log in again.']);
         }
         const h = harness(),
             dom = new JSDOM(read('public/views/Room.html'));

@@ -862,3 +862,42 @@ assets. JSON API errors remain JSON; `/login` remains retired.
 Deferred `9916d9be` and `9447f184` calendar invitations pending organizational
 SOGo/Kojo design. They remain in the project watch queue, not this implementation.
 RTCStats, server capture and presenter moderation remain deferred/excluded.
+
+## 2026-11-20 — Access checks, settings preview and terminology
+
+Kaigi 0.8.5 adapts upstream `c490e9f3`: apply the optional IP allow-list before
+static/instance assets, documentation and body parsing. Engine.IO checks the same
+policy only after Kaigi verifies the direct/proxy deployment boundary. Preserve
+the existing verified-address mechanism, including IPv4-mapped normalization;
+never import upstream's boolean trust of forwarded headers. Unknown addresses
+cannot match an enabled list. Existing meeting/session authentication still applies.
+
+Selectively adapt `841d6c64` and `24c0c333`: one compact, muted, inline settings
+camera preview follows the transmitted camera stream and its mirror state on
+desktop and mobile. Move it between Video and Background settings. Closing the
+panel, losing/closing the camera, leaving or recovering the transport detaches
+the preview without acquiring or stopping shared media tracks. No effects engine
+or additional browser dependency is imported.
+
+Standardize English actions as Log in / Log out, progress as Logging in… and
+nouns/modifiers as login/logout. Update error pages, defaults, help and samples;
+consolidate reconnect translation keys across all 30 catalogues. Retain native
+translations, standardize Japanese ログイン/ログアウト and correct French action
+fallbacks. Technical identifiers, Font Awesome classes and operator overrides
+are preserved. Browser error links say Return to login.
+
+Defer the worker/tasks-vision background rewrite (`f62f0053`, `d62f884c`,
+`b02ba83b`, `b27283ae`) pending locally packaged, pinned model/WASM resources,
+privacy review and browser/device validation. Background switching without camera
+restart (`17b42da9`) remains for separate evaluation; animated video backgrounds
+(`30368701`) and scrollbar styling (`27ca8929`) are not adopted. No dependency
+refresh is included. Meeting Manager is a separate project; integration is future
+work. Calendar/SOGo/Kojo remains on watch.
+
+Validation: 655 Mocha tests and 24 Node security tests pass. Two Unix-socket
+integration cases are skipped because this environment returns EPERM; direct
+and loopback-proxy HTTP/WebSocket checks pass. DOM tests cover preview stream
+replacement, mirroring, tab movement and detachment without stopping tracks;
+all 30 translation catalogues retain matching keys. Chromium cannot start here
+because its Unix socket is blocked. Actual browser/device, short viewport/150%
+rendering and FreeBSD/Poudriere validation remain outstanding.

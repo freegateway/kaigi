@@ -224,7 +224,10 @@ const io = socketIo(server, {
 });
 io.engine.use((req, res, next) => {
     if (!webListener.acceptRequest(req, webDeployment)) return next(new Error('Forbidden'));
-    next();
+	restrictAccessByIP.allowSocketRequest(req, (error, allowed) => {
+		if (error || !allowed) return next(new Error('Forbidden'));
+		next();
+	});
 });
 
 const { securityEvent, peerAddress } = require('./SecurityEvents');
@@ -700,6 +703,8 @@ function OIDCAuth(req, res, next) {
 function startServer() {
     // Start the app
     app.set('trust proxy', trustProxy); // Enables trust for proxy headers (e.g., X-Forwarded-For) based on the trustProxy setting
+	// The deployment boundary has verified the peer before any asset or body processing.
+	app.use(restrictAccessByIP);
     app.use(require('./middleware/ResourcePolicy')(config.server.hostUrl));
     app.use(helmet.noSniff()); // Enable content type sniffing prevention
     app.use(applyEmbedHeaders); // Apply iframe embedding restrictions (CSP frame-ancestors / X-Frame-Options)
@@ -735,9 +740,6 @@ function startServer() {
     app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Handles URL-encoded payloads
     app.use(express.raw({ type: 'video/webm', limit: '50mb' })); // Handles raw binary data
     app.use(restApi.basePath + '/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument)); // api docs
-
-    // IP Whitelist check ...
-    app.use(restrictAccessByIP);
 
     // Expire local authenticated sessions server-side before protected routes
     // evaluate IP authorization.  Active meetings keep their sessions alive
@@ -1217,7 +1219,7 @@ function startServer() {
     // Direct meeting-name URLs never serve a meeting page; require authenticated selection.
     app.get(['/join', '/join/:roomId', '/join/\\*'], (req, res) => {
         res.set('Cache-Control', 'no-store');
-        return res.status(403).send('Meeting links are disabled. Open the site, sign in, and select an authorized meeting.');
+        return res.status(403).send('Meeting links are disabled. Open the site, log in, and select an authorized meeting.');
     });
 
     // privacy policy
@@ -1235,7 +1237,7 @@ function startServer() {
         htmlInjector.injectHtml(views.about, res);
     });
 
-    // Reject the upstream host-wait flow; users must sign in and select an authorized meeting.
+    // Reject the upstream host-wait flow; users must log in and select an authorized meeting.
     app.get('/whoAreYou/:roomId', (req, res) => {
         return res.redirect('/');
     });

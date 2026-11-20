@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "فعال ہونے پر, اعلی درستگی ٹرانسکرپشن کے لیے سرور سائیڈ Whisper استعمال کرتا ہے",
         "When enabled, your transcription will be sent to all participants": "فعال ہونے پر, آپ کا ٹرانسکرپشن تمام شرکاء کو بھیج دیا جائے گا",
         "White annotation color": "سفید تشریح کا رنگ",
-        "Yellow annotation color": "پیلا تشریح کا رنگ"
+        "Yellow annotation color": "پیلا تشریح کا رنگ",
+        "Camera preview": "Camera preview"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -465,9 +466,9 @@
         "YouTube Live": "یوٹیوب لائیو",
         "End meeting for all": "End meeting for all",
         "Join meeting": "Join meeting",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Log in",
+        "Log out": "Log out",
+        "Logging in…": "Logging in…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "آپ کے اکاؤنٹ کو کوئی میٹنگ تفویض نہیں کی گئی۔ براہ کرم اپنے منتظم سے رابطہ کریں۔",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "میٹنگ شروع کرنے کے لیے ایک پریزنٹر ضروری ہے. براہ کرم بعد میں دوبارہ شامل ہونے کی کوشش کریں.",
         "Add to board": "بورڈ میں شامل کریں",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "تمام شرکاء کا رابطہ منقطع کر دیا جائے گا۔ اگر کوئی وجہ دی گئی ہو تو انہیں دکھائی جائے گی۔",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "لابی فعال ہے اور کوئی پریزنٹر دستیاب نہیں",
         "Lock room": "کمرہ لاک کریں",
         "Lock room?": "کمرہ لاک کریں?",
-        "Login": "لاگ ان",
+        "Log in": "لاگ ان",
         "Meeting date and time": "میٹنگ کی تاریخ اور وقت",
         "Microphone blocked": "مائیکروفون بلاک ہے",
         "Microphone busy": "مائیکروفون مصروف ہے",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "آپ کی لاگ ان شناخت پہلے ہی اس میٹنگ سے منسلک ہے۔ دوسرے کنکشن سے نکلیں، یا دوسرے اکاؤنٹ سے سائن ان کرنے کے لیے لاگ آؤٹ پر کلک کریں۔"
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "آپ کی لاگ ان شناخت پہلے ہی اس میٹنگ سے منسلک ہے۔ دوسرے کنکشن سے نکلیں، یا دوسرے اکاؤنٹ سے سائن ان کرنے کے لیے لاگ آؤٹ پر کلک کریں۔"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock بند کر دیا گیا",

@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "활성화하면 더 정확한 전사를 위해 서버 측 Whisper를 사용합니다",
         "When enabled, your transcription will be sent to all participants": "활성화하면 전사 내용이 모든 참가자에게 전송됩니다",
         "White annotation color": "주석 색상: 흰색",
-        "Yellow annotation color": "주석 색상: 노란색"
+        "Yellow annotation color": "주석 색상: 노란색",
+        "Camera preview": "Camera preview"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -465,9 +466,9 @@
         "YouTube Live": "유튜브 라이브",
         "End meeting for all": "모두의 회의 종료",
         "Join meeting": "회의 참가",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Log in",
+        "Log out": "Log out",
+        "Logging in…": "Logging in…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "계정에 배정된 회의가 없습니다. 관리자에게 문의하세요.",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "회의를 시작하려면 발표자가 필요합니다. 나중에 다시 참가해 주세요.",
         "Add to board": "보드에 추가",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "모든 참가자의 연결이 끊어집니다. 사유를 입력하면 참가자에게 표시됩니다.",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "로비가 활성화되어 있지만 현재 사용할 수 있는 발표자가 없습니다",
         "Lock room": "방 잠금",
         "Lock room?": "방을 잠그시겠습니까?",
-        "Login": "로그인",
+        "Log in": "로그인",
         "Meeting date and time": "회의 날짜 및 시간",
         "Microphone blocked": "마이크가 차단됨",
         "Microphone busy": "마이크 사용 중",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "이 로그인 ID는 이미 이 회의에 연결되어 있습니다. 다른 연결에서 회의를 나가거나 로그아웃을 클릭하여 다른 계정으로 로그인하세요."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "이 로그인 ID는 이미 이 회의에 연결되어 있습니다. 다른 연결에서 회의를 나가거나 로그아웃을 클릭하여 다른 계정으로 로그인하세요."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock 해제됨",
