@@ -86,16 +86,16 @@ function renderHelp(input = {}, requested) {
             'LOGIN_INSTRUCTIONS',
             brand.login?.description || 'Enter your credentials to continue.'
         ),
-        LOGIN_LABEL: configured('LOGIN_BUTTON_LABEL', brand.login?.buttonLabel || 'Login'),
+        LOGIN_LABEL: configured('LOGIN_BUTTON_LABEL', brand.login?.buttonLabel || 'Log in'),
         CHOOSE_HEADING: configured('NEW_ROOM_TITLE', brand.site?.newRoomTitle || 'Choose a meeting'),
         CHOOSE_INSTRUCTIONS: configured(
             'NEW_ROOM_DESCRIPTION',
-            brand.site?.newRoomDescription || 'Sign in and choose a meeting you are authorized to join.'
+            brand.site?.newRoomDescription || 'Log in and choose a meeting you are authorized to join.'
         ),
         JOIN_LABEL: configured('JOIN_BUTTON_LABEL', brand.app?.joinButtonLabel || 'Join meeting'),
         USERNAME_LABEL: ui('Username'),
         PASSWORD_LABEL: ui('Password'),
-        LOGOUT_LABEL: ui('Logout'),
+        LOGOUT_LABEL: ui('Log out'),
         PREJOIN_LABEL: ui('Join meeting'),
         LEAVE_LABEL: ui('Leave meeting'),
         AUDIO_ON: ui('Start the audio'),

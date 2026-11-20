@@ -1089,7 +1089,7 @@ module.exports = {
                     process.env.PRIVACY_POLICY_URL || siteAssetUrl(process.env.PRIVACY_POLICY_NAME) || '',
                 newRoomTitle: process.env.NEW_ROOM_TITLE || 'Choose a meeting',
                 newRoomDescription:
-                    process.env.NEW_ROOM_DESC || 'Sign in and choose a meeting you are authorized to join.',
+                    process.env.NEW_ROOM_DESC || 'Log in and choose a meeting you are authorized to join.',
             },
 
             /**
@@ -1156,7 +1156,7 @@ module.exports = {
                 waitingRoomWaiting:
                     process.env.WHO_ARE_YOU_WAITING_ROOM_WAITING || 'Waiting for host to start the meeting...',
                 waitingRoomHostLink: process.env.WHO_ARE_YOU_WAITING_ROOM_HOST_LINK || 'Are you the host?',
-                waitingRoomLoginLink: process.env.WHO_ARE_YOU_WAITING_ROOM_LOGIN_LINK || 'Login here',
+                waitingRoomLoginLink: process.env.WHO_ARE_YOU_WAITING_ROOM_LOGIN_LINK || 'Log in here',
                 waitingRoomElapsedJust: process.env.WHO_ARE_YOU_WAITING_ROOM_ELAPSED_JUST || 'Just started waiting',
                 waitingRoomElapsedMinutes:
                     process.env.WHO_ARE_YOU_WAITING_ROOM_ELAPSED_MINUTES || 'Waiting for {minutes}',
@@ -1171,7 +1171,7 @@ module.exports = {
             login: {
                 heading: process.env.LOGIN_HEADING || 'Welcome back',
                 description: process.env.LOGIN_INSTRUCTIONS ?? 'Enter your credentials to continue.',
-                buttonLabel: process.env.LOGIN_BUTTON_LABEL || 'Login',
+                buttonLabel: process.env.LOGIN_BUTTON_LABEL || 'Log in',
             },
 
             /**

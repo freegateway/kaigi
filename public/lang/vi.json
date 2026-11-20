@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "Khi bật, hệ thống sẽ dùng Whisper phía máy chủ để phiên âm chính xác hơn",
         "When enabled, your transcription will be sent to all participants": "Khi bật, bản phiên âm của bạn sẽ được gửi cho tất cả người tham gia",
         "White annotation color": "Màu chú thích màu trắng",
-        "Yellow annotation color": "Màu chú thích màu vàng"
+        "Yellow annotation color": "Màu chú thích màu vàng",
+        "Camera preview": "Camera preview"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -465,9 +466,9 @@
         "YouTube Live": "Trực tiếp trên YouTube",
         "End meeting for all": "End meeting for all",
         "Join meeting": "Join meeting",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Log in",
+        "Log out": "Log out",
+        "Logging in…": "Logging in…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "Tài khoản của bạn chưa được chỉ định cuộc họp nào. Vui lòng liên hệ quản trị viên.",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "Cần có người trình bày để bắt đầu cuộc họp. Vui lòng thử tham gia lại sau.",
         "Add to board": "Thêm vào bảng",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "Tất cả người tham gia sẽ bị ngắt kết nối. Lý do (nếu có) sẽ được hiển thị cho họ.",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "Đã bật phòng chờ nhưng không có người trình bày",
         "Lock room": "Khóa phòng",
         "Lock room?": "Khóa phòng?",
-        "Login": "Đăng nhập",
+        "Log in": "Đăng nhập",
         "Meeting date and time": "Ngày và giờ họp",
         "Microphone blocked": "Micrô bị chặn",
         "Microphone busy": "Micrô đang bận",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "ID đăng nhập của bạn đã kết nối với cuộc họp này. Hãy rời kết nối kia hoặc nhấn Đăng xuất để đăng nhập bằng tài khoản khác."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "ID đăng nhập của bạn đã kết nối với cuộc họp này. Hãy rời kết nối kia hoặc nhấn Đăng xuất để đăng nhập bằng tài khoản khác."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock đã được tắt",

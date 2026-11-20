@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "Si cette option est activée, Whisper côté serveur améliore la précision de la transcription",
         "When enabled, your transcription will be sent to all participants": "Lorsque cette option est activée, votre transcription est envoyée à tous les participants",
         "White annotation color": "Couleur d’annotation blanche",
-        "Yellow annotation color": "Couleur d’annotation jaune"
+        "Yellow annotation color": "Couleur d’annotation jaune",
+        "Camera preview": "Aperçu de la caméra"
     },
     "buttons": {
         "Hide password": "Masquer le mot de passe",
@@ -465,9 +466,9 @@
         "YouTube Live": "YouTube en direct",
         "End meeting for all": "Terminer la réunion pour tous",
         "Join meeting": "Rejoindre la réunion",
-        "Login": "Connexion",
-        "Logout": "Déconnexion",
-        "Signing in...": "Connexion en cours...",
+        "Log in": "Se connecter",
+        "Log out": "Se déconnecter",
+        "Logging in…": "Connexion en cours…",
         "SCHEDULE MEETING": "Planifier une réunion",
         "Generate random room name": "Générer un nom de réunion",
         "Show password": "Afficher le mot de passe",
@@ -1089,14 +1090,13 @@
         "Start conference.": "Démarrez la réunion.",
         "or": "ou",
         "Privacy Policy": "Politique de confidentialité",
-        "Logout": "Déconnexion",
+        "Log out": "Se déconnecter",
         "Username": "Nom d’utilisateur",
         "No meetings are assigned to your account. Please contact your administrator.": "Aucune réunion n’est attribuée à votre compte. Veuillez communiquer avec votre administrateur.",
         "You are sharing your screen": "Vous partagez votre écran"
     },
     "dialogs": {
         "Server restarting": "Redémarrage du serveur",
-        "Waiting for the server. You may need to sign in again.": "En attente du serveur. Vous devrez peut-être vous reconnecter.",
         "A presenter is required to start the meeting. Please try joining again later.": "Un présentateur est nécessaire pour démarrer la réunion. Veuillez réessayer plus tard.",
         "Add to board": "Ajouter au tableau",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "Tous les participants seront déconnectés. Le motif, le cas échéant, leur sera affiché.",
@@ -1205,7 +1205,7 @@
         "Lobby enabled and no presenter available": "Salle d'attente activée et aucun présentateur disponible",
         "Lock room": "Verrouiller la salle",
         "Lock room?": "Verrouiller la salle?",
-        "Login": "Se connecter",
+        "Log in": "Se connecter",
         "Meeting date and time": "Date et heure de la réunion",
         "Microphone blocked": "Micro bloqué",
         "Microphone busy": "Micro occupé",
@@ -1328,12 +1328,12 @@
         "Leave a feedback": "Laisser un avis",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte.",
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte.",
         "The network timed out. Trying to reconnect.": "Le délai réseau est dépassé. Tentative de reconnexion.",
         "Connection interrupted. Trying to reconnect.": "La connexion a été interrompue. Tentative de reconnexion.",
         "Reconnecting automatically": "Reconnexion automatique en cours",
         "Reconnect now": "Se reconnecter maintenant",
-        "Waiting for the server. You may need to login again.": "En attente du serveur. Vous pourriez devoir vous connecter de nouveau.",
+        "Waiting for the server. You may need to log in again.": "En attente du serveur. Vous pourriez devoir vous connecter de nouveau.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Tentative {attempt}/{max} — nouvel essai dans {seconds} s"
     },
     "toasts": {

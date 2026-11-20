@@ -70,7 +70,7 @@ let BRAND = {
         appleTouchIcon: '../images/logo.svg',
         newRoomTitle: 'Choose a meeting',
         newRoomDescription:
-            "Sign in and choose a meeting you are authorized to join.",
+            "Log in and choose a meeting you are authorized to join.",
     },
     meta: {
         description:
@@ -99,7 +99,7 @@ let BRAND = {
         waitingRoomReady: 'Room is ready! Joining...',
         waitingRoomWaiting: 'Waiting for host to start the meeting...',
         waitingRoomHostLink: 'Are you the host?',
-        waitingRoomLoginLink: 'Login here',
+        waitingRoomLoginLink: 'Log in here',
         waitingRoomElapsedJust: 'Just started waiting',
         waitingRoomElapsedMinutes: 'Waiting for {minutes}',
         waitingRoomSongUrl: '',
@@ -107,7 +107,7 @@ let BRAND = {
     login: {
         heading: 'Welcome back',
         description: 'Enter your credentials to continue.',
-        buttonLabel: 'Login',
+        buttonLabel: 'Log in',
     },
     about: {
         imageUrl: '',

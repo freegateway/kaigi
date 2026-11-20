@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "Ha engedélyezve van, szerveroldali Whisper használatával pontosabb átírást biztosít",
         "When enabled, your transcription will be sent to all participants": "Ha engedélyezve van, az átiratodat a rendszer elküldi minden résztvevőnek",
         "White annotation color": "Fehér jegyzetszín",
-        "Yellow annotation color": "Sárga jegyzetszín"
+        "Yellow annotation color": "Sárga jegyzetszín",
+        "Camera preview": "Camera preview"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -465,9 +466,9 @@
         "YouTube Live": "YouTube élőben",
         "End meeting for all": "Megbeszélés befejezése mindenkinek",
         "Join meeting": "Csatlakozás a megbeszéléshez",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Log in",
+        "Log out": "Log out",
+        "Logging in…": "Logging in…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "A fiókjához nincs megbeszélés hozzárendelve. Kérjük, forduljon a rendszergazdához.",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "A megbeszélés indításához előadó szükséges. Próbálj meg később újra csatlakozni.",
         "Add to board": "Hozzáadás a táblához",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "Minden résztvevő kapcsolata megszakad. Az esetleges indoklást látni fogják.",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "A váróterem engedélyezve van, és nincs elérhető előadó",
         "Lock room": "Szoba zárolása",
         "Lock room?": "Zárolod a szobát?",
-        "Login": "Bejelentkezés",
+        "Log in": "Bejelentkezés",
         "Meeting date and time": "A megbeszélés dátuma és időpontja",
         "Microphone blocked": "A mikrofon le van tiltva",
         "Microphone busy": "A mikrofon foglalt",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "A bejelentkezési azonosítója már csatlakozott ehhez a megbeszéléshez. Lépjen ki a másik kapcsolaton, vagy kattintson a Kijelentkezés gombra, majd jelentkezzen be másik fiókkal."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "A bejelentkezési azonosítója már csatlakozott ehhez a megbeszéléshez. Lépjen ki a másik kapcsolaton, vagy kattintson a Kijelentkezés gombra, majd jelentkezzen be másik fiókkal."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Ébren tartás feloldva",

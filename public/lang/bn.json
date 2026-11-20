@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "চালু থাকলে, আরও নির্ভুল ট্রান্সক্রিপশনের জন্য সার্ভার-সাইড Whisper ব্যবহার হবে",
         "When enabled, your transcription will be sent to all participants": "চালু থাকলে, আপনার ট্রান্সক্রিপশন সব অংশগ্রহণকারীর কাছে পাঠানো হবে",
         "White annotation color": "সাদা টীকা রঙ",
-        "Yellow annotation color": "হলুদ টীকা রঙ"
+        "Yellow annotation color": "হলুদ টীকা রঙ",
+        "Camera preview": "Camera preview"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -465,9 +466,9 @@
         "YouTube Live": "YouTube লাইভ",
         "End meeting for all": "End meeting for all",
         "Join meeting": "Join meeting",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Log in",
+        "Log out": "Log out",
+        "Logging in…": "Logging in…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "আপনার অ্যাকাউন্টে কোনো মিটিং নির্ধারিত নেই। অনুগ্রহ করে আপনার প্রশাসকের সঙ্গে যোগাযোগ করুন।",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "মিটিং শুরু করতে একজন উপস্থাপক প্রয়োজন. অনুগ্রহ করে পরে আবার যোগ দেওয়ার চেষ্টা করুন.",
         "Add to board": "বোর্ডে যোগ করুন",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "সব অংশগ্রহণকারীর সংযোগ বিচ্ছিন্ন হবে। কোনো কারণ থাকলে তা তাদের দেখানো হবে।",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "লবি চালু আছে, কিন্তু কোনো উপস্থাপক নেই",
         "Lock room": "রুম লক করুন",
         "Lock room?": "রুম লক করবেন?",
-        "Login": "লগইন করুন",
+        "Log in": "লগইন করুন",
         "Meeting date and time": "মিটিংয়ের তারিখ ও সময়",
         "Microphone blocked": "মাইক্রোফোন ব্লক করা আছে",
         "Microphone busy": "মাইক্রোফোন ব্যস্ত",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "আপনার লগইন আইডি ইতিমধ্যে এই সভায় সংযুক্ত। অন্য সংযোগ থেকে বেরিয়ে যান, অথবা অন্য অ্যাকাউন্ট দিয়ে প্রবেশ করতে লগ আউট ক্লিক করুন।"
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "আপনার লগইন আইডি ইতিমধ্যে এই সভায় সংযুক্ত। অন্য সংযোগ থেকে বেরিয়ে যান, অথবা অন্য অ্যাকাউন্ট দিয়ে প্রবেশ করতে লগ আউট ক্লিক করুন।"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock বন্ধ হয়েছে",

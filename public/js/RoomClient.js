@@ -1547,6 +1547,7 @@ class RoomClient {
             }
         }
         // Re-produce the tab audio after the screen it belongs to
+		this.syncSettingsVideoPreview();
         return snapshot.sort((a, b) => (a.type === mediaType.audioTab) - (b.type === mediaType.audioTab));
     }
 
@@ -2362,7 +2363,7 @@ class RoomClient {
         const t = (key) => window.i18n?.t(key, 'dialogs') || key;
         this.renderReconnectBanner({
             title: t('Server restarting'),
-            message: t('Waiting for the server. You may need to login again.'),
+            message: t('Waiting for the server. You may need to log in again.'),
             meta,
             state: 'planned',
             showSpinner: true,
@@ -2542,9 +2543,9 @@ class RoomClient {
             background: swalBackground,
             position: 'center',
             title: t('Username already in use'),
-            text: t('Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.'),
+            text: t('Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.'),
             showDenyButton: false,
-            confirmButtonText: t('Logout'),
+            confirmButtonText: t('Log out'),
             showClass: { popup: 'animate__animated animate__fadeInDown' },
             hideClass: { popup: 'animate__animated animate__fadeOutUp' },
         }).then(async (result) => {
@@ -2910,6 +2911,7 @@ class RoomClient {
                     this.videoProducerId = producer.id;
                     camera = detectCameraFacingMode(stream);
                     handleCameraMirror(elem);
+					this.syncSettingsVideoPreview();
                 }
 
                 if (screen) {
@@ -5417,6 +5419,8 @@ class RoomClient {
     // ####################################################
 
     exit(offline = false) {
+		this.isMySettingsOpen = false;
+		this.syncSettingsVideoPreview();
         this.saveRecording('Client exiting the room');
         this.microphoneRequest++;
         this.disableRNNoiseSuppression();
@@ -5897,6 +5901,8 @@ class RoomClient {
     }
 
     setIsVideo(status) {
+		if (!status) this.localVideoElement = null;
+		this.syncSettingsVideoPreview();
         if (!isBroadcastingEnabled || (isBroadcastingEnabled && isPresenter)) {
             this.peer_info.peer_video = status;
             if (!this.peer_info.peer_video) {
@@ -6202,6 +6208,7 @@ class RoomClient {
         mySettings.classList.toggle('show');
         this.isMySettingsOpen = !this.isMySettingsOpen;
         this.videoMediaContainer.style.opacity = this.isMySettingsOpen ? 0.3 : 1;
+		this.syncSettingsVideoPreview();
 
         if (!this.isMySettingsOpen) {
             this.closeMobileSettingsNav();
@@ -6215,6 +6222,37 @@ class RoomClient {
             this.startNetworkMonitor();
         }
     }
+
+	// Reuse the transmitted camera, including its background; never acquire or stop tracks here.
+	syncSettingsVideoPreview() {
+		const preview = this.getId('settingsVideoPreview');
+		const video = this.getId('settingsVideoPreviewVideo');
+		if (!preview || !video) return;
+		const source = this.localVideoElement;
+		const stream = this.isMySettingsOpen && source?.isConnected ? source.srcObject : null;
+		const track = stream?.getVideoTracks?.()[0];
+		const visible = Boolean(track && track.readyState !== 'ended' && track.enabled !== false);
+		preview.hidden = !visible;
+		if (!visible) {
+			video.pause();
+			video.srcObject = null;
+			return;
+		}
+		video.classList.toggle('mirror', source.classList.contains('mirror'));
+		if (video.srcObject !== stream) video.srcObject = stream;
+		video.muted = true;
+		video.play().catch(() => {});
+	}
+
+	moveSettingsVideoPreview(tabName) {
+		const preview = this.getId('settingsVideoPreview');
+		const target = tabName === 'tabVideoDevices'
+			? this.getId('cameraSettingsDiv')
+			: tabName === 'tabVirtualBackground' ? this.getId('videoVirtualBackground') : null;
+		if (!preview || !target || target.previousElementSibling === preview) return;
+		target.before(preview);
+		this.syncSettingsVideoPreview();
+	}
 
     openTab(evt, tabName) {
         let i, tabcontent, tablinks;
@@ -6233,6 +6271,7 @@ class RoomClient {
         evt.currentTarget.setAttribute('aria-selected', 'true');
         evt.currentTarget.tabIndex = 0;
         this.closeMobileSettingsNav();
+		this.moveSettingsVideoPreview(tabName);
 
         if (tabName === 'tabNetwork') {
             this.startNetworkMonitor();
@@ -12131,7 +12170,7 @@ class RoomClient {
             imageUrl: image.forbidden,
             title: 'Oops, Unauthorized',
             text: 'The host has user authentication enabled',
-            confirmButtonText: `Login`,
+            confirmButtonText: `Log in`,
             showClass: { popup: 'animate__animated animate__fadeInDown' },
             hideClass: { popup: 'animate__animated animate__fadeOutUp' },
         }).then(() => {

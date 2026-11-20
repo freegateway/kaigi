@@ -196,7 +196,8 @@
         "When enabled, uses server-side Whisper for higher accuracy transcription": "ప్రారంభించబడినప్పుడు, అధిక ఖచ్చితత్వ లిప్యంతరీకరణ కోసం సర్వర్ వైపు Whisperని ఉపయోగిస్తుంది",
         "When enabled, your transcription will be sent to all participants": "ఇది ఆన్‌లో ఉంటే, మీ లిప్యంతరీకరణ అందరికీ పంపబడుతుంది",
         "White annotation color": "తెలుపు ఉల్లేఖన రంగు",
-        "Yellow annotation color": "పసుపు ఉల్లేఖన రంగు"
+        "Yellow annotation color": "పసుపు ఉల్లేఖన రంగు",
+        "Camera preview": "Camera preview"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -465,9 +466,9 @@
         "YouTube Live": "YouTube ప్రత్యక్ష ప్రసారం",
         "End meeting for all": "End meeting for all",
         "Join meeting": "Join meeting",
-        "Login": "Login",
-        "Logout": "Logout",
-        "Signing in...": "Signing in...",
+        "Log in": "Log in",
+        "Log out": "Log out",
+        "Logging in…": "Logging in…",
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
@@ -1089,7 +1090,7 @@
         "Start conference.": "Start conference.",
         "or": "or",
         "Privacy Policy": "Privacy Policy",
-        "Logout": "Logout",
+        "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "మీ ఖాతాకు సమావేశాలు కేటాయించబడలేదు. దయచేసి మీ నిర్వాహకుడిని సంప్రదించండి.",
         "You are sharing your screen": "You are sharing your screen"
@@ -1099,10 +1100,9 @@
         "Connection interrupted. Trying to reconnect.": "Connection interrupted. Trying to reconnect.",
         "Reconnecting automatically": "Reconnecting automatically",
         "Reconnect now": "Reconnect now",
-        "Waiting for the server. You may need to login again.": "Waiting for the server. You may need to login again.",
+        "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
         "Server restarting": "Server restarting",
-        "Waiting for the server. You may need to sign in again.": "Waiting for the server. You may need to sign in again.",
         "A presenter is required to start the meeting. Please try joining again later.": "సమావేశాన్ని ప్రారంభించడానికి ప్రెజెంటర్ అవసరం. దయచేసి తర్వాత మళ్లీ చేరడానికి ప్రయత్నించండి.",
         "Add to board": "బోర్డుకు జోడించండి",
         "All participants will be disconnected. The reason, if any, will be shown to them.": "పాల్గొనేవారందరి కనెక్షన్ తెగిపోతుంది. కారణం ఇచ్చినట్లయితే, అది వారికి చూపబడుతుంది.",
@@ -1211,7 +1211,7 @@
         "Lobby enabled and no presenter available": "లాబీ ప్రారంభించబడింది మరియు ప్రెజెంటర్ అందుబాటులో లేరు",
         "Lock room": "గదిని లాక్ చేయండి",
         "Lock room?": "గదిని లాక్ చేయాలా?",
-        "Login": "లాగిన్ చేయండి",
+        "Log in": "లాగిన్ చేయండి",
         "Meeting date and time": "సమావేశం తేదీ మరియు సమయం",
         "Microphone blocked": "మైక్రోఫోన్ బ్లాక్ చేయబడింది",
         "Microphone busy": "మైక్రోఫోన్ వినియోగంలో ఉంది",
@@ -1334,7 +1334,7 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to sign in with a different account.": "మీ లాగిన్ ID ఇప్పటికే ఈ సమావేశానికి కనెక్ట్ అయింది. ఇతర కనెక్షన్ నుండి నిష్క్రమించండి లేదా వేరే ఖాతాతో లాగిన్ అవ్వడానికి లాగ్ అవుట్ క్లిక్ చేయండి."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "మీ లాగిన్ ID ఇప్పటికే ఈ సమావేశానికి కనెక్ట్ అయింది. ఇతర కనెక్షన్ నుండి నిష్క్రమించండి లేదా వేరే ఖాతాతో లాగిన్ అవ్వడానికి లాగ్ అవుట్ క్లిక్ చేయండి."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ వేక్ లాక్ విడుదలైంది",

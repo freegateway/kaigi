@@ -37,5 +37,8 @@ describe('browser error responses', () => {
         const res = await fetch(`${base}/%3Cscript%3E`, { headers: { Accept: 'text/html', 'Accept-Language': 'zz' } });
         assert.equal(res.status, 404);
         assert.match(await res.text(), /Page not found/);
+		const login = await fetch(`${base}/missing`, { headers: { Accept: 'text/html', 'Accept-Language': 'en-CA' } });
+		const page = new JSDOM(await login.text());
+		assert.equal(page.window.document.querySelector('a').textContent, 'Return to login');
     });
 });

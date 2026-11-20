@@ -3,7 +3,7 @@
         "HELP_LOGIN_INSTRUCTIONS": "Enter the username supplied by your administrator.",
         "SITE_NAME": "Example Video Conferencing",
         "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
-        "META_DESCRIPTION": "Sign in to Example Corporation's authorized meetings.",
+        "META_DESCRIPTION": "Log in to Example Corporation's authorized meetings.",
         "OG_TITLE": "Example Corporation meetings",
         "OG_DESCRIPTION": "Private meetings for Example Corporation.",
         "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
@@ -14,15 +14,15 @@
         "JOIN_LAST_LABEL": "Recent room:",
         "NEW_ROOM_TITLE": "Start a new meeting",
         "NEW_ROOM_DESCRIPTION": "Select an authorized meeting to continue.",
-        "LOGIN_HEADING": "Sign in",
+        "LOGIN_HEADING": "Log in",
         "LOGIN_INSTRUCTIONS": "Enter your username and password",
-        "LOGIN_BUTTON_LABEL": "Login"
+        "LOGIN_BUTTON_LABEL": "Log in"
     },
     "en-CA": {
         "HELP_LOGIN_INSTRUCTIONS": "Enter the username supplied by your administrator.",
         "SITE_NAME": "Example Video Conferencing",
         "SITE_DESCRIPTION": "Private video conferencing for Example Corporation.",
-        "META_DESCRIPTION": "Sign in to Example Corporation's authorized meetings.",
+        "META_DESCRIPTION": "Log in to Example Corporation's authorized meetings.",
         "OG_TITLE": "Example Corporation meetings",
         "OG_DESCRIPTION": "Private meetings for Example Corporation.",
         "SITE_COPYRIGHT": "Copyright © 2026 Example Corporation",
@@ -33,9 +33,9 @@
         "JOIN_LAST_LABEL": "Recent room:",
         "NEW_ROOM_TITLE": "Start a new meeting",
         "NEW_ROOM_DESCRIPTION": "Select an authorized meeting to continue.",
-        "LOGIN_HEADING": "Sign in",
+        "LOGIN_HEADING": "Log in",
         "LOGIN_INSTRUCTIONS": "Enter your username and password",
-        "LOGIN_BUTTON_LABEL": "Login"
+        "LOGIN_BUTTON_LABEL": "Log in"
     },
     "fr-CA": {
         "HELP_LOGIN_INSTRUCTIONS": "Saisissez le nom d’utilisateur fourni par votre administrateur.",
