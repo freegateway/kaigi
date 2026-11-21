@@ -73,7 +73,13 @@ URLs, email addresses and asset paths remain in kaigi.conf.
 .Pp
 Browser text uses an exact language entry, then its base language, then en,
 then the existing deployment/environment or application default value.
-Configure language-specific text in site-translations.json.
+Kaigi supplies localized built-in branding defaults through its language catalogues.
+Explicit deployment settings override built-in defaults; language-specific
+site-translations.json entries override the corresponding deployment text.
+No new keys or required entries are needed. Missing translations fall back to
+English. The initial HTML metadata follows the request language, and browser
+text follows the selected UI language. Administrator wording is preserved.
+Configure organization-specific text in site-translations.json.
 HELP_LOGIN_INSTRUCTIONS customizes the help guide's username-entry instruction,
 for example when login names are email addresses. It does not change the live
 login panel. Missing entries use the guide's localized default; all help-specific

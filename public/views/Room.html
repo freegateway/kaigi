@@ -871,6 +871,9 @@
                         </div>
 						<div id="settingsVideoPreview" hidden>
 							<video id="settingsVideoPreviewVideo" autoplay muted playsinline aria-label="Camera preview"></video>
+							<button id="settingsVideoPreviewOff" type="button" aria-label="Turn camera on" hidden>
+								<img id="settingsVideoPreviewAvatar" alt="" />
+							</button>
 						</div>
                         <div id="cameraSettingsDiv">
                             <div class="title">
@@ -2123,8 +2126,8 @@
                         </div>
                         <br />
                         <select id="BtnsBarPosition" class="form-select text-light bg-dark">
-                            <option value="vertical">Vertical</option>
                             <option value="horizontal">Horizontal</option>
+                            <option value="vertical">Vertical</option>
                         </select>
                         <br />
                         <div class="title">

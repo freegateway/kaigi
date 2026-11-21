@@ -10,6 +10,10 @@
 
 #settingsVideoPreview[hidden] { display: none; }
 #settingsVideoPreviewVideo { width: 100%; height: 100%; object-fit: contain; }
+#settingsVideoPreviewOff { width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; }
+#settingsVideoPreviewOff[hidden], #settingsVideoPreviewVideo[hidden] { display: none; }
+#settingsVideoPreviewAvatar { height: 80%; max-width: 100%; object-fit: contain; }
+#settingsVideoPreviewOff:disabled { cursor: default; }
 
 :root {
     --room-stage-bg: var(--body-bg);
@@ -1454,7 +1458,7 @@ body {
 }
 
 /* Popper anchors split menus to the chevron; align them with the main button. */
-#bottomButtons:not([data-position='horizontal']) .split-btn .dropdown-menu {
+#bottomButtons:not([data-position='vertical']) .split-btn .dropdown-menu {
     translate: -48px 0;
 }
 
@@ -1506,11 +1510,11 @@ body {
     background: var(--room-control-hover) !important;
 }
 
-#bottomButtons[data-position='horizontal'] .dropdown-menu {
+#bottomButtons[data-position='vertical'] .dropdown-menu {
     max-height: calc(100vh - 24px);
 }
 
-#bottomButtons[data-position='horizontal'] .device-dropdown-toggle i {
+#bottomButtons[data-position='vertical'] .device-dropdown-toggle i {
     transform: rotate(90deg);
 }
 
@@ -1806,7 +1810,7 @@ body {
     background: var(--color-danger-strong) !important;
 }
 
-#bottomButtons:not([data-position='horizontal']) #exitButton {
+#bottomButtons:not([data-position='vertical']) #exitButton {
     width: 64px;
 }
 
@@ -1844,7 +1848,7 @@ body {
         border-radius: 14px;
     }
     /* Wrap onto a second row instead of squeezing buttons or pushing Leave off-screen. */
-    #bottomButtons:not([data-position='horizontal']) {
+    #bottomButtons:not([data-position='vertical']) {
         flex-wrap: wrap;
         width: max-content;
         row-gap: 6px;
@@ -1861,7 +1865,7 @@ body {
         font-size: 1rem;
         border-radius: 10px;
     }
-    #bottomButtons:not([data-position='horizontal']) #exitButton {
+    #bottomButtons:not([data-position='vertical']) #exitButton {
         width: 52px;
     }
     #bottomButtons .split-btn > button:not(.device-dropdown-toggle) {
@@ -9865,3 +9869,20 @@ z-index:
     }
 }
 .kaigi-github-icon { display: inline-block; vertical-align: middle; filter: invert(1); }
+
+/* Toolbar and dropdown backdrops are separate. */
+#bottomButtons { border-radius: 18px; }
+#bottomButtons::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border: 1px solid var(--room-border);
+	border-radius: inherit;
+	background: color-mix(in srgb, var(--btns-bg-color) 35%, transparent);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	pointer-events: none;
+}
+#bottomButtons .split-btn { background: transparent; }

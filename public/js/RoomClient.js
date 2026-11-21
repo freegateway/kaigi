@@ -3278,6 +3278,22 @@ class RoomClient {
     // ####################################################
 
     async applyVirtualBackground(blurLevel, backgroundImage, backgroundTransparent) {
+        const selection = this.backgroundSelection = (this.backgroundSelection || 0) + 1;
+        const producer = this.producers?.get(this.producerLabel?.get(mediaType.video));
+        let swapped = false;
+        if ((blurLevel || backgroundImage || backgroundTransparent) && producer && producer.track === virtualBackground.activeOutputTrack) {
+            try {
+                swapped = await virtualBackground.setBackground(virtualBackground.activeSourceTrack,
+                    { blurLevel, imageUrl: backgroundImage, transparent: backgroundTransparent });
+            } catch (error) {
+                if (selection === this.backgroundSelection) {
+                    console.warn('Unable to load virtual background', error);
+                    this.userLog('warning', 'Unable to apply the background. Your previous camera effect is unchanged.', 'top-end');
+                }
+                return;
+            }
+            if (selection !== this.backgroundSelection || !this.producerLabel.has(mediaType.video)) return;
+        }
         if (blurLevel) {
             virtualBackgroundBlurLevel = blurLevel;
             virtualBackgroundSelectedImage = null;
@@ -3298,7 +3314,7 @@ class RoomClient {
         }
 
         this.syncVideoBackgroundSelection();
-        videoSelect.onchange();
+        if (!swapped) videoSelect.onchange();
         saveVirtualBackgroundSettings(blurLevel, backgroundImage, backgroundTransparent);
     }
 
@@ -6232,16 +6248,32 @@ class RoomClient {
 		const stream = this.isMySettingsOpen && source?.isConnected ? source.srcObject : null;
 		const track = stream?.getVideoTracks?.()[0];
 		const visible = Boolean(track && track.readyState !== 'ended' && track.enabled !== false);
-		preview.hidden = !visible;
+		const off = this.getId('settingsVideoPreviewOff');
+		preview.hidden = !this.isMySettingsOpen;
+		video.hidden = !visible;
+		if (off) off.hidden = visible;
 		if (!visible) {
 			video.pause();
 			video.srcObject = null;
+			if (off && this.isMySettingsOpen) this.updateSettingsVideoPreviewOff(off);
 			return;
 		}
 		video.classList.toggle('mirror', source.classList.contains('mirror'));
 		if (video.srcObject !== stream) video.srcObject = stream;
 		video.muted = true;
 		video.play().catch(() => {});
+	}
+
+	updateSettingsVideoPreviewOff(button) {
+		const avatar = this.getId('settingsVideoPreviewAvatar');
+		if (avatar && this.peer_name) avatar.src = this.peer_avatar && this.isValidAvatarURL(this.peer_avatar)
+			? this.peer_avatar : this.genAvatarSvg(this.peer_name, 176);
+		const start = this.getId('startVideoButton');
+		button.disabled = !start || start.disabled || start.classList.contains('hidden') ||
+			Boolean(this.producerLabel?.has(mediaType.video));
+		button.onclick = () => {
+			if (this.isMySettingsOpen && !button.disabled && !start.disabled && !this.producerLabel?.has(mediaType.video)) start.click();
+		};
 	}
 
 	moveSettingsVideoPreview(tabName) {
@@ -6320,8 +6352,8 @@ class RoomClient {
 
     changeBtnsBarPosition(position) {
         const positions = {
-            vertical: {
-                // bottomButtons horizontally
+            horizontal: {
+                // Bottom row
                 '--bottom-btns-top': 'auto',
                 '--bottom-btns-left': '50%',
                 '--bottom-btns-bottom': '0',
@@ -6330,8 +6362,8 @@ class RoomClient {
                 '--bottom-btns-margin-bottom': '16px',
                 '--bottom-btns-flex-direction': 'row',
             },
-            horizontal: {
-                // bottomButtons vertically
+            vertical: {
+                // Side column
                 '--bottom-btns-top': '50%',
                 '--bottom-btns-left': '15px',
                 '--bottom-btns-bottom': 'auto',
@@ -6346,8 +6378,8 @@ class RoomClient {
             const root = document.documentElement.style;
             Object.entries(props).forEach(([key, value]) => root.setProperty(key, value));
             bottomButtons.querySelectorAll('.split-btn .dropdown').forEach((dropdown) => {
-                dropdown.classList.toggle('dropup', position === 'vertical');
-                dropdown.classList.toggle('dropend', position === 'horizontal');
+                dropdown.classList.toggle('dropup', position === 'horizontal');
+                dropdown.classList.toggle('dropend', position === 'vertical');
             });
             bottomButtons.dataset.position = position;
             this.btnsBarPosition = position;
@@ -6358,7 +6390,7 @@ class RoomClient {
 
     // Center the horizontal buttons bar over the video area when a side panel is pinned
     updateButtonsBarPinnedOffset() {
-        if (this.isMobileDevice || this.btnsBarPosition !== 'vertical') return;
+        if (this.isMobileDevice || this.btnsBarPosition !== 'horizontal') return;
         const panelWidth = this.getPinnedSidePanelWidth();
         const left = panelWidth ? `${(100 - panelWidth) / 2}%` : '50%';
         document.documentElement.style.setProperty('--bottom-btns-left', left);

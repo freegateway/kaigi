@@ -901,3 +901,38 @@ replacement, mirroring, tab movement and detachment without stopping tracks;
 all 30 translation catalogues retain matching keys. Chromium cannot start here
 because its Unix socket is blocked. Actual browser/device, short viewport/150%
 rendering and FreeBSD/Poudriere validation remain outstanding.
+
+## 2026-11-21 — Localized branding, toolbar and camera continuity
+
+Kaigi 0.8.6 adds localized stock branding through the existing language
+catalogues, with complete English/Canadian English, Japanese and French/Canadian
+French defaults and English fallback for untranslated text. Capture explicit
+deployment text before applying defaults; reuse existing site-translations.json
+keys. Administrator-localized text overrides deployment text, which overrides
+built-in defaults. Preserve independently configured metadata and intentional
+empty text. Initial HTML/metadata follows the request language; live browser
+changes use the same resolved values. Administrator text is protected from
+automatic dictionary substitution. Help uses the same stock/default resolution.
+
+Adapt `e303c27e` and `7e024f50`: horizontal means a bottom row, vertical means a
+side column. Match dropdowns, tooltips, video-space reservation and pinned-panel
+offsets to the actual orientation. Reorder selection options to retain each
+stored index's physical layout. A separate toolbar backdrop preserves dropdown
+blur and narrow-screen wrapping keeps Leave meeting reachable.
+
+Selectively adapt `17b42da9`: switch between effects on an existing segmentation
+pipeline without replacing its camera or producer. Latest selection wins;
+late/aborted GIF resources are disposed and failed image loads retain the old
+effect/preferences. Reuse frame/mask canvases and crop images without stretching.
+Keep Kaigi's locally packaged segmentation resources and local-only images.
+Enabling processing or returning to the plain camera retains the existing restart
+path. No worker/tasks-vision engine, model switch, video loops or external loads.
+
+Adapt `8448a836`: the settings preview displays a local avatar/initials with the
+camera off. A keyboard-accessible button invokes the existing camera-start
+control only on deliberate activation and respects its disabled/hidden state.
+Do not import Gravatar or moderator controls.
+
+Defer the worker rewrite, auto framing (`2e948f3b`), quizzes and accessory controls.
+Breakout/Active Rooms refinements remain excluded from disabled features. No
+dependency refresh or Meeting Manager integration is included.
