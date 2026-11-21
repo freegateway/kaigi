@@ -66,7 +66,8 @@ function renderHelp(input = {}, requested) {
     // Match the application's English -> base language -> exact language overlay.
     // Only public text fields are projected, never the complete brand/config object.
     const translations = brand.siteTranslations || {};
-    const values = { ...translations.en, ...translations[language.split('-')[0]], ...translations[language] };
+    const values = brand.brandingSettings ? require('./Branding').brandingValues(brand.brandingSettings, translations, language) :
+        { ...translations.en, ...translations[language.split('-')[0]], ...translations[language] };
     const configured = (name, fallback) => (Object.hasOwn(values, name) ? String(values[name]) : ui(String(fallback)));
     const data = {
         ...copy,

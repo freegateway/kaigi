@@ -137,6 +137,29 @@ function createEnvironment(overrides = {}) {
     return { background, processors, generators };
 }
 
+describe('meeting background continuity', () => {
+	it('retains the producer on a successful swap and leaves preferences unchanged on load failure', async () => {
+		const output = {};
+		let restarts = 0, saves = 0, warnings = 0;
+		const context = vm.createContext({
+			window: {}, console: { warn() {} }, mediaType: { video: 'video' },
+			virtualBackgroundBlurLevel: 0, virtualBackgroundSelectedImage: 'old.png', virtualBackgroundTransparent: null,
+			virtualBackground: { activeOutputTrack: output, activeSourceTrack: {}, setBackground: async () => true },
+			videoSelect: { onchange: () => restarts++ }, saveVirtualBackgroundSettings: () => saves++,
+		});
+		vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/RoomClient.js'), 'utf8') + ';globalThis.proto=RoomClient.prototype;', context);
+		const client = Object.assign(Object.create(context.proto), {
+			producers: new Map([['camera', { track: output }]]), producerLabel: new Map([['videoType', 'camera']]),
+			syncVideoBackgroundSelection() {}, userLog() { warnings++; },
+		});
+		await client.applyVirtualBackground(10, null, false);
+		assert.equal(restarts, 0); assert.equal(saves, 1); assert.equal(context.virtualBackgroundBlurLevel, 10);
+		context.virtualBackground.setBackground = async () => { throw Error('bad image'); };
+		await client.applyVirtualBackground(null, 'new.png', false);
+		assert.equal(context.virtualBackgroundBlurLevel, 10); assert.equal(restarts, 0); assert.equal(saves, 1); assert.equal(warnings, 1);
+	});
+});
+
 function createCanvasEnvironment({ filters = true, webgl = true } = {}) {
     const contexts = [];
     const canvases = [];
@@ -206,6 +229,49 @@ function createCanvasEnvironment({ filters = true, webgl = true } = {}) {
 }
 
 describe('Virtual background canvas fallback', () => {
+	it('swaps a running effect without replacing output or stopping the camera', async () => {
+		const { background, camera } = createCanvasEnvironment();
+		await background.processStreamWithSegmentation(camera, () => {});
+		const output = background.activeOutputTrack;
+		const handler = () => {};
+		background.createMaskHandler = async () => handler;
+		assert.equal(await background.setBackground(camera, { blurLevel: 10 }), true);
+		assert.equal(background.activeMaskHandler, handler);
+		assert.equal(background.activeOutputTrack, output);
+		assert.equal(output.stop.called, false);
+		assert.equal(camera.stop.called, false);
+		await background.stopCurrentProcessor();
+	});
+	it('keeps the newest selection and disposes late animation resources after a switch or stop', async () => {
+		const { background, camera } = createCanvasEnvironment();
+		await background.processStreamWithSegmentation(camera, () => {});
+		let resolve;
+		const stale = Object.assign(() => {}, { dispose: sinon.spy(), activate: sinon.spy() });
+		const newest = () => {};
+		background.createMaskHandler = () => new Promise(done => resolve = done);
+		const first = background.setBackground(camera, {});
+		background.createMaskHandler = async () => newest;
+		await background.setBackground(camera, {});
+		resolve(stale); await first;
+		assert.equal(background.activeMaskHandler, newest);
+		assert(stale.dispose.calledOnce); assert.equal(stale.activate.called, false);
+		background.createMaskHandler = () => new Promise(done => resolve = done);
+		const pending = background.setBackground(camera, {});
+		await background.stopCurrentProcessor(); resolve(stale); await pending;
+		assert.equal(background.activeMaskHandler, null); assert(stale.dispose.calledTwice);
+	});
+	it('retains the old effect on load failure and crops images without stretching', async () => {
+		const { background, camera } = createCanvasEnvironment();
+		const handler = () => {};
+		await background.processStreamWithSegmentation(camera, handler);
+		background.createMaskHandler = async () => { throw Error('load failed'); };
+		await assert.rejects(background.setBackground(camera, {}), /load failed/);
+		assert.equal(background.activeMaskHandler, handler);
+		const drawImage = sinon.spy(), image = { naturalWidth: 400, naturalHeight: 200 };
+		background.drawCover({ drawImage }, image, 100, 100);
+		assert.deepEqual(drawImage.firstCall.args, [image, 100, 0, 200, 200, 0, 0, 100, 100]);
+		await background.stopCurrentProcessor();
+	});
     it('supports canvas capture without track APIs, but rejects environments without WebGL', () => {
         assert.equal(createCanvasEnvironment().background.isSupported, true);
         assert.equal(createCanvasEnvironment({ webgl: false }).background.isSupported, false);

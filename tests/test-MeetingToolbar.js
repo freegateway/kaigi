@@ -49,10 +49,10 @@ describe('meeting device and toolbar controls', () => {
         height = 88;
         sync();
         assert.equal(reserve(), '110px');
-        bottomButtons.dataset.position = 'horizontal';
+        bottomButtons.dataset.position = 'vertical';
         sync();
         assert.equal(reserve(), '0px');
-        bottomButtons.dataset.position = 'vertical';
+        bottomButtons.dataset.position = 'horizontal';
         sync();
         assert.equal(reserve(), '110px');
         localStorageSettings.keep_buttons_visible = false;

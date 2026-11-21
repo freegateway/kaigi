@@ -139,13 +139,6 @@ const loadSiteTranslations = () => {
 };
 const siteTranslations = loadSiteTranslations();
 const meetingSettings = require('./MeetingSettings').loadMeetingSettings(configDirectory);
-// English supplies startup text; the browser applies the selected language.
-// Configured text and application defaults cover missing translations.
-for (const [name, value] of Object.entries(siteTranslations.en || {})) {
-    const target = name === 'PAGE_TITLE' ? 'SITE_TITLE' : name === 'NEW_ROOM_DESCRIPTION' ? 'NEW_ROOM_DESC' : name;
-    if (process.env[target] === undefined && freeBSDConfig[name] === undefined) process.env[target] = value;
-}
-
 // FreeBSD-facing names are translated once into MiroTalk's existing
 // environment-variable configuration interface.  Existing environment values
 // always win, so kaigi.conf is an override layer above upstream defaults,
@@ -197,6 +190,12 @@ for (const [name, value] of Object.entries(freeBSDConfig)) {
         process.env[target] = mappedValue;
     }
 }
+
+// Capture explicit public text before convenience defaults are applied.
+const brandingAliases = { PAGE_TITLE: 'SITE_TITLE', NEW_ROOM_DESCRIPTION: 'NEW_ROOM_DESC' };
+const brandingSettings = Object.fromEntries([...siteTextSettings, 'APP_TITLE', 'APP_DESCRIPTION'].map(name =>
+ [name, process.env[brandingAliases[name] || name]]));
+brandingSettings.SITE_DESCRIPTION ??= process.env.APP_DESCRIPTION;
 
 const metadataSettings = {
     PAGE_TITLE: process.env.SITE_TITLE,
@@ -1811,11 +1810,13 @@ module.exports = {
 // initial HTML and later browser language changes use the same precedence.
 const { siteMetadata } = require('./SiteMetadata');
 const metadataBrand = module.exports.ui.brand;
-metadataBrand.metadataByLanguage = Object.fromEntries(
-    [...new Set(['en', metadataBrand.app.language, ...Object.keys(siteTranslations)])]
-        .map(language => [language, siteMetadata(metadataSettings, siteTranslations, language)])
-);
-const initialMetadata = metadataBrand.metadataByLanguage[metadataBrand.app.language];
+const { brandingValues, languages: brandingLanguages } = require('./Branding');
+metadataBrand.brandingSettings = brandingSettings;
+metadataBrand.brandingByLanguage = Object.fromEntries(brandingLanguages.map(language =>
+ [language, brandingValues(brandingSettings, siteTranslations, language)]));
+metadataBrand.metadataByLanguage = Object.fromEntries(brandingLanguages.map(language =>
+ [language, siteMetadata(metadataSettings, siteTranslations, language)]));
+const initialMetadata = metadataBrand.metadataByLanguage[metadataBrand.app.language] || metadataBrand.metadataByLanguage.en;
 metadataBrand.site.title = initialMetadata.PAGE_TITLE;
 metadataBrand.meta.description = initialMetadata.META_DESCRIPTION;
 metadataBrand.og.title = initialMetadata.OG_TITLE;

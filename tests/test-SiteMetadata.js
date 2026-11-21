@@ -70,6 +70,56 @@ function check(document, values) {
     }
 }
 
+describe('localized stock branding', () => {
+	it('uses localized site text ahead of the legacy application-description override', () => {
+		const brand = configuredBrand({ APP_DESCRIPTION: 'Deployment text' }, { ja: { SITE_DESCRIPTION: '組織の説明' } });
+		assert.equal(brand.brandingByLanguage.ja.APP_DESCRIPTION, '組織の説明');
+		assert.equal(brand.brandingByLanguage.ja.APP_TAGLINE, '組織の説明');
+		assert.equal(brand.brandingByLanguage['en-CA'].APP_DESCRIPTION, 'Deployment text');
+	});
+	it('switches stock branding without losing the application name or requiring administrator entries', () => {
+		const brand = configuredBrand({});
+		const dom = new JSDOM(render('landing', brand), { runScripts: 'outside-only', url: 'https://meet.example' });
+		try {
+			dom.window.eval(read('public/js/Brand.js').replace(/\ninitialize\(\);\s*$/, '') + '\nbaseSiteBrand = ' + JSON.stringify(brand) + ';');
+			for (const language of ['ja', 'fr-CA', 'en-CA']) {
+				dom.window.applySiteTranslations(language);
+				assert(dom.window.document.getElementById('appTitle').textContent.includes('Kaigi'));
+				assert.equal(dom.window.document.getElementById('appDescription').textContent, brand.brandingByLanguage[language].SITE_DESCRIPTION);
+				check(dom.window.document, brand.metadataByLanguage[language]);
+			}
+		} finally { dom.window.close(); }
+	});
+	it('uses request language for initial visible text and metadata without administrator translations', () => {
+		const brand = configuredBrand({});
+		const injector = Object.create(HtmlInjector.prototype);
+		injector.config = brand;
+		injector.cache = { page: read('public/views/login.html') };
+		for (const language of ['ja', 'fr-CA', 'en-CA']) {
+			let html;
+			injector.injectHtml('page', { req: { headers: { 'accept-language': language } }, send(value) { html = value; } });
+			const doc = new JSDOM(html).window.document;
+			check(doc, brand.metadataByLanguage[language]);
+			assert.equal(doc.getElementById('loginHeading').textContent, brand.brandingByLanguage[language].LOGIN_HEADING);
+			assert.equal(doc.getElementById('loginDescription').textContent, brand.brandingByLanguage[language].LOGIN_INSTRUCTIONS);
+		}
+	});
+	it('preserves explicit English wording, empty values and independent metadata on live changes', () => {
+		const brand = configuredBrand({ SITE_DESCRIPTION: 'My exact description', LOGIN_HEADING: 'Welcome back', LOGIN_INSTRUCTIONS: '', META_DESCRIPTION: 'Private metadata' });
+		const dom = new JSDOM(render('login', brand), { runScripts: 'outside-only', url: 'https://meet.example' });
+		try {
+			dom.window.eval(read('public/js/Brand.js').replace(/\ninitialize\(\);\s*$/, '') + '\nbaseSiteBrand = ' + JSON.stringify(brand) + ';');
+			for (const language of ['ja', 'fr-CA', 'en-CA']) {
+				dom.window.applySiteTranslations(language);
+				assert.equal(dom.window.document.getElementById('loginHeading').textContent, 'Welcome back');
+				assert.equal(dom.window.document.getElementById('loginDescription').textContent, '');
+				assert.equal(dom.window.document.querySelector('meta[name="description"]').content, 'Private metadata');
+				assert.equal(dom.window.document.getElementById('loginHeading').getAttribute('data-i18n-skip'), '');
+			}
+		} finally { dom.window.close(); }
+	});
+});
+
 describe('administrator metadata', () => {
     it('renders configured metadata in HTTP HTML without executing JavaScript', async () => {
         const settings = {

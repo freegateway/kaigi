@@ -21,7 +21,7 @@ class HtmlInjector {
     }
 
     // Function to get dynamic data for injection (e.g., OG data, title, etc.)
-    getInjectData() {
+    getInjectData(language = this.config?.app?.language || 'en') {
         const config = this.config?.htmlInjection === false ? {} : this.config;
         const metadata = siteMetadata({
             PAGE_TITLE: config?.site?.title,
@@ -30,12 +30,14 @@ class HtmlInjector {
             OG_DESCRIPTION: config?.og?.description,
             SITE_NAME: config?.site?.name || undefined,
             SITE_DESCRIPTION: config?.site?.description || undefined,
-        });
+        }, {}, language);
+        const localized = config?.metadataByLanguage?.[language] || config?.metadataByLanguage?.[language.split('-')[0]];
+        const values = config?.brandingByLanguage?.[language] || config?.brandingByLanguage?.en || {};
         return {
-            ...metadata,
-            APP_NAME: config?.app?.name || 'Kaigi',
+            ...metadata, ...localized,
+            APP_NAME: values.SITE_NAME ?? config?.app?.name ?? 'Kaigi',
             OG_TYPE: config?.og?.type || 'app-webrtc',
-            OG_SITE_NAME: config?.og?.siteName || 'Kaigi',
+            OG_SITE_NAME: values.SITE_NAME ?? config?.og?.siteName ?? 'Kaigi',
             OG_IMAGE: config?.og?.image || '/images/logo.svg',
             OG_URL: config?.og?.url || '/',
             // Add more data here as needed with fallbacks
@@ -93,7 +95,31 @@ class HtmlInjector {
         try {
             const escape = value => String(value ?? '').replace(/[&<>"']/g, character =>
                 ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-            const data = this.getInjectData();
+            const available = this.config?.app?.languages || require('./Branding').languages;
+            const language = res.req ? require('./Locale').requestLanguage(res.req, available) : this.config?.app?.language || 'en';
+            const data = this.getInjectData(language);
+            res.vary?.('Accept-Language');
+            res.set?.('Content-Language', language);
+            html = html.replace(/<html\b[^>]*>/i, open => open.replace(/\s+lang=["'][^"']*["']/i, '').replace('>', ` lang="${escape(language)}">`));
+            const values = this.config?.htmlInjection === false ? require('./Branding').brandingValues({}, {}, language) :
+                this.config?.brandingByLanguage?.[language] || this.config?.brandingByLanguage?.en;
+            if (values) {
+                const fields = { appDescription: 'SITE_DESCRIPTION', newRoomTitle: 'NEW_ROOM_TITLE', loginNewRoomTitle: 'NEW_ROOM_TITLE',
+                    newRoomDescription: 'NEW_ROOM_DESCRIPTION', loginNewRoomDescription: 'NEW_ROOM_DESCRIPTION',
+                    loginHeading: 'LOGIN_HEADING', loginDescription: 'LOGIN_INSTRUCTIONS', loginBtnText: 'LOGIN_BUTTON_LABEL' };
+                for (const [id, key] of Object.entries(fields)) {
+                    const pattern = new RegExp(`(<(p|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2>)`);
+                    html = html.replace(pattern, (_, open, tag, content, close) => {
+                        const icon = id === 'loginBtnText' ? content.match(/<i\b[^>]*>[\s\S]*?<\/i>/)?.[0] || '' : '';
+                        return open.replace(/>$/, ' data-i18n-skip>') + icon + escape(key === 'SITE_DESCRIPTION' ? values.APP_DESCRIPTION ?? values[key] : values[key]) + close;
+                    });
+                }
+            }
+            if (values && values.APP_TITLE === undefined) {
+                html = html.replace(/(<h1\b[^>]*\bid=["']appTitle["'][^>]*>)[\s\S]*?<\/h1>/,
+                    (_, open) => open.replace(/>$/, ' data-i18n-skip>') + escape(values.SITE_NAME ?? data.APP_NAME) + '<br />' +
+                        escape(values.APP_TAGLINE) + '</h1>');
+            }
             html = html.replaceAll('{{KAIGI_ABOUT}}', () => renderAbout(this.config?.site?.sourceCodeUrl));
             html = html.replace(/{{(APP_NAME|OG_[A-Z_]+)}}/g, (_, key) => escape(data[key]));
             // Only rewrite metadata inside the trusted template's head. Cached

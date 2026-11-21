@@ -197,7 +197,8 @@
         "When enabled, your transcription will be sent to all participants": "활성화하면 전사 내용이 모든 참가자에게 전송됩니다",
         "White annotation color": "주석 색상: 흰색",
         "Yellow annotation color": "주석 색상: 노란색",
-        "Camera preview": "Camera preview"
+        "Camera preview": "Camera preview",
+        "Turn camera on": "Turn camera on"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1497,7 +1498,8 @@
         "You cannot change your own role": "자신의 역할은 변경할 수 없습니다",
         "You cannot send files to yourself.": "자신에게 파일을 보낼 수 없습니다.",
         "Recording is disabled for this meeting": "이 회의에서는 녹화가 비활성화되어 있습니다",
-        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio",
+        "Unable to apply the background. Your previous camera effect is unchanged.": "Unable to apply the background. Your previous camera effect is unchanged."
     },
     "about": {
         "back": "Back",
@@ -1533,5 +1535,19 @@
         "licenseNotice": "Kaigi는 GNU AGPLv3에 따라 보증 없이 배포됩니다.",
         "sourceNotice": "변경 사항과 빌드 자료를 포함한 이 설치의 해당 소스 코드는 아래 링크를 참조하십시오.",
         "upstreamCredits": "MiroTalk SFU 크레딧"
+    },
+    "branding": {
+        "Self-hosted video conferencing with authenticated access to authorized meetings.": "Self-hosted video conferencing with authenticated access to authorized meetings.",
+        "Kaigi - Self-hosted Video Conferencing": "Kaigi - Self-hosted Video Conferencing",
+        "Self-hosted video conferencing.": "Self-hosted video conferencing.",
+        "Select an authorized meeting to continue.": "Select an authorized meeting to continue.",
+        "Join meeting": "회의 참가",
+        "Customize meeting": "Customize meeting",
+        "Your recent meeting:": "Your recent meeting:",
+        "Choose a meeting": "Choose a meeting",
+        "Log in and choose a meeting you are authorized to join.": "Log in and choose a meeting you are authorized to join.",
+        "Welcome back": "Welcome back",
+        "Enter your credentials to continue.": "Enter your credentials to continue.",
+        "Log in": "로그인"
     }
 }

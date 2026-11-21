@@ -716,7 +716,7 @@ function refreshMainButtonsToolTipPlacement() {
     if (!isMobileDevice) {
         //
         const position = BtnsBarPosition.options[BtnsBarPosition.selectedIndex].value;
-        const bPlacement = position == 'vertical' ? 'top' : 'right';
+        const bPlacement = position == 'horizontal' ? 'top' : 'right';
 
         // Bottom buttons
         setTippy(
@@ -751,7 +751,7 @@ function refreshExitButtonTooltip(placement) {
         return;
     }
     const buttonPlacement =
-        placement || (BtnsBarPosition.options[BtnsBarPosition.selectedIndex].value == 'vertical' ? 'top' : 'right');
+        placement || (BtnsBarPosition.options[BtnsBarPosition.selectedIndex].value == 'horizontal' ? 'top' : 'right');
     setTippy('exitButton', 'Leave meeting', buttonPlacement);
 }
 
@@ -5759,7 +5759,7 @@ let buttonsBarReserve = 0;
 function syncButtonsBarReserve() {
     // The side bar and the transient auto-hide bar must not resize the grid.
     const height =
-        localStorageSettings.keep_buttons_visible && bottomButtons.dataset.position !== 'horizontal'
+        localStorageSettings.keep_buttons_visible && bottomButtons.dataset.position !== 'vertical'
             ? bottomButtons.offsetHeight
             : 0;
     const margin = height ? parseFloat(getComputedStyle(bottomButtons).marginBottom) || 0 : 0;

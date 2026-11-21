@@ -197,7 +197,8 @@
         "When enabled, your transcription will be sent to all participants": "Lorsque cette option est activée, votre transcription est envoyée à tous les participants",
         "White annotation color": "Couleur d’annotation blanche",
         "Yellow annotation color": "Couleur d’annotation jaune",
-        "Camera preview": "Aperçu de la caméra"
+        "Camera preview": "Aperçu de la caméra",
+        "Turn camera on": "Activer la caméra"
     },
     "buttons": {
         "Hide password": "Masquer le mot de passe",
@@ -1497,7 +1498,8 @@
         "You cannot change your own role": "Vous ne pouvez pas modifier votre propre rôle",
         "You cannot send files to yourself.": "Vous ne pouvez pas vous envoyer de fichiers.",
         "Recording is disabled for this meeting": "L’enregistrement est désactivé pour cette réunion",
-        "Microphone input was lost; select a microphone to resume audio": "L’entrée du microphone a été perdue. Sélectionnez un microphone pour rétablir le son."
+        "Microphone input was lost; select a microphone to resume audio": "L’entrée du microphone a été perdue. Sélectionnez un microphone pour rétablir le son.",
+        "Unable to apply the background. Your previous camera effect is unchanged.": "Impossible d’appliquer l’arrière-plan. L’effet précédent de votre caméra est conservé."
     },
     "about": {
         "back": "Retour",
@@ -1533,5 +1535,19 @@
         "licenseNotice": "Kaigi est distribué sous GNU AGPLv3, sans garantie.",
         "sourceNotice": "Le lien ci-dessous donne accès au code source correspondant de cette installation, y compris ses modifications et les fichiers de compilation.",
         "upstreamCredits": "Crédits de MiroTalk SFU"
+    },
+    "branding": {
+        "Self-hosted video conferencing with authenticated access to authorized meetings.": "Vidéoconférence autohébergée avec authentification et accès aux réunions autorisées.",
+        "Kaigi - Self-hosted Video Conferencing": "Kaigi - Vidéoconférence autohébergée",
+        "Self-hosted video conferencing.": "Vidéoconférence autohébergée.",
+        "Select an authorized meeting to continue.": "Sélectionnez une réunion autorisée pour continuer.",
+        "Join meeting": "Rejoindre la réunion",
+        "Customize meeting": "Personnaliser la réunion",
+        "Your recent meeting:": "Votre dernière réunion :",
+        "Choose a meeting": "Choisir une réunion",
+        "Log in and choose a meeting you are authorized to join.": "Connectez-vous et choisissez une réunion à laquelle vous êtes autorisé à participer.",
+        "Welcome back": "Bienvenue",
+        "Enter your credentials to continue.": "Entrez votre nom d’utilisateur et votre mot de passe pour continuer.",
+        "Log in": "Se connecter"
     }
 }

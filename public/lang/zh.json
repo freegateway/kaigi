@@ -197,7 +197,8 @@
         "When enabled, your transcription will be sent to all participants": "开启后, 您的转录内容会发送给所有参会者",
         "White annotation color": "批注颜色：白色",
         "Yellow annotation color": "批注颜色：黄色",
-        "Camera preview": "Camera preview"
+        "Camera preview": "Camera preview",
+        "Turn camera on": "Turn camera on"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1497,7 +1498,8 @@
         "You cannot change your own role": "您不能更改自己的角色",
         "You cannot send files to yourself.": "您不能向自己发送文件.",
         "Recording is disabled for this meeting": "此会议已禁用录制",
-        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio",
+        "Unable to apply the background. Your previous camera effect is unchanged.": "Unable to apply the background. Your previous camera effect is unchanged."
     },
     "about": {
         "back": "Back",
@@ -1533,5 +1535,19 @@
         "licenseNotice": "Kaigi 根据 GNU AGPLv3 发布，不提供任何担保。",
         "sourceNotice": "请通过以下链接获取此安装的对应源代码，包括修改内容和构建材料。",
         "upstreamCredits": "MiroTalk SFU 致谢"
+    },
+    "branding": {
+        "Self-hosted video conferencing with authenticated access to authorized meetings.": "Self-hosted video conferencing with authenticated access to authorized meetings.",
+        "Kaigi - Self-hosted Video Conferencing": "Kaigi - Self-hosted Video Conferencing",
+        "Self-hosted video conferencing.": "Self-hosted video conferencing.",
+        "Select an authorized meeting to continue.": "Select an authorized meeting to continue.",
+        "Join meeting": "加入会议",
+        "Customize meeting": "Customize meeting",
+        "Your recent meeting:": "Your recent meeting:",
+        "Choose a meeting": "Choose a meeting",
+        "Log in and choose a meeting you are authorized to join.": "Log in and choose a meeting you are authorized to join.",
+        "Welcome back": "Welcome back",
+        "Enter your credentials to continue.": "Enter your credentials to continue.",
+        "Log in": "登录"
     }
 }

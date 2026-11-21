@@ -197,7 +197,8 @@
         "When enabled, your transcription will be sent to all participants": "Cuando está activado, tu transcripción se enviará a todos los participantes",
         "White annotation color": "Color de anotación blanco",
         "Yellow annotation color": "Color de anotación amarillo",
-        "Camera preview": "Camera preview"
+        "Camera preview": "Camera preview",
+        "Turn camera on": "Turn camera on"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1497,7 +1498,8 @@
         "You cannot change your own role": "No puedes cambiar tu propio rol",
         "You cannot send files to yourself.": "No puedes enviarte archivos a ti mismo.",
         "Recording is disabled for this meeting": "La grabación está desactivada para esta reunión",
-        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio"
+        "Microphone input was lost; select a microphone to resume audio": "Microphone input was lost; select a microphone to resume audio",
+        "Unable to apply the background. Your previous camera effect is unchanged.": "Unable to apply the background. Your previous camera effect is unchanged."
     },
     "about": {
         "back": "Back",
@@ -1533,5 +1535,19 @@
         "licenseNotice": "Kaigi se distribuye bajo GNU AGPLv3, sin garantía.",
         "sourceNotice": "El siguiente enlace ofrece el código fuente correspondiente a esta instalación, incluidos sus cambios y los materiales de compilación.",
         "upstreamCredits": "Créditos de MiroTalk SFU"
+    },
+    "branding": {
+        "Self-hosted video conferencing with authenticated access to authorized meetings.": "Self-hosted video conferencing with authenticated access to authorized meetings.",
+        "Kaigi - Self-hosted Video Conferencing": "Kaigi - Self-hosted Video Conferencing",
+        "Self-hosted video conferencing.": "Self-hosted video conferencing.",
+        "Select an authorized meeting to continue.": "Select an authorized meeting to continue.",
+        "Join meeting": "Entrar a la reunión",
+        "Customize meeting": "Customize meeting",
+        "Your recent meeting:": "Your recent meeting:",
+        "Choose a meeting": "Choose a meeting",
+        "Log in and choose a meeting you are authorized to join.": "Log in and choose a meeting you are authorized to join.",
+        "Welcome back": "Welcome back",
+        "Enter your credentials to continue.": "Enter your credentials to continue.",
+        "Log in": "Iniciar sesión"
     }
 }

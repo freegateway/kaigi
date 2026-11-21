@@ -53,6 +53,7 @@ const loginButton = document.getElementById('loginButton');
 
 // app/src/config.js - ui.brand
 let BRAND = {
+    builtinBranding: true,
     app: {
         language: 'en',
         name: 'Kaigi',
@@ -201,10 +202,24 @@ async function getBrand() {
 function localizedSiteBrand(base, language) {
     const brand = JSON.parse(JSON.stringify(base));
     const dictionaries = base.siteTranslations || {};
-    const values = { ...(dictionaries.en || {}), ...(dictionaries[language.split('-')[0]] || {}), ...(dictionaries[language] || {}) };
+    const fallback = {};
+    if (base.builtinBranding && !base.brandingByLanguage) {
+        const t = text => window.i18n?.t(text, 'branding') || text;
+        Object.assign(fallback, { PAGE_TITLE: t(base.site.title), SITE_DESCRIPTION: t(base.app.description), APP_TAGLINE: t('Self-hosted video conferencing.'),
+            NEW_ROOM_TITLE: t(base.site.newRoomTitle), NEW_ROOM_DESCRIPTION: t(base.site.newRoomDescription),
+            LOGIN_HEADING: t(base.login.heading), LOGIN_INSTRUCTIONS: t(base.login.description), LOGIN_BUTTON_LABEL: t(base.login.buttonLabel),
+            JOIN_DESCRIPTION: t('Select an authorized meeting to continue.'), JOIN_BUTTON_LABEL: t(base.app.joinButtonLabel),
+            CUSTOMIZE_BUTTON_LABEL: t('Customize meeting'), JOIN_LAST_LABEL: t('Your recent meeting:') });
+        brand.meta.description = t(base.meta.description);
+		brand.og ||= {};
+		brand.og.title = t(base.og?.title || base.site.title);
+		brand.og.description = t(base.og?.description || base.meta.description);
+    }
+    const values = base.brandingByLanguage?.[language] || base.brandingByLanguage?.[language.split('-')[0]] ||
+        { ...fallback, ...(dictionaries.en || {}), ...(dictionaries[language.split('-')[0]] || {}), ...(dictionaries[language] || {}) };
     const paths = {
         SITE_NAME: [['site','name'],['app','name'],['og','siteName']],
-        SITE_DESCRIPTION: [['site','description'],['app','description']],
+        SITE_DESCRIPTION: [['site','description'],['app','description']], APP_DESCRIPTION: [['app','description']],
         SITE_COPYRIGHT: [['site','copyright']], PAGE_TITLE: [['site','title']],
         JOIN_DESCRIPTION: [['app','joinDescription']], JOIN_BUTTON_LABEL: [['app','joinButtonLabel']],
         CUSTOMIZE_BUTTON_LABEL: [['app','customizeButtonLabel']], JOIN_LAST_LABEL: [['app','joinLastLabel']],
@@ -223,10 +238,11 @@ function localizedSiteBrand(base, language) {
         brand.og.title = metadata.OG_TITLE;
         brand.og.description = metadata.OG_DESCRIPTION;
     }
-    if (Object.hasOwn(values, 'SITE_NAME') || Object.hasOwn(values, 'SITE_DESCRIPTION')) {
+    if (Object.hasOwn(values, 'APP_TITLE')) brand.app.title = values.APP_TITLE;
+    else if (Object.hasOwn(values, 'SITE_NAME') || Object.hasOwn(values, 'SITE_DESCRIPTION')) {
         // Administrator text is rendered as text below, including the landing heading.
         const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        brand.app.title = `<h1>${escape(brand.site.name ?? brand.app.name)}</h1>${escape(brand.site.description || '')}`;
+        brand.app.title = `<h1>${escape(Object.hasOwn(values, 'SITE_NAME') ? values.SITE_NAME : brand.app.name)}</h1>${escape((base.brandingSettings?.SITE_DESCRIPTION !== undefined || Object.hasOwn({ ...dictionaries.en, ...dictionaries[language.split('-')[0]], ...dictionaries[language] }, 'SITE_DESCRIPTION')) ? brand.site.description ?? '' : values.APP_TAGLINE ?? brand.site.description ?? '')}`;
     }
     return brand;
 }
@@ -250,6 +266,10 @@ window.refreshMeetingLabels = () => {
 window.applySiteTranslations = (language) => {
     if (!baseSiteBrand) return;
     BRAND = localizedSiteBrand(baseSiteBrand, language);
+    for (const element of [appTitle, appDescription, newRoomTitle, newRoomDescription, loginHeading, loginDescription,
+        document.getElementById('loginBtnText'), joinRoomBtn, joinSelectRoomButton, customizeRoomBtn, joinLastLabel]) {
+        element?.setAttribute('data-i18n-skip', '');
+    }
     customizeSite(); customizeMetaTags(); customizeApp(); customizeLogin();
     window.refreshMeetingLabels();
     const name = document.getElementById('siteName'), description = document.getElementById('siteDescription');
