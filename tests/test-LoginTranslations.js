@@ -3,13 +3,22 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const HtmlInjector = require('../app/src/HtmlInjector');
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 describe('login translation sources and live switching', () => {
     let dom;
     async function load(lang) {
-        dom = new JSDOM(read('public/views/login.html'), {
+        const injector = Object.create(HtmlInjector.prototype);
+        injector.config = require('../app/src/config').ui.brand;
+        injector.cache = { login: read('public/views/login.html') };
+        let html;
+        injector.injectHtml('login', {
+            req: { headers: { 'accept-language': lang } },
+            send(value) { html = value; },
+        });
+        dom = new JSDOM(html, {
             url: 'https://kaigi.invalid/',
             runScripts: 'outside-only',
             virtualConsole: new VirtualConsole(),
@@ -37,6 +46,39 @@ describe('login translation sources and live switching', () => {
         await tick();
     }
     afterEach(() => dom?.window.close());
+
+    for (const language of ['en-CA', 'ja', 'fr-CA']) {
+        it(`submits the rendered ${language} login page and opens the authorized meeting selector`, async () => {
+            const w = await load(language);
+            const document = w.document;
+            const button = document.getElementById('loginButton');
+            const loader = document.getElementById('loginBtnLoader');
+            assert.ok(loader, 'localization must preserve the adjacent loading indicator');
+            assert.equal(button.querySelectorAll(':scope > span').length, 2);
+            document.getElementById('username').value = 'employee';
+            document.getElementById('password').value = 'fixture-password';
+            const requests = [];
+            let complete;
+            w.axios = { post: (url, data) => {
+                requests.push({ url, ...data });
+                return new Promise(resolve => { complete = resolve; });
+            } };
+            // Advance the existing transition without waiting for animation timers.
+            w.setTimeout = callback => { callback(); return 0; };
+            w.requestAnimationFrame = callback => { callback(); return 0; };
+            button.click();
+            assert.deepEqual(requests, [{ url: '/auth/session/login', username: 'employee', password: 'fixture-password' }]);
+            assert.equal(button.disabled, true);
+            assert.equal(loader.classList.contains('show'), true);
+            assert.equal(document.getElementById('loginBtnText').style.display, 'none');
+            complete({ data: { message: 'fixture-session', allowedRooms: ['Customer Inc', 'all-employees'], displayname: 'Employee' } });
+            await tick();
+            assert.equal(document.getElementById('loginForm').style.display, 'none');
+            assert.equal(document.getElementById('joinRoomForm').classList.contains('show'), true);
+            assert.deepEqual(Array.from(document.getElementById('selectRoom').options, option => option.value), ['Customer Inc', 'all-employees']);
+            assert.equal(w.sessionStorage.peer_token, 'fixture-session');
+        });
+    }
 
     it('keeps password visibility, title, aria-label and pressed state synchronized across language switches', async () => {
         const w = await load('ja');
@@ -113,5 +155,7 @@ describe('login translation sources and live switching', () => {
         );
         assert.deepEqual(messages, ['Login request failed']);
         assert.equal(w.document.getElementById('loginButton').disabled, false);
+        assert.equal(w.document.getElementById('loginBtnLoader').classList.contains('show'), false);
+        assert.equal(w.document.getElementById('loginBtnText').style.display, 'inline');
     });
 });
