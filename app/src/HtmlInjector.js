@@ -108,7 +108,7 @@ class HtmlInjector {
                     newRoomDescription: 'NEW_ROOM_DESCRIPTION', loginNewRoomDescription: 'NEW_ROOM_DESCRIPTION',
                     loginHeading: 'LOGIN_HEADING', loginDescription: 'LOGIN_INSTRUCTIONS', loginBtnText: 'LOGIN_BUTTON_LABEL' };
                 for (const [id, key] of Object.entries(fields)) {
-                    const pattern = new RegExp(`(<(p|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2>)`);
+                    const pattern = new RegExp(`(<(p|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2\\s*>)`);
                     html = html.replace(pattern, (_, open, tag, content, close) => {
                         const icon = id === 'loginBtnText' ? content.match(/<i\b[^>]*>[\s\S]*?<\/i>/)?.[0] || '' : '';
                         return open.replace(/>$/, ' data-i18n-skip>') + icon + escape(key === 'SITE_DESCRIPTION' ? values.APP_DESCRIPTION ?? values[key] : values[key]) + close;
