@@ -1944,7 +1944,6 @@ async function whoAreYou() {
         background: swalBackground,
         title: BRAND.app?.name,
         input: 'text',
-        inputLabel: 'Display name',
         inputPlaceholder: 'Enter your email or name',
         inputAttributes: { maxlength: 254, id: 'usernameInput' },
         inputValue: default_name,
@@ -1955,13 +1954,11 @@ async function whoAreYou() {
         hideClass: { popup: 'animate__animated animate__fadeOutUp' },
         willOpen: (popup) => {
             hide(loadingDiv);
-            // SweetAlert2 replaces the input id when inputLabel is set; restore it for existing lookups.
+            // Keep the input reference stable when SweetAlert renders the dialog.
             const usernameInput = Swal.getInput();
             if (usernameInput) {
                 usernameInput.id = 'usernameInput';
                 usernameInput.addEventListener('input', updateInitVideoOffAvatar);
-                const label = popup.querySelector('.swal2-input-label');
-                if (label) label.htmlFor = 'usernameInput';
             }
         },
         didOpen: () => {
@@ -1970,14 +1967,22 @@ async function whoAreYou() {
             panel.className = 'init-identity-panel';
             const nameRow = document.createElement('dt');
             nameRow.className = 'init-identity-row';
-            const nameLabel = document.createElement('label');
-            nameLabel.htmlFor = 'usernameInput';
+            const nameLabel = document.createElement(force_peer_name ? 'span' : 'label');
+            if (!force_peer_name) nameLabel.htmlFor = 'usernameInput';
             nameLabel.textContent = "User's display name:";
             nameInput.parentNode.insertBefore(panel, nameInput);
             panel.appendChild(nameRow);
             nameRow.appendChild(nameLabel);
             const nameValue = document.createElement('dd');
             nameValue.appendChild(nameInput);
+            if (force_peer_name) {
+                nameInput.readOnly = true;
+                nameInput.hidden = true;
+                const displayName = document.createElement('strong');
+                displayName.setAttribute('data-i18n-skip', '');
+                displayName.textContent = nameInput.value;
+                nameValue.appendChild(displayName);
+            }
             panel.appendChild(nameValue);
             if (force_peer_name) {
                 const loginName = window.sessionStorage.mirotalk_login_name;

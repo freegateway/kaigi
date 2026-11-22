@@ -566,6 +566,10 @@ body {
     text-align: start;
 }
 
+.init-identity-panel #usernameInput[hidden] {
+    display: none !important;
+}
+
 .init-identity-panel .swal2-input:read-only {
     opacity: 1;
     cursor: default;
