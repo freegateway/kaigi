@@ -936,3 +936,20 @@ Do not import Gravatar or moderator controls.
 Defer the worker rewrite, auto framing (`2e948f3b`), quizzes and accessory controls.
 Breakout/Active Rooms refinements remain excluded from disabled features. No
 dependency refresh or Meeting Manager integration is included.
+
+## 2026-11-22 — Malformed Socket.IO events
+
+Kaigi 0.8.8 selectively adapts upstream eefc116f73eee710857c7015500ebcf018577a43c.
+Install listener protection before application/helper registrations. Validate object
+payloads, required acknowledgements and critical transport/creation fields before
+handlers allocate resources or mutate state. Contain synchronous exceptions and
+rejected promises, return a generic error at most once, and disconnect only the
+failing connection on unexpected errors through normal cleanup. Preserve existing
+authentication, admission, revocation and prohibited-feature middleware. Fixed-field
+security logs never include payloads or exception messages; bound per-socket reports.
+No Socket.IO/dependency/native worker update or process-wide error-policy change.
+
+Child-process regressions send real Socket.IO frames through production registration,
+admission and selected handlers; exercise absent/null/scalar/array payloads, missing
+and malformed acknowledgements, synchronous throws and asynchronous rejections.
+Verify another connection remains usable and unexpected failures run cleanup.

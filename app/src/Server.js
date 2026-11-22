@@ -2328,6 +2328,7 @@ function startServer() {
     });
 
     io.on('connection', (socket) => {
+        require('./SocketEventGuard')(socket, securityEvent);
         recordingCapabilities.attach(socket);
         socket.use((packet, next) => {
             const event = packet[0];
