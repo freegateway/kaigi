@@ -473,7 +473,8 @@
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
-        "Stop sharing": "Stop sharing"
+        "Stop sharing": "Stop sharing",
+        "Play shared media": "Lire le média partagé"
     },
     "labels": {
         "Enter meeting name": "Entrez le nom de la réunion",
@@ -1335,7 +1336,8 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "Votre identifiant de connexion est déjà connecté à cette réunion. Quittez l’autre connexion ou cliquez sur Déconnexion pour vous connecter avec un autre compte.",
+        "Unable to play shared media. Check the file and try again.": "Impossible de lire le média partagé. Vérifiez le fichier et réessayez."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Verrou d’éveil désactivé",

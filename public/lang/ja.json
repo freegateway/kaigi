@@ -473,7 +473,8 @@
         "SCHEDULE MEETING": "会議を予約",
         "Generate random room name": "会議名を自動生成",
         "Show password": "パスワードを表示",
-        "Stop sharing": "共有を停止"
+        "Stop sharing": "共有を停止",
+        "Play shared media": "共有メディアを再生"
     },
     "labels": {
         "Enter meeting name": "会議名を入力",
@@ -1335,7 +1336,8 @@
         "Reconnecting automatically": "自動再接続中",
         "Reconnect now": "今すぐ再接続",
         "Waiting for the server. You may need to log in again.": "サーバーの復旧を待っています。再度ログインが必要な場合があります。",
-        "Attempt {attempt}/{max} — retry in {seconds}s": "試行 {attempt}/{max} — {seconds}秒後に再試行"
+        "Attempt {attempt}/{max} — retry in {seconds}s": "試行 {attempt}/{max} — {seconds}秒後に再試行",
+        "Unable to play shared media. Check the file and try again.": "共有メディアを再生できません。ファイルを確認して、もう一度お試しください。"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock を解除しました",

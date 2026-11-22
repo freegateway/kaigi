@@ -473,7 +473,8 @@
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
-        "Stop sharing": "Stop sharing"
+        "Stop sharing": "Stop sharing",
+        "Play shared media": "Play shared media"
     },
     "labels": {
         "Enter meeting name": "Enter meeting name",
@@ -1335,7 +1336,8 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "이 로그인 ID는 이미 이 회의에 연결되어 있습니다. 다른 연결에서 회의를 나가거나 로그아웃을 클릭하여 다른 계정으로 로그인하세요."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "이 로그인 ID는 이미 이 회의에 연결되어 있습니다. 다른 연결에서 회의를 나가거나 로그아웃을 클릭하여 다른 계정으로 로그인하세요.",
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock 해제됨",

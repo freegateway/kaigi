@@ -953,3 +953,25 @@ Child-process regressions send real Socket.IO frames through production registra
 admission and selected handlers; exercise absent/null/scalar/array payloads, missing
 and malformed acknowledgements, synchronous throws and asynchronous rejections.
 Verify another connection remains usable and unexpected failures run cleanup.
+
+## 2026-11-22 — PiP sources and same-origin shared media
+
+Kaigi 0.8.9 selectively adapts bf8b128a5fe3047f709dc72254ea039ed3337246
+and a4ae501f2d0f5011879d0949e95021d509551900. Document PiP ignores
+settings previews, anonymous sources and hidden/aria-hidden streams; privacy
+mode still excludes participant video. Use the iterated video directly and
+release per-video observers when rebuilding or closing PiP.
+
+Shared MP3 uses audio/mpeg and a native audio element with a local poster;
+video uses inline playback. Parse extensions from URL pathnames, including
+uppercase suffixes and query/fragment URLs. Keep same-origin checks for both
+sharing and received messages, reject unsupported formats and YouTube, and
+never append YouTube parameters to direct media. A localized native Play
+button in the tile retries blocked autoplay within the user gesture; stale
+failures after closing/replacing the tile cannot open prompts. Stop playback
+and release the URL when closing. Maintain Japanese, Canadian French/English
+and all 30 catalogue key sets. No external assets or dependency changes.
+
+The worker/tasks-vision rewrite, auto framing and full-range face tracking
+(50e7ae15) remain deferred under W02. Quiz, Gravatar and breakout additions
+remain excluded. Calendar/SOGo/Kojo and Meeting Manager integration stay separate.

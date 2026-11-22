@@ -473,7 +473,8 @@
         "SCHEDULE MEETING": "Planifier une réunion",
         "Generate random room name": "Générer un nom de réunion",
         "Show password": "Afficher le mot de passe",
-        "Stop sharing": "Arrêter le partage"
+        "Stop sharing": "Arrêter le partage",
+        "Play shared media": "Lire le média partagé"
     },
     "labels": {
         "Enter meeting name": "Entrez le nom de la réunion",
@@ -1335,7 +1336,8 @@
         "Reconnecting automatically": "Reconnexion automatique en cours",
         "Reconnect now": "Se reconnecter maintenant",
         "Waiting for the server. You may need to log in again.": "En attente du serveur. Vous pourriez devoir vous connecter de nouveau.",
-        "Attempt {attempt}/{max} — retry in {seconds}s": "Tentative {attempt}/{max} — nouvel essai dans {seconds} s"
+        "Attempt {attempt}/{max} — retry in {seconds}s": "Tentative {attempt}/{max} — nouvel essai dans {seconds} s",
+        "Unable to play shared media. Check the file and try again.": "Impossible de lire le média partagé. Vérifiez le fichier et réessayez."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Verrou d’éveil désactivé",
