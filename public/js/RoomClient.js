@@ -6479,8 +6479,12 @@ class RoomClient {
             pipWindow.document.head.append(pipStylesheet);
             pipWindow.document.body.append(pipVideoContainer);
 
+            const videoElementObservers = [];
+
             function cloneVideoElements() {
                 let foundVideo = false;
+
+                for (const observer of videoElementObservers.splice(0)) observer.disconnect();
 
                 pipVideoContainer.innerHTML = '';
 
@@ -6488,11 +6492,11 @@ class RoomClient {
                     console.log('DOCUMENT PIP found video id -----> ' + video.id);
 
                     // No video stream detected or is video share from URL...
-                    if (!video.srcObject || video.id === '__videoShare') return;
+                    if (!video.srcObject || !video.id || video.id === '__videoShare' ||
+                        video.id === 'settingsVideoPreviewVideo' || video.hidden ||
+                        video.getAttribute('aria-hidden') === 'true') return;
 
-                    const videoElement = rc.getId(video.id);
-
-                    const isPIPAllowed = !videoElement.classList.contains('videoCircle'); // Check if not in privacy mode
+                    const isPIPAllowed = !video.classList.contains('videoCircle'); // Check if not in privacy mode
 
                     const logMessage = [rc.videoProducerId, rc.screenProducerId].includes(video.id)
                         ? `DOCUMENT PIP PRODUCER: PiP allowed? -----> ${isPIPAllowed}`
@@ -6528,6 +6532,7 @@ class RoomClient {
 
                     // Start observing for new videos and class changes
                     videoElementObserver.observe(video, { attributes: true, attributeFilter: ['class'] });
+                    videoElementObservers.push(videoElementObserver);
                 });
 
                 return foundVideo;
@@ -6555,6 +6560,7 @@ class RoomClient {
             });
 
             pipWindow.addEventListener('unload', () => {
+                for (const observer of videoElementObservers.splice(0)) observer.disconnect();
                 videoObserver.disconnect();
                 documentObserver.disconnect();
             });
@@ -11421,11 +11427,14 @@ class RoomClient {
         return true;
     }
 
-    getVideoType(url) {
-        if (url.endsWith('.mp4')) return 'video/mp4';
-        if (url.endsWith('.mp3')) return 'video/mp3';
-        if (url.endsWith('.webm')) return 'video/webm';
-        if (url.endsWith('.ogg')) return 'video/ogg';
+    getVideoType(input) {
+        try {
+            const path = new URL(input, window.location.origin).pathname.toLowerCase();
+            if (path.endsWith('.mp4')) return 'video/mp4';
+            if (path.endsWith('.mp3')) return 'audio/mpeg';
+            if (path.endsWith('.webm')) return 'video/webm';
+            if (path.endsWith('.ogg')) return 'video/ogg';
+        } catch {}
         return 'na';
     }
 
@@ -11439,15 +11448,7 @@ class RoomClient {
     }
 
     isVideoTypeSupported(url) {
-        if (
-            url.endsWith('.mp4') ||
-            url.endsWith('.mp3') ||
-            url.endsWith('.webm') ||
-            url.endsWith('.ogg') ||
-            url.includes('youtube.com')
-        )
-            return true;
-        return false;
+        return this.isLocalMediaURL(url) && this.getVideoType(url) !== 'na';
     }
 
     getYoutubeEmbed(url) {
@@ -11475,12 +11476,13 @@ class RoomClient {
 
     openVideo(data) {
         // Check received socket messages as well as the local sharing form.
-        if (!data || !this.isLocalMediaURL(data.video_url) || data.is_youtube) return;
+        if (!data || !this.isVideoTypeSupported(data.video_url) || data.is_youtube) return;
         let d, vb, e, video, pn, fsBtn;
         let peer_name = data.peer_name;
-        let video_url = data.video_url + (this.isMobileSafari ? '&enablejsapi=1&mute=1' : ''); // Safari need user interaction
+        let video_url = data.video_url;
         let is_youtube = data.is_youtube;
         let video_type = this.getVideoType(video_url);
+        const audioShare = video_type === 'audio/mpeg';
         this.closeVideo();
         show(videoCloseBtn);
         d = document.createElement('div');
@@ -11528,20 +11530,32 @@ class RoomClient {
                 });
             }
         } else {
-            video = document.createElement('video');
+            video = document.createElement(audioShare ? 'audio' : 'video');
             video.type = video_type;
             video.autoplay = true;
             video.controls = true;
-            if (video_type == 'video/mp3') {
-                video.poster = image.audio;
+            video.preload = 'metadata';
+            if (audioShare) {
+                const poster = document.createElement('img');
+                poster.src = image.audio;
+                poster.alt = '';
+                poster.className = 'shared-media-poster';
+                d.appendChild(poster);
+                video.className = 'shared-media-audio';
+            } else {
+                video.playsInline = true;
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
             }
         }
         video.setAttribute('id', '__videoShare');
         video.setAttribute('src', video_url);
-        video.setAttribute('width', '100%');
-        video.setAttribute('height', '100%');
+        if (!audioShare) {
+            video.setAttribute('width', '100%');
+            video.setAttribute('height', '100%');
+        }
         vb.appendChild(e);
-        BUTTONS.videoShare.fullScreenButton && vb.appendChild(fsBtn);
+        BUTTONS.videoShare.fullScreenButton && !audioShare && vb.appendChild(fsBtn);
         if (BUTTONS.videoShare.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);
         d.appendChild(video);
         d.appendChild(vb);
@@ -11625,12 +11639,42 @@ class RoomClient {
         if (!this.isMobileDevice) {
             this.refreshPinLabels();
             this.setTippy(e.id, 'Close video player', 'bottom');
-            this.setTippy(fsBtn.id, 'Full screen', 'bottom');
+            if (!audioShare) this.setTippy(fsBtn.id, 'Full screen', 'bottom');
         }
 
+        this.playSharedMedia(video, d);
         handleAspectRatio();
         console.log('[openVideo] Video-element-count', this.videoMediaContainer.childElementCount);
         this.sound('joined');
+    }
+
+    playSharedMedia(video, container) {
+        let button;
+        const current = () => video.isConnected && this.getId('__videoShare') === video;
+        const attempt = () => {
+            if (!current()) return;
+            let playback;
+            try { playback = video.play(); } catch (error) { failed(error); return; }
+            Promise.resolve(playback).then(() => button?.remove()).catch(failed);
+        };
+        const failed = error => {
+            if (!current()) return;
+            if (error?.name !== 'NotAllowedError') {
+                this.userLog('warning', 'Unable to play shared media. Check the file and try again.', 'top-end', 6000);
+                return;
+            }
+            if (button) return;
+            button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'shared-media-play';
+            const label = 'Play shared media';
+            const caption = document.createTextNode(window.i18n?.t(label, 'buttons') || label);
+            caption.__i18nSrc = label;
+            button.appendChild(caption);
+            button.addEventListener('click', attempt);
+            container.appendChild(button);
+        };
+        attempt();
     }
 
     closeVideo(emit = false, peer_id = 'all') {
@@ -11644,6 +11688,12 @@ class RoomClient {
         }
         let shareVideoDiv = this.getId('__shareVideo');
         if (shareVideoDiv) {
+            const media = shareVideoDiv.querySelector('audio, video');
+            if (media) {
+                media.pause();
+                media.removeAttribute('src');
+                media.load();
+            }
             hide(videoCloseBtn);
             shareVideoDiv.parentNode.removeChild(shareVideoDiv);
             //alert(this.isVideoPinned + ' - ' + this.pinnedVideoPlayerId);

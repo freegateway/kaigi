@@ -473,7 +473,8 @@
         "SCHEDULE MEETING": "SCHEDULE MEETING",
         "Generate random room name": "Generate random room name",
         "Show password": "Show password",
-        "Stop sharing": "Stop sharing"
+        "Stop sharing": "Stop sharing",
+        "Play shared media": "Play shared media"
     },
     "labels": {
         "Enter meeting name": "Enter meeting name",
@@ -1335,7 +1336,8 @@
         "Leave a feedback": "Leave a feedback",
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
-        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "మీ లాగిన్ ID ఇప్పటికే ఈ సమావేశానికి కనెక్ట్ అయింది. ఇతర కనెక్షన్ నుండి నిష్క్రమించండి లేదా వేరే ఖాతాతో లాగిన్ అవ్వడానికి లాగ్ అవుట్ క్లిక్ చేయండి."
+        "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "మీ లాగిన్ ID ఇప్పటికే ఈ సమావేశానికి కనెక్ట్ అయింది. ఇతర కనెక్షన్ నుండి నిష్క్రమించండి లేదా వేరే ఖాతాతో లాగిన్ అవ్వడానికి లాగ్ అవుట్ క్లిక్ చేయండి.",
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ వేక్ లాక్ విడుదలైంది",
