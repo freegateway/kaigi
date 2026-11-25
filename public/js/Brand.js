@@ -441,7 +441,13 @@ function customizeWhoAreYou() {
 
 function customizeLogin() {
     if (loginHeading && BRAND.login?.heading !== undefined) loginHeading.textContent = BRAND.login.heading;
-    if (loginDescription && BRAND.login?.description !== undefined) loginDescription.textContent = BRAND.login.description;
+    if (loginDescription && BRAND.login?.description !== undefined) {
+        if (window.KaigiLoginInstructions) {
+            loginDescription.innerHTML = window.KaigiLoginInstructions(BRAND.login.description, window.DOMPurify);
+        } else {
+            loginDescription.textContent = BRAND.login.description;
+        }
+    }
     if (BRAND.login?.buttonLabel !== undefined) {
         const loginBtnText = document.getElementById('loginBtnText');
         if (loginBtnText) {

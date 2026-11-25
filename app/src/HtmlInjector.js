@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { siteMetadata } = require('./SiteMetadata');
 const { renderAbout } = require('./AboutContent');
+const loginInstructions = require('./LoginInstructions');
 
 const chokidar = require('chokidar');
 
@@ -98,6 +99,9 @@ class HtmlInjector {
             const available = this.config?.app?.languages || require('./Branding').languages;
             const language = res.req ? require('./Locale').requestLanguage(res.req, available) : this.config?.app?.language || 'en';
             const data = this.getInjectData(language);
+            // Expand trusted template markers before inserting administrator content.
+            html = html.replaceAll('{{KAIGI_ABOUT}}', () => renderAbout(this.config?.site?.sourceCodeUrl));
+            html = html.replace(/{{(APP_NAME|OG_[A-Z_]+)}}/g, (_, key) => escape(data[key]));
             res.vary?.('Accept-Language');
             res.set?.('Content-Language', language);
             html = html.replace(/<html\b[^>]*>/i, open => open.replace(/\s+lang=["'][^"']*["']/i, '').replace('>', ` lang="${escape(language)}">`));
@@ -108,10 +112,12 @@ class HtmlInjector {
                     newRoomDescription: 'NEW_ROOM_DESCRIPTION', loginNewRoomDescription: 'NEW_ROOM_DESCRIPTION',
                     loginHeading: 'LOGIN_HEADING', loginDescription: 'LOGIN_INSTRUCTIONS', loginBtnText: 'LOGIN_BUTTON_LABEL' };
                 for (const [id, key] of Object.entries(fields)) {
-                    const pattern = new RegExp(`(<(p|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2\\s*>)`);
+                    const pattern = new RegExp(`(<(p|div|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2\\s*>)`);
                     html = html.replace(pattern, (_, open, tag, content, close) => {
                         const icon = id === 'loginBtnText' ? content.match(/<i\b[^>]*>[\s\S]*?<\/i>/)?.[0] || '' : '';
-                        return open.replace(/>$/, ' data-i18n-skip>') + icon + escape(key === 'SITE_DESCRIPTION' ? values.APP_DESCRIPTION ?? values[key] : values[key]) + close;
+                        const value = key === 'SITE_DESCRIPTION' ? values.APP_DESCRIPTION ?? values[key] : values[key];
+                        return open.replace(/>$/, ' data-i18n-skip>') + icon +
+                            (key === 'LOGIN_INSTRUCTIONS' ? loginInstructions(value) : escape(value)) + close;
                     });
                 }
             }
@@ -120,8 +126,6 @@ class HtmlInjector {
                     (_, open) => open.replace(/>$/, ' data-i18n-skip>') + escape(values.SITE_NAME ?? data.APP_NAME) + '<br />' +
                         escape(values.APP_TAGLINE) + '</h1>');
             }
-            html = html.replaceAll('{{KAIGI_ABOUT}}', () => renderAbout(this.config?.site?.sourceCodeUrl));
-            html = html.replace(/{{(APP_NAME|OG_[A-Z_]+)}}/g, (_, key) => escape(data[key]));
             // Only rewrite metadata inside the trusted template's head. Cached
             // templates remain unchanged; no request fields enter public previews.
             html = html.replace(/<head>([\s\S]*?)<\/head>/i, (_, head) => {

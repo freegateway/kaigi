@@ -27,6 +27,13 @@ pack 'animejs@3.0.1' 'animejs'
 pack 'axios@1.20.0' 'axios'
 pack 'bootstrap@5.0.2' 'bootstrap'
 pack 'crypto-js@4.2.0' 'crypto-js'
+# Keep only the pinned browser sanitizer and its license/source map.
+pack 'dompurify@3.4.18' 'dompurify'
+mkdir -p "$work/dompurify-browser/dist"
+cp "$work/vendor/dompurify/LICENSE" "$work/dompurify-browser/"
+cp "$work/vendor/dompurify/dist/purify.min.js" "$work/vendor/dompurify/dist/purify.min.js.map" "$work/dompurify-browser/dist/"
+rm -rf "$work/vendor/dompurify"
+mv "$work/dompurify-browser" "$work/vendor/dompurify"
 pack 'emoji-mart@5.6.0' 'emoji-mart'
 pack 'fabric@5.3.0-browser' 'fabric'
 pack 'flatpickr@4.6.13' 'flatpickr'

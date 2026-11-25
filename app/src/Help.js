@@ -6,6 +6,7 @@ const { version } = require('../../package.json');
 const strings = require('./templates/HelpStrings.json');
 const topics = require('./templates/HelpTopics.json');
 const { requestLanguage } = require('./Locale');
+const loginInstructions = require('./LoginInstructions');
 const crypto = require('node:crypto');
 const scriptHash = crypto
     .createHash('sha256')
@@ -161,6 +162,7 @@ function renderHelp(input = {}, requested) {
         ...sections.map((section) => [section.id, section.title]),
     ];
     const html = {
+        LOGIN_INSTRUCTIONS: loginInstructions(data.LOGIN_INSTRUCTIONS),
         HELP_NAV: nav.map(([id, title]) => `<li><a href="#${id}">${escape(title)}</a></li>`).join(''),
         HELP_TOPICS: sections
             .map(
