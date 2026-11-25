@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{{TITLE}} - {{SITE_NAME}}</title>
+        <title>{{TITLE}} - {{SITE_NAME_TEXT}}</title>
         <meta name="description" content="{{INTRO}}" />
         <meta name="robots" content="noindex, nofollow" />
         <link rel="stylesheet" href="/css/landing.css" />
@@ -32,7 +32,7 @@
             <main class="help-main" id="help-content" tabindex="-1">
                 <p class="help-kicker">{{PROTOTYPE}}</p>
                 <h1>{{TITLE}}</h1>
-                <p class="help-site-description">{{SITE_DESCRIPTION}}</p>
+                <div class="help-site-description">{{SITE_DESCRIPTION}}</div>
                 <p>{{INTRO}}</p>
                 <p>{{LANGUAGE_NOTE}}</p>
                 <p class="help-notice">{{EXAMPLES}}</p>
@@ -104,9 +104,9 @@
                                             <i class="fa-solid fa-video"></i>
                                         </div>
                                         <h2 id="loginNewRoomTitle" class="join-room-title">{{CHOOSE_HEADING}}</h2>
-                                        <p id="loginNewRoomDescription" class="login-description">
+                                        <div id="loginNewRoomDescription" class="login-description">
                                             {{CHOOSE_INSTRUCTIONS}}
-                                        </p>
+                                        </div>
                                         <div class="help-logout help-target">
                                             <span class="help-callout">3</span
                                             ><span id="logoutButton" class="logout-icon-btn"

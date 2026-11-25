@@ -11855,11 +11855,11 @@
     },
     {
       "path": "vendor/dompurify/dist/purify.min.js",
-      "sha256": "8053ee2a6a09f9d50f7fcd6fb7f07072f52c7f3fa9aa12147cab4feaf65ee970"
+      "sha256": "f69a46022ab1f53e969c8ebbca98172c8995785a9b3be72ea4a12d25b1a1bf67"
     },
     {
       "path": "vendor/dompurify/dist/purify.min.js.map",
-      "sha256": "e565dcc29492aa486364f05fbae2afb797a37918b4a36a079c1e0933499cc92a"
+      "sha256": "37fb3017b54d201a28b88374e3b06eec286369051d2ae180819b99454299d32f"
     },
     {
       "path": "vendor/emoji-mart/LICENSE",

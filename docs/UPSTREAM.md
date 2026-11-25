@@ -975,3 +975,33 @@ and all 30 catalogue key sets. No external assets or dependency changes.
 The worker/tasks-vision rewrite, auto framing and full-range face tracking
 (50e7ae15) remain deferred under W02. Quiz, Gravatar and breakout additions
 remain excluded. Calendar/SOGo/Kojo and Meeting Manager integration stay separate.
+
+## 2026-11-25 — Shared site text and selective upstream maintenance
+
+Kaigi 0.8.12 uses one shared SiteText policy for the 17 site-translations.json
+settings: block text, inline headings/buttons and plain metadata. Apply the same
+sanitizer to server HTML, browser language changes, help and security pages.
+Keep icons/loaders outside text slots and derive plain accessible names, logo
+alternative text, browser titles and metadata without losing explicit override
+precedence. Resolve trusted template markers before inserting operator wording.
+Retain independent HELP_LOGIN_INSTRUCTIONS and fixed account/meeting identities.
+
+Selectively update DOMPurify 3.4.18 to 3.5.0 (upstream 863e459e), including the
+identical local browser bundle, license, map, lock and vendor hashes. Do not
+refresh unrelated dependencies. Verify string, DOM-fragment and existing hook
+behaviour under the new sanitizer.
+
+Adapt de5940e4's shared-media sender identity from server-owned peers. Keep the
+recipient separate, remove claimed UUIDs and reject unimplemented sync actions.
+Do not import synchronized playback or replace Kaigi's MP3/autoplay handling.
+Adapt 363cbe25 pin switching with cleanup that preserves tile classes, dimensions,
+hidden screen-share sources and participant layout behaviour. Adapt 99b8da31's
+mouse-locked emoji picker with selection, hover/outside and keyboard handling.
+Adapt 0042b2e6's visible-by-default toolbar, preserving saved false preferences,
+and fac57f47's Share media shortcut to Kaigi's existing same-origin interface.
+
+Defer 12-hour timestamps, image/GIF-specific chat actions (4166c057), reaction
+chevron (902a8588), playback synchronization and auto-framing (59c32fa0/W02).
+Exclude KLIPY room GIFs (d9c86400), absent chat translation changes (1ddfbac7),
+cloud dependency refreshes, presenter controls and external browser requests.
+Calendar/SOGo/Kojo and Meeting Manager integration remain future work.

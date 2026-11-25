@@ -7,6 +7,8 @@
         <link rel="stylesheet" href="../css/landing.css" />
         <link rel="stylesheet" href="/css/public-page.css" />
         <link rel="stylesheet" href="/site-assets/site.css" />
+        <script defer src="/vendor/dompurify/dist/purify.min.js"></script>
+        <script defer src="/js/SiteText.js"></script>
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
         <script defer src="/js/Help.js"></script>
@@ -15,7 +17,7 @@
         <main class="about-local">
             <a id="siteLogoLink" href="/"><img id="siteLogo" class="about-local-logo" data-brand-logo alt="Site logo" /></a>
             <h1 id="siteName">Video Conferencing</h1>
-            <p id="siteDescription"></p>
+            <div id="siteDescription"></div>
             <dl id="siteDetails">
                 <div id="siteUrlRow" hidden><dt data-about-key="site" data-i18n-skip>Site</dt><dd><a id="siteUrl"></a></dd></div>
                 <div id="siteContactRow" hidden><dt data-about-key="contact" data-i18n-skip>Contact</dt><dd><a id="siteContact"></a></dd></div>

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { siteMetadata } = require('./SiteMetadata');
 const { renderAbout } = require('./AboutContent');
-const loginInstructions = require('./LoginInstructions');
+const siteText = require('./SiteText');
 
 const chokidar = require('chokidar');
 
@@ -36,9 +36,9 @@ class HtmlInjector {
         const values = config?.brandingByLanguage?.[language] || config?.brandingByLanguage?.en || {};
         return {
             ...metadata, ...localized,
-            APP_NAME: values.SITE_NAME ?? config?.app?.name ?? 'Kaigi',
+            APP_NAME: siteText.plain(values.SITE_NAME ?? config?.app?.name ?? 'Kaigi'),
             OG_TYPE: config?.og?.type || 'app-webrtc',
-            OG_SITE_NAME: values.SITE_NAME ?? config?.og?.siteName ?? 'Kaigi',
+            OG_SITE_NAME: siteText.plain(values.SITE_NAME ?? config?.og?.siteName ?? 'Kaigi'),
             OG_IMAGE: config?.og?.image || '/images/logo.svg',
             OG_URL: config?.og?.url || '/',
             // Add more data here as needed with fallbacks
@@ -108,24 +108,30 @@ class HtmlInjector {
             const values = this.config?.htmlInjection === false ? require('./Branding').brandingValues({}, {}, language) :
                 this.config?.brandingByLanguage?.[language] || this.config?.brandingByLanguage?.en;
             if (values) {
-                const fields = { appDescription: 'SITE_DESCRIPTION', newRoomTitle: 'NEW_ROOM_TITLE', loginNewRoomTitle: 'NEW_ROOM_TITLE',
-                    newRoomDescription: 'NEW_ROOM_DESCRIPTION', loginNewRoomDescription: 'NEW_ROOM_DESCRIPTION',
-                    loginHeading: 'LOGIN_HEADING', loginDescription: 'LOGIN_INSTRUCTIONS', loginBtnText: 'LOGIN_BUTTON_LABEL' };
+                const fields = siteText.fields;
                 for (const [id, key] of Object.entries(fields)) {
-                    const pattern = new RegExp(`(<(p|div|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2\\s*>)`);
+                    const pattern = new RegExp(`(<(p|div|dd|h[1-6]|span)[^>]*\\bid=["']${id}["'][^>]*>)([\\s\\S]*?)(</\\2\\s*>)`);
                     html = html.replace(pattern, (_, open, tag, content, close) => {
-                        const icon = id === 'loginBtnText' ? content.match(/<i\b[^>]*>[\s\S]*?<\/i>/)?.[0] || '' : '';
                         const value = key === 'SITE_DESCRIPTION' ? values.APP_DESCRIPTION ?? values[key] : values[key];
-                        return open.replace(/>$/, ' data-i18n-skip>') + icon +
-                            (key === 'LOGIN_INSTRUCTIONS' ? loginInstructions(value) : escape(value)) + close;
+                        return open.replace(/>$/, ' data-i18n-skip>').replace(/\s+hidden\b/, value ? '' : ' hidden') + siteText.html(value, key) + close;
                     });
                 }
             }
             if (values && values.APP_TITLE === undefined) {
                 html = html.replace(/(<h1\b[^>]*\bid=["']appTitle["'][^>]*>)[\s\S]*?<\/h1>/,
-                    (_, open) => open.replace(/>$/, ' data-i18n-skip>') + escape(values.SITE_NAME ?? data.APP_NAME) + '<br />' +
-                        escape(values.APP_TAGLINE) + '</h1>');
+                    (_, open) => open.replace(/>$/, ' data-i18n-skip>') + siteText.html(values.SITE_NAME ?? data.APP_NAME, 'SITE_NAME') + '<br />' +
+                        siteText.html(values.APP_TAGLINE, 'SITE_NAME') + '</h1>');
             }
+            const buttonKeys = { loginButton: 'LOGIN_BUTTON_LABEL', joinRoomButton: 'JOIN_BUTTON_LABEL',
+                joinSelectRoomButton: 'JOIN_BUTTON_LABEL', customizeRoomButton: 'CUSTOMIZE_BUTTON_LABEL' };
+            for (const [id, key] of Object.entries(buttonKeys)) if (values?.[key] !== undefined) {
+                const pattern = new RegExp(`<button\\b[^>]*\\bid=["']${id}["'][^>]*>`, 'g');
+                html = html.replace(pattern, open => open.replace(/\s+aria-label=["'][^"']*["']/g, '')
+                    .replace(/>$/, ` aria-label="${escape(siteText.plain(values[key]))}">`));
+            }
+            html = html.replace(/<img\b[^>]*\bdata-brand-logo\b[^>]*>/g, open => open
+                .replace(/\s+alt=["'][^"']*["']/g, '')
+                .replace(/\s*\/?>(?=$)/, ` alt="${escape(siteText.plain(values?.SITE_NAME ?? data.APP_NAME))}">`));
             // Only rewrite metadata inside the trusted template's head. Cached
             // templates remain unchanged; no request fields enter public previews.
             html = html.replace(/<head>([\s\S]*?)<\/head>/i, (_, head) => {

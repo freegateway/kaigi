@@ -120,7 +120,9 @@ const sinkId = 'sinkId' in HTMLMediaElement.prototype;
 
 const lS = new LocalStorage();
 
-const localStorageSettings = lS.getLocalStorageSettings() || lS.SFU_SETTINGS;
+const storedSettings = lS.getLocalStorageSettings();
+const localStorageSettings = storedSettings || lS.SFU_SETTINGS;
+if (storedSettings?.keep_buttons_visible === undefined) localStorageSettings.keep_buttons_visible = true;
 
 const locallyHiddenPeerIds = new Set();
 
@@ -1942,7 +1944,7 @@ async function whoAreYou() {
         allowOutsideClick: false,
         allowEscapeKey: false,
         background: swalBackground,
-        title: BRAND.app?.name,
+        title: window.KaigiSiteText ? window.KaigiSiteText.html(BRAND.app?.name, 'SITE_NAME', window.DOMPurify) : 'Kaigi',
         input: 'text',
         inputPlaceholder: 'Enter your email or name',
         inputAttributes: { maxlength: 254, id: 'usernameInput' },
@@ -2502,6 +2504,7 @@ function roomIsReady() {
     BUTTONS.main.editorButton && show(editorButton);
     BUTTONS.main.raiseHandButton && show(raiseHandButton);
     BUTTONS.main.emojiRoomButton && show(emojiRoomButton);
+    show(getId('shareMediaExtraButton'));
     show(fileShareExtraButton);
     !BUTTONS.chat.chatSaveButton && hide(chatSaveButton);
     BUTTONS.chat.chatEmojiButton && show(chatEmojiButton);
@@ -3441,7 +3444,11 @@ function handleButtons() {
         rc.sendMessage();
     };
     chatEmojiButton.onclick = (event) => {
-        if (!isMobileDevice && event.detail > 0) return;
+        if (!isMobileDevice && event.detail > 0) {
+            if (rc.isChatEmojiLocked) rc.setChatEmojiOpen(false);
+            else { rc.setChatEmojiOpen(true); rc.setChatEmojiLocked(true); }
+            return;
+        }
         rc.toggleChatEmoji();
     };
     chatMarkdownButton.onclick = () => {
@@ -3602,6 +3609,7 @@ function handleButtons() {
     fileShareButton.onclick = () => {
         rc.selectFileToShare(socket.id, true);
     };
+    getId('shareMediaExtraButton').onclick = () => rc.shareVideo('all');
     fileShareExtraButton.onclick = () => {
         fileShareButton.click();
     };
@@ -4990,7 +4998,7 @@ function handleChatEmojiPicker() {
 
     function addEmojiToMsg(data) {
         chatMessage.value += data.native;
-        rc.setChatEmojiOpen(false);
+        if (!rc.isChatEmojiLocked) rc.setChatEmojiOpen(false);
     }
 
     const chatEmojiButton = getId('chatEmojiButton');
@@ -5005,7 +5013,7 @@ function handleChatEmojiPicker() {
         };
         const scheduleClose = () => {
             cancelClose();
-            closeTimer = setTimeout(() => rc.setChatEmojiOpen(false), 300);
+            closeTimer = setTimeout(() => { if (!rc.isChatEmojiLocked) rc.setChatEmojiOpen(false); }, 300);
         };
 
         chatEmojiButton.addEventListener('mouseenter', openPicker);

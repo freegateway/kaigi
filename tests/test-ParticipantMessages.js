@@ -68,6 +68,13 @@ describe('participant message boundaries over real Socket.IO frames', function (
                 checkXSS: (data) => { if (socket.handshake.auth.failSanitizer) throw Error('private payload'); return data; },
                 isValidFileName: (name) => typeof name === 'string' && !name.includes('/'),
             });
+            room.updateShareMedia = data => { room.lastShare = data; };
+            vm.runInNewContext(section("        socket.on('shareVideoAction',", "        socket.on('whiteboardPanelState'"), {
+                socket, roomExists: () => true, getRoom: () => room, getPeer: () => room.getPeer(socket.id),
+                Validator: require('../app/src/Validator'), checkXSS: value => value,
+                securityEvent, isValidHttpURL: () => true, isPeerPresenter: () => false,
+                log: { debug() {} },
+            });
             socket.on('getMeetingRecordingPolicy', (_, ack) => ack(true));
             socket.on('disconnect', () => room.peers.delete(socket.id));
         });
@@ -82,6 +89,20 @@ describe('participant message boundaries over real Socket.IO frames', function (
         assert.equal(receiver.events.filter(([name]) => name === 'fileInfo').length, 0);
         assert(logs.some(([event, , reason]) => event === 'socket_event_rejected' && reason === 'sanitization_failed'));
         assert(!JSON.stringify(logs.map(([event, , reason]) => [event, reason])).includes('private payload'));
+    });
+
+    it('binds shared-media sender identity to server state and does not enable playback sync', async () => {
+        const sender = await connect('sender'), receiver = await connect('receiver');
+        sender.send('shareVideoAction', { action: 'open', peer_id: 'all', peer_name: 'Forged', peer_uuid: 'Forged', video_url: '/media.mp4' });
+        await sender.barrier(); await receiver.barrier();
+        const delivered = receiver.events.filter(([event]) => event === 'shareVideoAction');
+        assert.equal(delivered.length, 1);
+        assert.equal(delivered[0][1].peer_name, 'sender');
+        assert.equal(delivered[0][1].from_peer_id, sockets.get('sender').id);
+        assert.equal(delivered[0][1].peer_uuid, undefined);
+        sender.send('shareVideoAction', { action: 'sync', peer_id: 'all', paused: true, time: 99 });
+        await sender.barrier(); await receiver.barrier();
+        assert.equal(receiver.events.filter(([event]) => event === 'shareVideoAction').length, 1);
     });
 
     afterEach(async () => {

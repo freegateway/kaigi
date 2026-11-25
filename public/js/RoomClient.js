@@ -373,6 +373,7 @@ class RoomClient {
         this.isZoomCenterMode = false;
         this.isChatOpen = false;
         this.isChatEmojiOpen = false;
+        this.isChatEmojiLocked = false;
         this.isPollOpen = false;
         this.isPollPinned = false;
         this.isPollMaximized = false;
@@ -6748,12 +6749,27 @@ class RoomClient {
             btnPn.addEventListener('click', () => {
                 if (this.isMobileDevice) return;
                 this.sound('click');
+                if (this.isVideoPinned && this.pinnedVideoPlayerId !== elemId) {
+                    this.restorePinnedVideoToGrid?.();
+                    this.isVideoPinned = false;
+                }
                 this.isVideoPinned = !this.isVideoPinned;
                 if (this.isVideoPinned) {
                     if (!videoPlayer.classList.contains('videoCircle')) {
                         videoPlayer.style.objectFit = 'contain';
                     }
-                    cam.className = 'pinned-video-container';
+                    const width = cam.style.width, height = cam.style.height;
+                    this.restorePinnedVideoToGrid = () => {
+                        if (!cam.isConnected) return;
+                        if (!isScreen && !isBroadcastingEnabled) videoPlayer.style.objectFit = 'var(--videoObjFit)';
+                        cam.classList.remove('pinned-video-container');
+                        cam.classList.add('Camera');
+                        cam.style.width = width; cam.style.height = height;
+                        this.videoMediaContainer.appendChild(cam);
+                        setColor(btnPn, 'white');
+                    };
+                    cam.classList.remove('Camera');
+                    cam.classList.add('pinned-video-container');
                     cam.style.width = '100%';
                     cam.style.height = '100%';
                     this.toggleVideoPin(pinVideoPosition.value);
@@ -6762,15 +6778,7 @@ class RoomClient {
                     this.pinnedVideoPlayerId = elemId;
                     setColor(btnPn, 'lime');
                 } else {
-                    if (this.pinnedVideoPlayerId != videoPlayer.id) {
-                        this.isVideoPinned = true;
-                        if (this.isScreenAllowed) return;
-                        return this.msgPopup('toast', 'Another video seems pinned, unpin it before to pin this one');
-                    }
-                    if (!isScreen && !isBroadcastingEnabled) videoPlayer.style.objectFit = 'var(--videoObjFit)';
-                    this.videoPinMediaContainer.removeChild(cam);
-                    cam.className = 'Camera';
-                    this.videoMediaContainer.appendChild(cam);
+                    this.restorePinnedVideoToGrid?.();
                     this.removeVideoPinMediaContainer();
                     setColor(btnPn, 'white');
                     if (!this.isApplyingParticipantViewMode && typeof setParticipantViewMode === 'function') {
@@ -7162,6 +7170,7 @@ class RoomClient {
         this.videoPinMediaContainer.style.display = 'none';
         this.videoMediaContainerUnpin();
         this.pinnedVideoPlayerId = null;
+        this.restorePinnedVideoToGrid = null;
         this.isVideoPinned = false;
         this.refreshPinLabels();
         if (this.isChatPinned) {
@@ -7757,6 +7766,12 @@ class RoomClient {
         const chatEmojiButton = this.getId('chatEmojiButton');
         chatEmojiButton.style.color = isOpen ? '#FFFF00' : '#FFFFFF';
         chatEmojiButton.setAttribute('aria-expanded', String(isOpen));
+        if (!isOpen) this.setChatEmojiLocked(false);
+    }
+
+    setChatEmojiLocked(locked) {
+        this.isChatEmojiLocked = locked;
+        this.getId('chatEmojiButton')?.classList.toggle('is-active', locked);
     }
 
     addEmojiToMsg(data) {
@@ -14470,12 +14485,6 @@ class RoomClient {
 
         if (!btnPn) {
             return this.userLog('info', 'No video available to pin for this participant', 'top-end');
-        }
-
-        // Unpin the currently pinned video, otherwise pinning another one is rejected
-        if (this.isVideoPinned && this.pinnedVideoPlayerId !== videoEl.id) {
-            const pinnedBtn = this.getId(`${this.pinnedVideoPlayerId}__pin`);
-            if (pinnedBtn) pinnedBtn.click();
         }
 
         btnPn.click();

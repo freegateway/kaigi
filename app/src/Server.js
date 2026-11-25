@@ -3900,21 +3900,24 @@ function startServer() {
                 return;
             }
 
-            if (!Validator.isValidData(data)) return;
+            if (!Validator.isValidData(data) || !['open', 'close'].includes(data.action)) return;
 
             if (data.action == 'open' && !isValidHttpURL(data.video_url)) {
                 log.debug('Video src not valid', data);
                 return;
             }
 
-            log.debug('Share video: ', data);
-
             const room = getRoom(socket);
+            const peer = getPeer(socket);
+            if (!room || !peer) return;
+            data.peer_name = peer.peer_name;
+            delete data.peer_uuid;
+            data.from_peer_id = socket.id;
 
             // Enforce the moderator "everyone can't share media" rule server-side.
             // The presenter is exempt because they own/toggle the rule.
             if (room._moderator && room._moderator.media_cant_sharing) {
-                const isPresenter = isPeerPresenter(socket.room_id, socket.id, data.peer_name, data.peer_uuid);
+                const isPresenter = isPeerPresenter(socket.room_id, socket.id, peer.peer_name, peer.peer_uuid);
                 if (!isPresenter) {
                     log.debug('shareVideoAction blocked by moderator rule (media_cant_sharing)', {
                         peer_name: data.peer_name,

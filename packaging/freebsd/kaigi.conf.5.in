@@ -80,6 +80,19 @@ No new keys or required entries are needed. Missing translations fall back to
 English. The initial HTML metadata follows the request language, and browser
 text follows the selected UI language. Administrator wording is preserved.
 Configure organization-specific text in site-translations.json.
+.Pp
+All supported text settings accept sanitized HTML with no attributes, links,
+styles, scripts or embedded resources.
+SITE_DESCRIPTION, JOIN_DESCRIPTION, NEW_ROOM_DESCRIPTION, LOGIN_INSTRUCTIONS
+and HELP_LOGIN_INSTRUCTIONS support p, br, strong, em, ul, ol and li.
+SITE_NAME, SITE_COPYRIGHT, NEW_ROOM_TITLE, LOGIN_HEADING, JOIN_BUTTON_LABEL,
+CUSTOMIZE_BUTTON_LABEL, JOIN_LAST_LABEL and LOGIN_BUTTON_LABEL support inline
+strong, em and br formatting. Block wrappers are flattened in inline settings.
+PAGE_TITLE, META_DESCRIPTION, OG_TITLE and OG_DESCRIPTION produce plain text.
+Formatting is also reduced to readable plain text for accessible labels,
+logo alternative text and metadata fallbacks. Explicit metadata settings retain
+precedence. Plain and empty values remain supported.
+
 HELP_LOGIN_INSTRUCTIONS customizes the help guide's username-entry instruction,
 for example when login names are email addresses. It does not change the live
 login panel. Missing entries use the guide's localized default; all help-specific
@@ -219,7 +232,7 @@ line breaks, emphasis and lists.
 All attributes and other tags are removed; scripts and embedded resources
 are not allowed.
 The same rules apply to language-specific values in site-translations.json.
-Plain text remains supported. Other branding and help settings remain unchanged.
+Plain text remains supported. See the site-translations.json formatting rules above.
 .It Ev LOGIN_BUTTON_LABEL
 Login button label.
 .It Ev SHOW_SHARE_ROOM_POPUP

@@ -95,6 +95,8 @@
         <!-- UAParser -->
 
         <script defer src="/vendor/ua-parser-js/dist/ua-parser.min.js"></script>
+        <script defer src="/vendor/dompurify/dist/purify.min.js"></script>
+        <script defer src="/js/SiteText.js"></script>
 
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
@@ -451,11 +453,12 @@
                         <!-- SHARING -->
                         <div
                             class="device-menu-header extra-menu-group"
-                            data-buttons="shareButton,fileShareExtraButton"
+                            data-buttons="shareButton,shareMediaExtraButton,fileShareExtraButton"
                         >
                             SHARING
                         </div>
                         <button id="shareButton" class="hidden"><i class="fas fa-share-alt"></i> Share Room</button>
+                        <button id="shareMediaExtraButton" class="hidden"><i class="fas fa-photo-film" aria-hidden="true"></i> Share media</button>
                         <button id="fileShareExtraButton" class="hidden">
                             <i class="fas fa-folder-open"></i> File sharing
                         </button>
