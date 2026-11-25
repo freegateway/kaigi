@@ -1,3 +1,13 @@
+// Restored documents do not rerun initial load handlers. Reveal cached content
+// immediately and let the login page reconcile its existing controls once.
+window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    document.documentElement.classList.add('anime-ready');
+    document.body.classList.add('is-loaded');
+    document.querySelectorAll('[class*=reveal-]').forEach(element => element.classList.add('is-revealed'));
+    window.restoreLoginPresentation?.();
+});
+
 !(function () {
     window;
     const e = document.documentElement;
@@ -328,59 +338,6 @@
         }
 
         e && (window.addEventListener('load', t), e.addEventListener('change', t));
-    })(),
-    (function () {
-        'use strict';
-        const e = document.querySelectorAll('[class*=reveal-]');
-        let t = window.innerHeight;
-
-        function n(e, t) {
-            let n = 0;
-            return function () {
-                let i = new Date().getTime();
-                if (!(i - n < e)) return ((n = i), t.apply(void 0, arguments));
-            };
-        }
-
-        function i() {
-            let n;
-            for (let i = 0; i < e.length; i++) {
-                let s = e[i],
-                    a = s.getAttribute('data-reveal-delay'),
-                    l = s.getAttribute('data-reveal-offset') ? s.getAttribute('data-reveal-offset') : '200',
-                    c = s.getAttribute('data-reveal-container')
-                        ? s.closest(s.getAttribute('data-reveal-container'))
-                        : s;
-                ((n = l),
-                    c.getBoundingClientRect().top <= t - n &&
-                        !s.classList.contains('is-revealed') &&
-                        (a && 0 !== a
-                            ? setTimeout(function () {
-                                  s.classList.add('is-revealed');
-                              }, a)
-                            : s.classList.add('is-revealed')));
-            }
-            !(function () {
-                if (e.length > document.querySelectorAll('[class*=reveal-].is-revealed').length) return;
-                (window.removeEventListener('load', i),
-                    window.removeEventListener('scroll', s),
-                    window.removeEventListener('resize', a));
-            })();
-        }
-
-        function s() {
-            n(30, i());
-        }
-
-        function a() {
-            ((t = window.innerHeight), n(30, i()));
-        }
-
-        e.length > 0 &&
-            document.body.classList.contains('has-animations') &&
-            (window.addEventListener('load', i),
-            window.addEventListener('scroll', s),
-            window.addEventListener('resize', a));
     })(),
     (function () {
         'use strict';
