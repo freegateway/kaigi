@@ -15,7 +15,7 @@
         "NEW_ROOM_TITLE": "Start a new meeting",
         "NEW_ROOM_DESCRIPTION": "Select an authorized meeting to continue.",
         "LOGIN_HEADING": "Log in",
-        "LOGIN_INSTRUCTIONS": "Enter your username and password",
+        "LOGIN_INSTRUCTIONS": "<p><strong>Employees:</strong> Use your organizational email address and password.</p><p><strong>Customers:</strong> Use the login name and password supplied to you.</p>",
         "LOGIN_BUTTON_LABEL": "Log in"
     },
     "en-CA": {
@@ -34,7 +34,7 @@
         "NEW_ROOM_TITLE": "Start a new meeting",
         "NEW_ROOM_DESCRIPTION": "Select an authorized meeting to continue.",
         "LOGIN_HEADING": "Log in",
-        "LOGIN_INSTRUCTIONS": "Enter your username and password",
+        "LOGIN_INSTRUCTIONS": "<p><strong>Employees:</strong> Use your organizational email address and password.</p><p><strong>Customers:</strong> Use the login name and password supplied to you.</p>",
         "LOGIN_BUTTON_LABEL": "Log in"
     },
     "fr-CA": {
@@ -53,7 +53,7 @@
         "NEW_ROOM_TITLE": "Commencer une réunion",
         "NEW_ROOM_DESCRIPTION": "Sélectionnez une réunion autorisée pour continuer.",
         "LOGIN_HEADING": "Se connecter",
-        "LOGIN_INSTRUCTIONS": "Entrez votre nom d’utilisateur et votre mot de passe",
+        "LOGIN_INSTRUCTIONS": "<p><strong>Employés :</strong> Utilisez votre adresse courriel professionnelle et votre mot de passe.</p><p><strong>Clients :</strong> Utilisez le nom de connexion et le mot de passe qui vous ont été fournis.</p>",
         "LOGIN_BUTTON_LABEL": "Connexion"
     },
     "ja": {
@@ -72,7 +72,7 @@
         "NEW_ROOM_TITLE": "会議を開始",
         "NEW_ROOM_DESCRIPTION": "参加が許可されている会議を選択してください。",
         "LOGIN_HEADING": "ログイン",
-        "LOGIN_INSTRUCTIONS": "ユーザー名とパスワードを入力してください",
+        "LOGIN_INSTRUCTIONS": "<p><strong>従業員の方：</strong>組織のメールアドレスとパスワードを使用してください。</p><p><strong>お客様：</strong>案内されたログイン名とパスワードを使用してください。</p>",
         "LOGIN_BUTTON_LABEL": "ログイン"
     }
 }

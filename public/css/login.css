@@ -132,6 +132,20 @@
 }
 
 /* Inline error message */
+.login-description p,
+.login-description ul,
+.login-description ol {
+    margin: 0.65em 0;
+}
+
+.login-description > :first-child { margin-top: 0; }
+.login-description > :last-child { margin-bottom: 0; }
+.login-description ul,
+.login-description ol {
+    padding-inline-start: 1.5em;
+    text-align: start;
+}
+
 .login-error {
     display: none;
     align-items: center;

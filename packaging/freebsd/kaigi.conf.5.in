@@ -214,6 +214,12 @@ Description below the meeting-selection title after login.
 Login-page heading.
 .It Ev LOGIN_INSTRUCTIONS
 Instructions displayed on the login panel.
+Supports the HTML tags p, br, strong, em, ul, ol and li for paragraphs,
+line breaks, emphasis and lists.
+All attributes and other tags are removed; scripts and embedded resources
+are not allowed.
+The same rules apply to language-specific values in site-translations.json.
+Plain text remains supported. Other branding and help settings remain unchanged.
 .It Ev LOGIN_BUTTON_LABEL
 Login button label.
 .It Ev SHOW_SHARE_ROOM_POPUP

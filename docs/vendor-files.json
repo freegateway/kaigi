@@ -11850,6 +11850,18 @@
       "sha256": "c54130dcd19ae2c7f8c4b4a69cb2038a65d363899cddf7ebaae0102bfc8fe086"
     },
     {
+      "path": "vendor/dompurify/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "vendor/dompurify/dist/purify.min.js",
+      "sha256": "8053ee2a6a09f9d50f7fcd6fb7f07072f52c7f3fa9aa12147cab4feaf65ee970"
+    },
+    {
+      "path": "vendor/dompurify/dist/purify.min.js.map",
+      "sha256": "e565dcc29492aa486364f05fbae2afb797a37918b4a36a079c1e0933499cc92a"
+    },
+    {
       "path": "vendor/emoji-mart/LICENSE",
       "sha256": "9acd87e46fa3c7fb66a4b4e472711fc5ed80e18f537a3ee2937f93f6e0dd968a"
     },
