@@ -44,20 +44,46 @@ function setLoginLoading(loading) {
     }
 }
 
-function showJoinRoomForm() {
-    loginForm.style.opacity = '0';
-    loginForm.style.transform = 'translateY(-10px)';
-    setTimeout(() => {
-        loginForm.style.display = 'none';
-        joinRoomForm.classList.add('show');
-        joinRoomForm.style.opacity = '0';
-        joinRoomForm.style.transform = 'translateY(10px)';
-        requestAnimationFrame(() => {
-            joinRoomForm.style.opacity = '1';
-            joinRoomForm.style.transform = 'translateY(0)';
-        });
-    }, 250);
+let renderedRoomSelectorSession = null;
+let loginAttempt = 0;
+let loginRequestController = null;
+
+function setLoginView(authenticated) {
+    loginForm.style.display = authenticated ? 'none' : '';
+    loginForm.style.opacity = '1';
+    loginForm.style.transform = '';
+    joinRoomForm.classList.toggle('show', authenticated);
+    joinRoomForm.style.opacity = '1';
+    joinRoomForm.style.transform = '';
 }
+
+function roomSelectorSessionKey() {
+    return JSON.stringify(['peer_token', 'mirotalk_allowed_rooms', 'mirotalk_displayname',
+        'mirotalk_meeting_translations', 'mirotalk_allow_any_meeting'].map(key => window.sessionStorage.getItem(key)));
+}
+
+function showJoinRoomForm() {
+    setLoginView(true);
+    renderedRoomSelectorSession = roomSelectorSessionKey();
+}
+
+function cancelPendingLogin() {
+    if (!loginRequestController) return;
+    loginAttempt++;
+    loginRequestController.abort();
+    loginRequestController = null;
+    setLoginLoading(false);
+}
+window.addEventListener('pagehide', cancelPendingLogin);
+
+// Called by Landing.js only for restored documents, without reinitializing UI.
+function restoreLoginPresentation() {
+    cancelPendingLogin();
+    setLoginLoading(false);
+    const wasMonitoring = authSessionMonitorStarted;
+    if (restoreAuthenticatedRoomSelector() && wasMonitoring) void touchAuthenticatedSession();
+}
+window.restoreLoginPresentation = restoreLoginPresentation;
 
 function clearAuthenticatedSession() {
     window.sessionStorage.removeItem('peer_token');
@@ -71,6 +97,8 @@ function clearAuthenticatedSession() {
     window.sessionStorage.removeItem('mirotalk_auth_session_max_age');
     window.sessionStorage.removeItem('mirotalk_auth_session_started_at');
     window.sessionStorage.removeItem('roomID');
+    renderedRoomSelectorSession = null;
+    setLoginView(false);
 }
 
 let authSessionMonitorStarted = false;
@@ -111,6 +139,7 @@ async function touchAuthenticatedSession() {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
+        if (window.sessionStorage.peer_token !== token) return false;
         if (!response.ok) {
             clearAuthenticatedSession();
             window.location.replace('/?session_expired=1');
@@ -233,21 +262,25 @@ function restoreAuthenticatedRoomSelector() {
         params.delete('select');
         const query = params.toString();
         window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
-        return;
+        return false;
     }
 
     const token = window.sessionStorage.peer_token;
     const serializedAllowedRooms = window.sessionStorage.mirotalk_allowed_rooms;
     const displayname = window.sessionStorage.mirotalk_displayname;
-    if (!token || !serializedAllowedRooms || !displayname) return;
+    if (!token || !serializedAllowedRooms || !displayname) { clearAuthenticatedSession(); return false; }
 
     try {
         const allowedRooms = JSON.parse(serializedAllowedRooms);
-        configureRoomSelector(allowedRooms, displayname);
+        if (!Array.isArray(allowedRooms) || !allowedRooms.length) { clearAuthenticatedSession(); return false; }
+        if (renderedRoomSelectorSession === roomSelectorSessionKey()) setLoginView(true);
+        else if (!configureRoomSelector(allowedRooms, displayname)) { clearAuthenticatedSession(); return false; }
         startAuthenticatedSessionMonitor();
+        return true;
     } catch (error) {
         console.warn('Unable to restore authenticated room selector', error);
         clearAuthenticatedSession();
+        return false;
     }
 }
 
@@ -327,6 +360,9 @@ function login() {
     const password = document.getElementById('password').value;
 
     if (username && password) {
+        if (loginRequestController) return;
+        const attempt = ++loginAttempt;
+        loginRequestController = new AbortController();
         setLoginLoading(true);
         hideLoginError();
 
@@ -334,14 +370,19 @@ function login() {
             .post('/auth/session/login', {
                 username: username,
                 password: password,
-            })
+            }, { signal: loginRequestController.signal })
             .then(function (response) {
+                if (attempt !== loginAttempt) return;
+                loginRequestController = null;
+                setLoginLoading(false);
                 const { allowedRooms, displayname } = storeAuthenticatedSession(response, username);
 
                 configureRoomSelector(allowedRooms, displayname);
                 return;
             })
             .catch(function (error) {
+                if (attempt !== loginAttempt) return;
+                loginRequestController = null;
                 console.warn('Login request failed');
                 setLoginLoading(false);
                 if (error.response && error.response.status === 429) {
