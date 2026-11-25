@@ -34,7 +34,7 @@ const brand = {
 };
 
 describe('public help guide and inert illustrations', () => {
-    it('supports a literal localized HELP_LOGIN_INSTRUCTIONS override and default fallback', () => {
+    it('supports a sanitized localized HELP_LOGIN_INSTRUCTIONS override and default fallback', () => {
         const configured = {
             siteTranslations: {
                 en: { HELP_LOGIN_INSTRUCTIONS: 'Use your email [[LOGIN_LABEL]] <literal>.' },
@@ -44,7 +44,7 @@ describe('public help guide and inert illustrations', () => {
         const en = new JSDOM(help.renderHelp(configured, 'en-CA')).window.document;
         assert.equal(
             en.querySelector('.help-instructions li').textContent,
-            'Use your email [[LOGIN_LABEL]] <literal>.'
+            'Use your email [[LOGIN_LABEL]] .'
         );
         assert.equal(en.querySelector('.help-instructions img'), null);
         const ja = new JSDOM(help.renderHelp(configured, 'ja')).window.document;
@@ -74,7 +74,7 @@ describe('public help guide and inert illustrations', () => {
             assert(
                 document
                     .querySelectorAll('.help-instructions ol')[1]
-                    .textContent.includes(document.getElementById('joinSelectRoomButton').textContent.trim())
+                    .textContent.includes(document.getElementById('joinSelectRoomButton').textContent.replace(/\s+/g, ' ').trim())
             );
             assert.equal(document.querySelector('.help-instructions img'), null);
             dom.window.close();
@@ -312,7 +312,7 @@ describe('public help guide and inert illustrations', () => {
             login: { heading: '<script>secret</script>' },
         };
         const dom = new JSDOM(help.renderHelp(hostile));
-        assert.match(dom.window.document.querySelector('.help-identity').textContent, /<img/);
+        assert.equal(dom.window.document.querySelector('.help-identity').textContent, '');
         assert.equal(dom.window.document.querySelector('script:not([src="/js/Help.js"]), [onerror]'), null);
         for (const image of dom.window.document.images) assert.equal(image.getAttribute('src'), '/images/logo.svg');
         for (const logo of [

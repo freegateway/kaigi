@@ -8,7 +8,7 @@ const sanitize = require('../app/src/XSS');
 describe('sanitizer dependency maintenance', () => {
     it('locks only the intended sanitizer and DOM versions', () => {
         const lock = require('../package-lock.json');
-        assert.equal(lock.packages['node_modules/dompurify'].version, '3.4.18');
+        assert.equal(lock.packages['node_modules/dompurify'].version, '3.5.0');
         assert.equal(lock.packages['node_modules/jsdom'].version, '31.0.1');
         assert(!Object.keys(lock.packages).some(name => /node_modules\/(?:canvas|@napi-rs\/canvas)/.test(name)));
     });

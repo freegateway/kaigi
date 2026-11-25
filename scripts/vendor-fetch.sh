@@ -28,7 +28,7 @@ pack 'axios@1.20.0' 'axios'
 pack 'bootstrap@5.0.2' 'bootstrap'
 pack 'crypto-js@4.2.0' 'crypto-js'
 # Keep only the pinned browser sanitizer and its license/source map.
-pack 'dompurify@3.4.18' 'dompurify'
+pack 'dompurify@3.5.0' 'dompurify'
 mkdir -p "$work/dompurify-browser/dist"
 cp "$work/vendor/dompurify/LICENSE" "$work/dompurify-browser/"
 cp "$work/vendor/dompurify/dist/purify.min.js" "$work/vendor/dompurify/dist/purify.min.js.map" "$work/dompurify-browser/dist/"

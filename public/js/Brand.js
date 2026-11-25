@@ -243,6 +243,10 @@ function localizedSiteBrand(base, language) {
         // Administrator text is rendered as text below, including the landing heading.
         const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         brand.app.title = `<h1>${escape(Object.hasOwn(values, 'SITE_NAME') ? values.SITE_NAME : brand.app.name)}</h1>${escape((base.brandingSettings?.SITE_DESCRIPTION !== undefined || Object.hasOwn({ ...dictionaries.en, ...dictionaries[language.split('-')[0]], ...dictionaries[language] }, 'SITE_DESCRIPTION')) ? brand.site.description ?? '' : values.APP_TAGLINE ?? brand.site.description ?? '')}`;
+        brand.app.siteTitle = {
+            name: Object.hasOwn(values, 'SITE_NAME') ? values.SITE_NAME : brand.app.name,
+            tagline: values.APP_TAGLINE ?? brand.site.description ?? '',
+        };
     }
     return brand;
 }
@@ -273,8 +277,8 @@ window.applySiteTranslations = (language) => {
     customizeSite(); customizeMetaTags(); customizeApp(); customizeLogin();
     window.refreshMeetingLabels();
     const name = document.getElementById('siteName'), description = document.getElementById('siteDescription');
-    if (name) name.textContent = BRAND.site?.name || BRAND.app?.name || 'Video Conferencing';
-    if (description) description.textContent = BRAND.site?.description || '';
+    siteText(name, BRAND.site?.name ?? BRAND.app?.name ?? 'Video Conferencing', 'SITE_NAME');
+    siteText(description, BRAND.site?.description || '', 'SITE_DESCRIPTION');
     if (siteCopyright) siteCopyright.hidden = !BRAND.site?.copyright;
 };
 
@@ -315,26 +319,30 @@ function elementDisplay(element, display, mode = 'block') {
     element.style.display = display ? mode : 'none';
 }
 
+// The shared module owns formatting; missing assets fall back to literal text.
+function siteText(element, value, key) {
+    if (!element || value === undefined) return;
+    if (window.KaigiSiteText) window.KaigiSiteText.set(element, value, key, window.DOMPurify);
+    else element.textContent = value;
+}
+function sitePlain(value) {
+    return window.KaigiSiteText ? window.KaigiSiteText.plain(value, window.DOMPurify) : String(value ?? '');
+}
+
 // APP customize
 function customizeApp() {
     if (appTitle && BRAND.app?.title !== undefined) {
-        appTitle.innerHTML = BRAND.app?.title;
+        const parts = BRAND.app.siteTitle;
+        if (parts && window.KaigiSiteText) {
+            appTitle.innerHTML = window.KaigiSiteText.html(parts.name, 'SITE_NAME', window.DOMPurify) + '<br>' +
+                window.KaigiSiteText.html(parts.tagline, 'SITE_NAME', window.DOMPurify);
+        } else siteText(appTitle, BRAND.app.title, 'SITE_NAME');
     }
-    if (appDescription && BRAND.app?.description !== undefined) {
-        appDescription.textContent = BRAND.app.description;
-    }
-    if (joinDescription && BRAND.app?.joinDescription !== undefined) {
-        joinDescription.innerHTML = BRAND.app.joinDescription;
-    }
-    if (joinRoomBtn && BRAND.app?.joinButtonLabel !== undefined) {
-        joinRoomBtn.innerText = BRAND.app.joinButtonLabel;
-    }
-    if (customizeRoomBtn && BRAND.app?.customizeButtonLabel !== undefined) {
-        customizeRoomBtn.innerText = BRAND.app.customizeButtonLabel;
-    }
-    if (joinLastLabel && BRAND.app?.joinLastLabel !== undefined) {
-        joinLastLabel.innerText = BRAND.app.joinLastLabel;
-    }
+    siteText(appDescription, BRAND.app?.description, 'SITE_DESCRIPTION');
+    siteText(joinDescription, BRAND.app?.joinDescription, 'JOIN_DESCRIPTION');
+    siteText(document.getElementById('joinRoomLabel') || joinRoomBtn, BRAND.app?.joinButtonLabel, 'JOIN_BUTTON_LABEL');
+    siteText(document.getElementById('customizeRoomLabel') || customizeRoomBtn, BRAND.app?.customizeButtonLabel, 'CUSTOMIZE_BUTTON_LABEL');
+    siteText(joinLastLabel, BRAND.app?.joinLastLabel, 'JOIN_LAST_LABEL');
 }
 
 // WIDGET customize
@@ -359,7 +367,7 @@ function customizeWidget() {
 // SITE metadata
 function customizeSite() {
     if (title && BRAND.site?.title !== undefined) {
-        title.textContent = BRAND.site?.title;
+        title.textContent = sitePlain(BRAND.site?.title);
     }
     if (icon && BRAND.site?.icon) {
         icon.href = BRAND.site?.icon;
@@ -367,14 +375,13 @@ function customizeSite() {
     if (appleTouchIcon && BRAND.site?.appleTouchIcon) {
         appleTouchIcon.href = BRAND.site.appleTouchIcon;
     }
-    if (BRAND.site?.logo) {
-        document.querySelectorAll("[data-brand-logo]").forEach((image) => {
-            image.src = BRAND.site.logo;
-        });
-    }
-    if (headerLogo && BRAND.site?.logo) {
-        headerLogo.src = BRAND.site.logo;
-        headerLogo.alt = BRAND.site?.name || BRAND.app?.name || 'Site logo';
+    document.querySelectorAll('[data-brand-logo]').forEach(image => {
+        if (BRAND.site?.logo) image.src = BRAND.site.logo;
+        image.alt = sitePlain(BRAND.site?.name ?? BRAND.app?.name ?? 'Site logo');
+    });
+    if (headerLogo) {
+        if (BRAND.site?.logo) headerLogo.src = BRAND.site.logo;
+        headerLogo.alt = sitePlain(BRAND.site?.name ?? BRAND.app?.name ?? 'Site logo');
     }
     if (headerLogoLink && BRAND.site?.logoUrl) {
         headerLogoLink.href = BRAND.site.logoUrl;
@@ -384,31 +391,31 @@ function customizeSite() {
         privacyPolicyLink.hidden = false;
     }
     if (siteCopyright) {
-        siteCopyright.textContent = BRAND.site?.copyright || '';
+        siteText(siteCopyright, BRAND.site?.copyright || '', 'SITE_COPYRIGHT');
         siteCopyright.hidden = false;
     }
     if (newRoomTitle && BRAND.site?.newRoomTitle !== undefined) {
-        newRoomTitle.innerHTML = BRAND.site?.newRoomTitle;
+        siteText(newRoomTitle, BRAND.site?.newRoomTitle, 'NEW_ROOM_TITLE');
     }
     if (loginNewRoomTitle && BRAND.site?.newRoomTitle !== undefined) {
-        loginNewRoomTitle.innerHTML = BRAND.site.newRoomTitle;
+        siteText(loginNewRoomTitle, BRAND.site.newRoomTitle, 'NEW_ROOM_TITLE');
     }
     if (joinSelectRoomButton && BRAND.app?.joinButtonLabel !== undefined) {
-        joinSelectRoomButton.querySelector('#joinSelectRoomLabel').textContent = BRAND.app.joinButtonLabel;
+        siteText(joinSelectRoomButton.querySelector('#joinSelectRoomLabel'), BRAND.app.joinButtonLabel, 'JOIN_BUTTON_LABEL');
     }
     const loginNewRoomDescription = document.getElementById('loginNewRoomDescription');
     if (loginNewRoomDescription && BRAND.site?.newRoomDescription !== undefined) {
-        loginNewRoomDescription.textContent = BRAND.site.newRoomDescription;
+        siteText(loginNewRoomDescription, BRAND.site.newRoomDescription, 'NEW_ROOM_DESCRIPTION');
     }
     if (newRoomDescription && BRAND.site?.newRoomDescription !== undefined) {
-        newRoomDescription.textContent = BRAND.site.newRoomDescription;
+        siteText(newRoomDescription, BRAND.site.newRoomDescription, 'NEW_ROOM_DESCRIPTION');
     }
 }
 
 // SEO metadata
 function customizeMetaTags() {
     if (description && BRAND.meta?.description !== undefined) {
-        description.content = BRAND.meta.description;
+        description.content = sitePlain(BRAND.meta.description);
     }
     if (keywords && BRAND.meta?.keywords) {
         keywords.content = BRAND.meta.keywords;
@@ -421,7 +428,7 @@ function customizeMetaTags() {
         ['name', 'twitter:image', BRAND.og?.image],
     ]) {
         const element = document.querySelector(`meta[${attribute}="${key}"]`);
-        if (element && value !== undefined) element.content = value;
+        if (element && value !== undefined) element.content = ['og:image', 'og:url', 'twitter:image', 'og:type'].includes(key) ? value : sitePlain(value);
     }
 }
 
@@ -440,22 +447,9 @@ function customizeWhoAreYou() {
 }
 
 function customizeLogin() {
-    if (loginHeading && BRAND.login?.heading !== undefined) loginHeading.textContent = BRAND.login.heading;
-    if (loginDescription && BRAND.login?.description !== undefined) {
-        if (window.KaigiLoginInstructions) {
-            loginDescription.innerHTML = window.KaigiLoginInstructions(BRAND.login.description, window.DOMPurify);
-        } else {
-            loginDescription.textContent = BRAND.login.description;
-        }
-    }
-    if (BRAND.login?.buttonLabel !== undefined) {
-        const loginBtnText = document.getElementById('loginBtnText');
-        if (loginBtnText) {
-            loginBtnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>&nbsp; ' + BRAND.login.buttonLabel;
-        } else if (loginButton) {
-            loginButton.textContent = BRAND.login.buttonLabel;
-        }
-    }
+    siteText(loginHeading, BRAND.login?.heading, 'LOGIN_HEADING');
+    siteText(loginDescription, BRAND.login?.description, 'LOGIN_INSTRUCTIONS');
+    siteText(document.getElementById('loginButtonLabel'), BRAND.login?.buttonLabel, 'LOGIN_BUTTON_LABEL');
 }
 
 initialize();

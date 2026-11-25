@@ -6,7 +6,7 @@ const { version } = require('../../package.json');
 const strings = require('./templates/HelpStrings.json');
 const topics = require('./templates/HelpTopics.json');
 const { requestLanguage } = require('./Locale');
-const loginInstructions = require('./LoginInstructions');
+const siteText = require('./SiteText');
 const crypto = require('node:crypto');
 const scriptHash = crypto
     .createHash('sha256')
@@ -121,7 +121,7 @@ function renderHelp(input = {}, requested) {
             language === 'ja' ? 'ほかの参加者' : language === 'fr-CA' ? 'Autre participant' : 'Other participant',
         CONTENTS: topics[language]?.contents || topics.en.contents,
     };
-    const expand = (text) => String(text).replace(/\[\[([A-Z_]+)\]\]/g, (_match, key) => String(data[key] ?? ''));
+    const expand = (text) => String(text).replace(/\[\[([A-Z_]+)\]\]/g, (_match, key) => siteText.plain(data[key] ?? ''));
     const sections = topics[language]?.sections || topics.en.sections;
     const controls = {
         'help-video-layout': [
@@ -162,7 +162,12 @@ function renderHelp(input = {}, requested) {
         ...sections.map((section) => [section.id, section.title]),
     ];
     const html = {
-        LOGIN_INSTRUCTIONS: loginInstructions(data.LOGIN_INSTRUCTIONS),
+        SITE_NAME_TEXT: escape(siteText.plain(data.SITE_NAME)),
+        ...Object.fromEntries(Object.entries({ SITE_NAME: 'SITE_NAME', SITE_DESCRIPTION: 'SITE_DESCRIPTION',
+            SITE_COPYRIGHT: 'SITE_COPYRIGHT', LOGIN_HEADING: 'LOGIN_HEADING', LOGIN_INSTRUCTIONS: 'LOGIN_INSTRUCTIONS',
+            LOGIN_LABEL: 'LOGIN_BUTTON_LABEL', CHOOSE_HEADING: 'NEW_ROOM_TITLE', CHOOSE_INSTRUCTIONS: 'NEW_ROOM_DESCRIPTION',
+            JOIN_LABEL: 'JOIN_BUTTON_LABEL', LOGIN_STEP_A: 'HELP_LOGIN_INSTRUCTIONS' })
+            .map(([slot, key]) => [slot, siteText.html(data[slot], key)])),
         HELP_NAV: nav.map(([id, title]) => `<li><a href="#${id}">${escape(title)}</a></li>`).join(''),
         HELP_TOPICS: sections
             .map(

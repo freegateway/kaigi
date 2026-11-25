@@ -1,4 +1,5 @@
 'use strict';
+const siteText = require('./SiteText');
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -58,7 +59,8 @@ function renderSecurity(input = {}, requested = 'en') {
     }[language === 'en-CA' ? 'en' : language];
     const translations = brand.siteTranslations || {};
     const values = { ...translations.en, ...translations[language.split('-')[0]], ...translations[language] };
-    const name = escape(values.SITE_NAME ?? brand.site?.name ?? brand.app?.name ?? 'Kaigi');
+    const rawName = values.SITE_NAME ?? brand.site?.name ?? brand.app?.name ?? 'Kaigi';
+    const name = siteText.html(rawName, 'SITE_NAME');
     let logo = '/images/logo.svg';
     try {
         const url = new URL(brand.site?.logo || logo, 'https://kaigi.invalid');
@@ -82,7 +84,7 @@ function renderSecurity(input = {}, requested = 'en') {
     return `<!doctype html>
 <html lang="${language}" data-public-path="/security" data-help-language="${escape(selected)}" data-help-languages="${escape(JSON.stringify(available))}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${copy[0]} - ${name}</title>
+<title>${copy[0]} - ${escape(siteText.plain(rawName))}</title>
 <link rel="stylesheet" href="/css/landing.css"><link rel="stylesheet" href="/css/login.css">
 <link rel="stylesheet" href="/css/help.css"><link rel="stylesheet" href="/css/security.css">
 <link rel="stylesheet" href="/css/public-page.css">
@@ -94,10 +96,10 @@ function renderSecurity(input = {}, requested = 'en') {
 <main class="about-local">
 <button id="helpPrint" type="button" hidden>${copy[4]}</button>
 <a href="/" class="help-identity"><img class="about-local-logo" src="${escape(logo)}" alt=""><span hidden>${name}</span></a>
-<h1>${name}</h1><p>${escape(values.SITE_DESCRIPTION ?? brand.site?.description ?? '')}</p>
+<h1>${name}</h1><div>${siteText.html(values.SITE_DESCRIPTION ?? brand.site?.description ?? '', 'SITE_DESCRIPTION')}</div>
 <h2>${copy[0]}</h2>${prose(text)}
 <p><a class="button button-primary" href="/" id="publicBack">${copy[1]}</a></p></main></div>
-<footer class="public-footer"><a href="/help">${copy[2]}</a><a href="/about">${copy[3]}</a><span>Kaigi ${escape(version)}</span><span>${escape(values.SITE_COPYRIGHT ?? brand.site?.copyright ?? '')}</span></footer></body></html>`;
+<footer class="public-footer"><a href="/help">${copy[2]}</a><a href="/about">${copy[3]}</a><span>Kaigi ${escape(version)}</span><span>${siteText.html(values.SITE_COPYRIGHT ?? brand.site?.copyright ?? '', 'SITE_COPYRIGHT')}</span></footer></body></html>`;
 }
 
 module.exports = (brand) => (req, res) => {

@@ -1,5 +1,6 @@
 'use strict';
 
+const { plain } = require('./SiteText');
 const { brandingValues } = require('./Branding');
 
 // Resolve fields independently so localized visible text cannot replace an
@@ -14,10 +15,10 @@ function siteMetadata(settings = {}, dictionaries = {}, language = 'en') {
         settings.SITE_DESCRIPTION ??
         brandingValues({}, {}, language).SITE_DESCRIPTION;
     return {
-        PAGE_TITLE: title,
-        META_DESCRIPTION: description,
-        OG_TITLE: text.OG_TITLE ?? settings.OG_TITLE ?? title,
-        OG_DESCRIPTION: text.OG_DESCRIPTION ?? settings.OG_DESCRIPTION ?? description,
+        PAGE_TITLE: plain(title),
+        META_DESCRIPTION: plain(description),
+        OG_TITLE: plain(text.OG_TITLE ?? settings.OG_TITLE ?? title),
+        OG_DESCRIPTION: plain(text.OG_DESCRIPTION ?? settings.OG_DESCRIPTION ?? description),
     };
 }
 

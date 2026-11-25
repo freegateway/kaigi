@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const HtmlInjector = require('../app/src/HtmlInjector');
-const format = require('../app/src/LoginInstructions');
+const format = value => require('../app/src/SiteText').html(value, 'LOGIN_INSTRUCTIONS');
 const help = require('../app/src/Help');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
 const allowed = new Set(['P', 'BR', 'STRONG', 'EM', 'UL', 'OL', 'LI']);
@@ -42,7 +42,8 @@ function render(config, language) {
 function browser(html) {
     const dom = new JSDOM(html, { url: 'https://meet.example/', runScripts: 'outside-only' });
     dom.window.eval(read('public/vendor/dompurify/dist/purify.min.js'));
-    dom.window.eval(read('public/js/LoginInstructions.js'));
+    dom.window.eval(read('public/js/SiteText.js'));
+    dom.window.KaigiLoginInstructions = (value, purifier) => dom.window.KaigiSiteText.html(value, 'LOGIN_INSTRUCTIONS', purifier);
     return dom;
 }
 
@@ -129,13 +130,13 @@ describe('formatted login instructions', () => {
         const dom = new JSDOM(help.renderHelp(config, 'en-CA'));
         try {
             assert.equal(dom.window.document.getElementById('loginDescription').innerHTML, format(examples['en-CA']));
-            assert(dom.window.document.body.textContent.includes('Literal <strong>help</strong>'));
+            assert(dom.window.document.body.textContent.includes('Literal help'));
         } finally { dom.window.close(); }
     });
     it('ships the exact pinned sanitizer locally before the shared helper and branding scripts', () => {
         const html = read('public/views/login.html');
-        assert(html.indexOf('/vendor/dompurify/dist/purify.min.js') < html.indexOf('/js/LoginInstructions.js'));
-        assert(html.indexOf('/js/LoginInstructions.js') < html.indexOf('../js/Brand.js'));
+        assert(html.indexOf('/vendor/dompurify/dist/purify.min.js') < html.indexOf('/js/SiteText.js'));
+        assert(html.indexOf('/js/SiteText.js') < html.indexOf('../js/Brand.js'));
         assert.equal(read('public/vendor/dompurify/dist/purify.min.js'), read('node_modules/dompurify/dist/purify.min.js'));
         const crypto = require('node:crypto'), manifest = require('../docs/vendor-files.json');
         for (const name of ['LICENSE', 'dist/purify.min.js', 'dist/purify.min.js.map']) {

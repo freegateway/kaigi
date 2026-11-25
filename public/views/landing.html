@@ -46,6 +46,8 @@
 
         <!-- Js scripts -->
         <script defer src="../js/Widget.js"></script>
+        <script defer src="/vendor/dompurify/dist/purify.min.js"></script>
+        <script defer src="/js/SiteText.js"></script>
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
 
@@ -92,9 +94,9 @@
                                 <h1 id="appTitle" class="hero-title mt-0">
                                     Kaigi<br />Self-hosted video conferencing.
                                 </h1>
-                                <p id="appDescription" class="hero-paragraph">
+                                <div id="appDescription" class="hero-paragraph">
                                     Self-hosted video conferencing with authenticated access to authorized meetings.
-                                </p>
+                                </div>
                             </div>
                             <div class="hero-figure anime-element">
                                 <svg class="placeholder" width="528" height="396" viewBox="0 0 528 396">
@@ -118,10 +120,10 @@
                 <section class="cta section">
                     <div class="container">
                         <div class="cta-inner section-inner br-12">
-                            <h3 id="joinDescription" class="section-title mt-0">
+                            <div id="joinDescription" class="section-title mt-0">
                                 Pick a room name.<br />
                                 How about this one?
-                            </h3>
+                            </div>
                             <div>
                                 <div class="mb-24">
                                     <label for="roomName" class="screen-reader-text">Room name</label>
@@ -142,17 +144,13 @@
                                                 title="Generate a new room name"
                                             ></button>
                                         </div>
-                                        <button id="joinRoomButton" class="button button-primary pulse">
-                                            Join meeting
-                                        </button>
+                                        <button id="joinRoomButton" class="button button-primary pulse"><span id="joinRoomLabel">Join meeting</span></button>
                                     </div>
                                     <div class="mt-16">
                                         <button
                                             id="customizeRoomButton"
                                             class="button button-secondary button-block br-6"
-                                        >
-                                            Customize Room
-                                        </button>
+                                        ><span id="customizeRoomLabel">Customize Room</span></button>
                                     </div>
                                     <div class="mt-8">
                                         <button

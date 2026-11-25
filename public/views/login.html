@@ -56,9 +56,9 @@
         <link rel="stylesheet" href="/vendor/@fortawesome/fontawesome-free/css/all.min.css" />
 
         <!-- Js scripts -->
-
         <script defer src="/vendor/dompurify/dist/purify.min.js"></script>
-        <script defer src="/js/LoginInstructions.js"></script>
+        <script defer src="/js/SiteText.js"></script>
+
         <script defer src="../js/Brand.js"></script>
         <script defer src="../js/I18n.js"></script>
 
@@ -163,7 +163,7 @@
                                     </div>
                                     <button id="loginButton" class="login-btn pulse" type="button">
                                         <span id="loginBtnText"
-                                            ><i class="fa-solid fa-right-to-bracket"></i>&nbsp; Log in</span
+                                            ><i class="fa-solid fa-right-to-bracket"></i>&nbsp; <span id="loginButtonLabel">Log in</span></span
                                         >
                                         <span id="loginBtnLoader" class="login-btn-loader">
                                             <i class="fa-solid fa-circle-notch fa-spin"></i>&nbsp; Logging in…
@@ -180,7 +180,7 @@
                                         Share URL.<br />
                                         Start conference.
                                     </h2>
-                                    <p id="loginNewRoomDescription" class="login-description" data-i18n-skip></p>
+                                    <div id="loginNewRoomDescription" class="login-description" data-i18n-skip></div>
                                     <button
                                         id="logoutButton"
                                         class="logout-icon-btn"

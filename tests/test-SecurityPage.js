@@ -47,7 +47,7 @@ describe('security page and initial browser language', () => {
         assert.equal(new JSDOM(security.renderSecurity({}, 'de')).window.document.documentElement.lang, 'en');
     });
 
-    it('projects only escaped public branding and rejects remote logo loads', () => {
+    it('projects only sanitized public branding and rejects remote logo loads', () => {
         const doc = new JSDOM(
             security.renderSecurity({
                 site: { name: '<img src=x>', logo: 'https://outside.invalid/tracker.svg' },
@@ -55,7 +55,7 @@ describe('security page and initial browser language', () => {
                 users: ['private-user'],
             })
         ).window.document;
-        assert.equal(doc.querySelector('.help-identity span').textContent, '<img src=x>');
+        assert.equal(doc.querySelector('.help-identity span').textContent, '');
         assert.equal(doc.querySelector('img').getAttribute('src'), '/images/logo.svg');
         assert(!doc.body.textContent.includes('private-password'));
         assert(!doc.body.textContent.includes('private-user'));

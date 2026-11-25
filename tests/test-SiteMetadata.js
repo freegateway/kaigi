@@ -56,7 +56,7 @@ function render(page, brand, context = {}) {
     return result;
 }
 function check(document, values) {
-    assert.equal(document.title, values.PAGE_TITLE);
+    assert.equal(document.title, require('../app/src/SiteText').plain(values.PAGE_TITLE));
     for (const [attribute, key, expected] of [
         ['name', 'description', values.META_DESCRIPTION],
         ['property', 'og:title', values.OG_TITLE],
@@ -66,7 +66,7 @@ function check(document, values) {
     ]) {
         const tags = document.querySelectorAll(`meta[${attribute}="${key}"]`);
         assert.equal(tags.length, 1, key);
-        assert.equal(tags[0].content, expected, key);
+        assert.equal(tags[0].content, require('../app/src/SiteText').plain(expected), key);
     }
 }
 
