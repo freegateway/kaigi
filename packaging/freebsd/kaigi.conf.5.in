@@ -53,6 +53,28 @@ An explicitly supplied application environment variable has highest priority,
 followed by the corresponding setting in this file, with Kaigi's defaults
 as the final fallback.
 Language-specific site text is configured separately as described below.
+.Sh PATH POLICY
+.Bl -tag -width ALLOW_SYMLINKS
+.It Va ALLOW_SYMLINKS
+Defaults to false. Set to exactly true to permit symbolic links in this
+instance's configuration and state directory paths, including their parent
+directories, and in its recording directory path. For example, this permits
+.Pa %%PREFIX%%/etc/kaigi
+to be an administrator-managed link.
+This setting is read from kaigi.conf before startup path validation; an
+environment variable does not override it. Normal quoting and variable
+expansion rules apply. Restart the service after changing it.
+.El
+.Pp
+Allowed paths are resolved to their real targets before cross-instance overlap
+and recording containment checks. Missing state/recording descendants are
+resolved through their existing parents. Dangling links and loops are rejected.
+Resolved directories must not be group/world-writable, apart from root-owned
+sticky system parents such as /tmp. File ownership and permission requirements
+remain in force. kaigi.conf itself must be a regular non-symlink file and must
+not be group/world-writable. This option does not relax separate rules for
+credential files, meeting JSON files, Unix socket paths or runtime metadata.
+The rc script uses validated canonical configuration and state paths.
 .Sh SITE TEXT TRANSLATIONS
 User-facing site text examples are provided in
 .Pa %%PREFIX%%/etc/kaigi/example/site-translations.json.sample .

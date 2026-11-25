@@ -256,8 +256,18 @@ Explicit stop/status accepts a valid name after removal from rc.conf, without
 parsing application configuration. Stop without a name also discovers PID
 directories, ignoring malformed configured names. It never deletes credentials
 or recordings. Stale recorded identity is rejected instead of signaling another
-process. Preflight rejects symlinks in existing configuration/state/recording
-paths; this does not sandbox a compromised process changing writable paths later.
+process. By default, preflight and service startup reject symlinks in existing
+configuration/state/recording paths. Set `ALLOW_SYMLINKS=true` in the instance's
+`kaigi.conf` to permit directory aliases (including a linked `/usr/local/etc/kaigi`).
+The option uses the same declarative parser as other settings and cannot be
+enabled by an environment variable. Allowed paths are canonicalized before
+cross-instance overlap and recording containment checks; the rc script launches
+with the validated canonical configuration/state paths. Dangling/cyclic links
+and group/world-writable resolved directories are rejected, except root-owned
+sticky system parents. `kaigi.conf` remains a regular, non-symlink file without
+group/world write access. Credential, meeting JSON, socket and runtime-metadata
+protections are independent and remain enforced.
+This does not sandbox a compromised process changing writable paths later.
 Use separate accounts or jails for stronger isolation.
 
 ## Checks

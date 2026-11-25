@@ -33,6 +33,16 @@ const stages = new Set(['paths', 'credentials', 'account', 'configuration', 'net
 const resources = new Set(['instance paths', 'users', 'jwt-secret', 'service account', 'kaigi.conf', 'ldap/ldap.conf',
     'site-translations.json', 'TLS certificate', 'TLS private key', 'TLS certificate/key pair', 'state/recordings']);
 const settingPattern = /^[A-Z][A-Z0-9_]{0,63}$/;
+const pathReasons = Object.freeze({
+    symlink: 'symlinks are not allowed; set ALLOW_SYMLINKS=true in kaigi.conf to permit configured path aliases',
+    unresolved: 'cannot resolve path; check for missing targets, inaccessible directories or symlink loops',
+    directory: 'path must resolve to a directory',
+    unsafe: 'path must be regular configuration or directories without group/world write access',
+});
+function validPathDetail(detail) {
+    return detail && typeof detail.path === 'string' && detail.path.startsWith('/') &&
+        detail.path.length <= 4096 && !/[\0-\x1f\x7f]/.test(detail.path) && Object.hasOwn(pathReasons, detail.reason);
+}
 
 function diagnose(error, stage, resource) {
     const result = { stage, resource, reason: 'unknown' };
@@ -74,11 +84,18 @@ function diagnose(error, stage, resource) {
     if (['jwt', 'origin', 'proxy'].includes(error?.startupReason)) result.reason = error.startupReason;
     if (error?.startupReason === 'jwt') result.resource = 'jwt-secret';
     if (error?.name === 'LdapError') { result.resource = 'ldap/ldap.conf'; result.reason = 'policy'; result.ldap = error.ldapDiagnostic; }
+    if (message === 'ALLOW_SYMLINKS must be true or false') { result.reason = 'boolean'; result.setting = 'ALLOW_SYMLINKS'; }
+    if (validPathDetail(error?.instancePath)) {
+        result.stage = 'paths'; result.resource = 'instance paths'; result.pathDetail = error.instancePath;
+    }
     return result;
 }
 
 function formatDiagnostic(data) {
     if (!data || !stages.has(data.stage) || !resources.has(data.resource) || !Object.hasOwn(reasons, data.reason)) return null;
+    if (validPathDetail(data.pathDetail)) {
+        return `paths validation failed (${JSON.stringify(data.pathDetail.path)}): ${pathReasons[data.pathDetail.reason]}`;
+    }
     if (data.ldap) {
         const detail = require('./LdapDiagnostics').format(data.ldap);
         if (detail) return `${data.stage} validation failed (${data.resource}): ${detail}`;

@@ -35,6 +35,13 @@
 
 NODE_ENV=production
 
+# Directory symlinks are denied by default. Set true to permit aliases in this
+# instance's configuration/state roots and recording directory. Resolved paths
+# retain permission, cross-instance isolation and recording containment checks.
+# Regular-file rules for configuration/secrets and socket/runtime protections
+# are independent and remain enforced. This setting is read only from this file.
+# ALLOW_SYMLINKS=false
+
 # Site identity.
 # SITE_URL=https://meet.example.com/
 # SITE_CONTACT_EMAIL=video@example.com

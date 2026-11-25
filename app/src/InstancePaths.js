@@ -8,7 +8,7 @@ function absoluteDirectory(value, name) {
 }
 
 // Every deployment has an explicit instance name and independent roots.
-function instancePaths(environment = process.env) {
+function instancePaths(environment = process.env, policy) {
     const instance = environment.KAIGI_INSTANCE;
     if (!instance) throw new Error('KAIGI_INSTANCE must explicitly name an instance');
     if (!/^[a-z][a-z0-9_]{0,31}$/.test(instance)) throw new Error('Invalid KAIGI_INSTANCE name');
@@ -22,7 +22,12 @@ function instancePaths(environment = process.env) {
         navigationCookie: `__Host-kaigi_${instance}_session`,
         recordingDirectory(configuredDirectory) {
             // Recordings stay beneath this instance's private state root.
-            const directory = path.resolve(stateDirectory, configuredDirectory || 'recordings');
+            let directory = path.resolve(stateDirectory, configuredDirectory || 'recordings');
+            if (policy) {
+                const { resolvePath, validateDirectory } = require('./PathPolicy');
+                directory = resolvePath(directory, policy.allowSymlinks);
+                if (policy.allowSymlinks) validateDirectory(directory);
+            }
             const relative = path.relative(stateDirectory, directory);
             if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
                 throw new Error('RECORDING_DIR must remain inside KAIGI_STATE_DIR');

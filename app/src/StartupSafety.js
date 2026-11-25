@@ -9,16 +9,7 @@ let inspectionStage = 'paths';
 const { diagnose, formatDiagnostic } = require('./StartupDiagnostics');
 let inspectionResource = 'instance paths';
 
-function noSymlinks(directory) {
-    const absolute = path.resolve(directory);
-    let current = path.parse(absolute).root;
-    for (const component of absolute.slice(current.length).split(path.sep).filter(Boolean)) {
-        current = path.join(current, component);
-        try {
-            if (fs.lstatSync(current).isSymbolicLink()) throw Error('Symlink in instance path');
-        } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    }
-}
+const { noSymlinks, resolvePath, loadInstanceConfiguration } = require('./PathPolicy');
 
 function writeMetadata(filename, data, mode = 0o600) {
     noSymlinks(filename);
@@ -60,6 +51,12 @@ function addressOverlaps(a, b) {
 }
 
 function checkPlans(plans, cpuCount = require('node:os').cpus().length) {
+    const allocations = new Map(plans.map(plan => [plan,
+        [plan.config, plan.state, plan.recordings].filter(Boolean).map(value => resolvePath(value))]));
+    const contains = (parent, child) => {
+        const relative = path.relative(parent, child);
+        return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+    };
     for (let i = 0; i < plans.length; i++) {
         const a = plans[i];
         for (const b of plans.slice(i + 1)) {
@@ -73,8 +70,8 @@ function checkPlans(plans, cpuCount = require('node:os').cpus().length) {
                     throw Error(`Instances ${a.name} and ${b.name}: overlapping ${x.protocol} ${x.kind}/${y.kind} ports ${Math.max(x.min, y.min)}..${Math.min(x.max, y.max)} (${a.name} ${a.allocation || 'configured'} ${x.min}..${x.max}; ${b.name} ${b.allocation || 'configured'} ${y.min}..${y.max})`);
                 }
             }
-            for (const x of [a.config, a.recordings]) for (const y of [b.config, b.recordings]) {
-                if (x === y || x.startsWith(y + path.sep) || y.startsWith(x + path.sep)) {
+            for (const x of allocations.get(a)) for (const y of allocations.get(b)) {
+                if (contains(x, y) || contains(y, x)) {
                     throw Error(`Instances ${a.name} and ${b.name}: overlapping configuration/state paths`);
                 }
             }
@@ -88,8 +85,12 @@ function checkPlans(plans, cpuCount = require('node:os').cpus().length) {
 
 async function inspect(name, configDirectory, stateDirectory, user, group) {
     if (!/^[a-z][a-z0-9_]{0,31}$/.test(name)) throw Error('Invalid instance');
-    noSymlinks(configDirectory);
-    if (stateDirectory) noSymlinks(stateDirectory);
+    const { paths } = loadInstanceConfiguration({ ...process.env, KAIGI_INSTANCE: name,
+        KAIGI_CONFIG_DIR: configDirectory, KAIGI_STATE_DIR: stateDirectory });
+    configDirectory = paths.configDirectory;
+    stateDirectory = paths.stateDirectory;
+    process.env.KAIGI_CONFIG_DIR = configDirectory;
+    process.env.KAIGI_STATE_DIR = stateDirectory;
     inspectionStage = 'credentials';
     const readSecret = filename => {
         inspectionResource = path.basename(filename);
@@ -153,14 +154,14 @@ async function inspect(name, configDirectory, stateDirectory, user, group) {
     }
     inspectionStage = 'recordings';
     inspectionResource = 'state/recordings';
-    noSymlinks(config.media.recording.dir);
+    // The shared configuration loader has already resolved and validated recording paths.
     if (config.media.recording.enabled && (!stateDirectory || fs.existsSync(stateDirectory))) {
         let parent = config.media.recording.dir;
         while (!fs.existsSync(parent)) parent = path.dirname(parent);
         fs.accessSync(parent, fs.constants.W_OK | fs.constants.X_OK);
     }
     if (stateDirectory && fs.existsSync(stateDirectory)) fs.accessSync(stateDirectory, fs.constants.R_OK | fs.constants.W_OK | fs.constants.X_OK);
-    return { name, config: path.resolve(configDirectory), recordings: config.media.recording.dir,
+    return { name, config: configDirectory, state: stateDirectory, recordings: config.media.recording.dir,
         workers: config.mediasoup.numWorkers, listeners };
 }
 
@@ -248,6 +249,12 @@ async function main(args) {
         if (!plan) throw Error('Missing validated launch plan');
         noSymlinks(destination);
         writeMetadata(destination, plan, 0o644);
+    } else if (mode === 'path') {
+        const [filename, kind] = rest;
+        if (!['config', 'state'].includes(kind)) throw Error('Invalid launch path kind');
+        const value = readMetadata(filename)[kind];
+        if (typeof value !== 'string' || !path.isAbsolute(value) || /[\0\r\n]/.test(value)) throw Error('Invalid launch path');
+        process.stdout.write(value);
     } else if (mode === 'ready') {
         const [filename, pidfile, nonce] = rest;
         const stat = fs.lstatSync(filename);
