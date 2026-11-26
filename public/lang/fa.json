@@ -198,7 +198,8 @@
         "White annotation color": "رنگ سفید حاشیه‌نویسی",
         "Yellow annotation color": "رنگ زرد حاشیه‌نویسی",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "روشن/خاموش کردن برجسته‌سازی گوینده فعال"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "هیچ جلسه‌ای به حساب شما اختصاص داده نشده است. لطفاً با مدیر تماس بگیرید.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "برجسته‌سازی گوینده فعال",
+        "Show a border around whoever is talking": "نمایش کادر دور کسی که صحبت می‌کند"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "شناسه ورود شما از قبل به این جلسه متصل است. از اتصال دیگر خارج شوید یا روی خروج کلیک کنید تا با حساب دیگری وارد شوید.",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock آزاد شد",

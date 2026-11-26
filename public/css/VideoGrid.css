@@ -91,6 +91,8 @@
     overflow: hidden;
     container-type: inline-size;
     container-name: camera;
+    /* Drop the inline grid margin (VideoGrid.js) kept from the grid, so the 100% tile is not clipped right/bottom */
+    margin: 0 !important;
 }
 
 .pinned-video-container .user-hand {
@@ -100,6 +102,46 @@
     left: 0;
     margin: 10px !important;
     font-size: 1.5rem !important;
+}
+
+/* Speaking indicator (handleSpeakingTile in RoomClient.js): a thin gradient ring drawn inside the tile edge, so it is
+   never clipped. Calm by design: no glow, fades in fast and out slowly so it does not flicker between words. */
+:root {
+    --speaking-accent: #3fd8a4;
+    --speaking-gradient: linear-gradient(135deg, #5b8cff 0%, var(--speaking-accent) 50%, #a77bff 100%);
+}
+
+.Camera[data-peer-id]::after,
+.pinned-video-container[data-peer-id]::after,
+.screen-cam-overlay[data-peer-id]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2; /* Above video and name, below the menu dropdowns */
+    padding: 2px; /* ring width */
+    border-radius: inherit;
+    background: var(--speaking-gradient);
+    /* Keep only the padding area of the gradient: a ring with rounded corners */
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+        linear-gradient(#000 0 0) content-box exclude,
+        linear-gradient(#000 0 0);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.45s ease;
+}
+
+[data-peer-id].speaking::after {
+    opacity: 0.9;
+    transition-duration: 0.2s;
+}
+
+/* Pinned tiles lose the .Camera radius: follow the #videoPinMediaContainer corners */
+.pinned-video-container[data-peer-id]::after {
+    border-radius: 10px;
 }
 
 #videoMediaContainer i {
@@ -224,17 +266,6 @@
     scrollbar-width: none; /* Firefox */
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
-}
-
-/* Mobile floating menubar when appended to body */
-.videoMenuBar.mobile-floating {
-    z-index: 2;
-    position: fixed;
-    top: env(safe-area-inset-top, 0px);
-    left: 0;
-    right: 0;
-    width: 100vw;
-    border-radius: 0 0 10px 10px;
 }
 
 .videoAvatarMenuBar,
@@ -1318,4 +1349,67 @@ input[type='range'] {
 
 .layout-animating #bottomButtons {
     transition: left 0.24s var(--ease-standard);
+}
+
+/*--------------------------------------------------------------
+# Speaker view: other tiles in one swipeable row (layoutPinnedStrip in VideoGrid.js)
+--------------------------------------------------------------*/
+
+:root {
+    /* Height of the speaker view thumbnails strip (tiles + margins), consistent for any participant count */
+    --pinned-strip-size: clamp(130px, 22vh, 220px);
+}
+
+#videoMediaContainer.pinned-strip {
+    flex-wrap: nowrap;
+    align-content: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    /* No scroll snap/anchoring: tiles reorder on camera on/off and the scroller must not follow them */
+    overflow-anchor: none;
+}
+
+#videoMediaContainer.pinned-strip::-webkit-scrollbar {
+    display: none;
+}
+
+/* Centered while the row fits; start-aligned once it scrolls, so the first tiles are not cut off */
+#videoMediaContainer.pinned-strip-overflow {
+    justify-content: flex-start;
+}
+
+#videoMediaContainer.pinned-strip > .Camera {
+    flex: 0 0 auto;
+}
+
+/* Desktop speaker left/right: same fixed-size tiles in a scrollable column */
+#videoMediaContainer.pinned-strip-vertical {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+}
+
+#videoMediaContainer.pinned-strip > .Camera[data-camera-off='true'] {
+    order: 1;
+}
+
+/* Desktop: keep a thin scrollbar so the overflow is discoverable with a mouse */
+@media (hover: hover) and (pointer: fine) {
+    #videoMediaContainer.pinned-strip-overflow {
+        scrollbar-width: thin;
+    }
+
+    #videoMediaContainer.pinned-strip-overflow::-webkit-scrollbar {
+        display: block;
+        height: 6px;
+        width: 6px;
+    }
+
+    #videoMediaContainer.pinned-strip-overflow::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 3px;
+    }
 }

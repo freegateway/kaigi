@@ -198,7 +198,8 @@
         "White annotation color": "White annotation color",
         "Yellow annotation color": "Yellow annotation color",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "Toggle the active speaker highlight"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "No meetings are assigned to your account. Please contact your administrator.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "Highlight active speaker",
+        "Show a border around whoever is talking": "Show a border around whoever is talking"
     },
     "dialogs": {
         "Server restarting": "Server restarting",
@@ -1337,7 +1340,9 @@
         "Reconnect now": "Reconnect now",
         "Waiting for the server. You may need to log in again.": "Waiting for the server. You may need to log in again.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Attempt {attempt}/{max} — retry in {seconds}s",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock released",

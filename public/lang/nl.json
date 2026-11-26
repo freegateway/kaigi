@@ -198,7 +198,8 @@
         "White annotation color": "Witte annotatiekleur",
         "Yellow annotation color": "Gele annotatiekleur",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "Markering van actieve spreker aan/uit"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "Er zijn geen vergaderingen aan uw account toegewezen. Neem contact op met uw beheerder.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "Actieve spreker markeren",
+        "Show a border around whoever is talking": "Een rand tonen rond degene die praat"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "Uw aanmeld-ID is al verbonden met deze vergadering. Verlaat de andere verbinding of klik op Uitloggen om met een ander account in te loggen.",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock uitgeschakeld",

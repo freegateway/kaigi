@@ -68,6 +68,7 @@ const icons = {
     lock: '<i class="fa-solid fa-lock"></i>',
     unlock: '<i class="fa-solid fa-lock-open"></i>',
     pitchBar: '<i class="fas fa-microphone-lines"></i>',
+    speakingHighlight: '<i class="fas fa-user-check"></i>',
     mirror: '<i class="fas fa-arrow-right-arrow-left"></i>',
     sounds: '<i class="fas fa-music"></i>',
     fileSend: '<i class="fa-solid fa-file-export"></i>',
@@ -1783,6 +1784,7 @@ class RoomClient {
 
     handleRemoveMe = (data) => {
         console.log('SocketOn Remove me:', data);
+        this.clearSpeakingPeer(data.peer_id);
         this.removeVideoOff(data.peer_id);
         this.lobbyRemoveMe(data.peer_id);
         participantsCount = data.peer_counts;
@@ -4140,7 +4142,7 @@ class RoomClient {
                     vb.appendChild(pip);
                 BUTTONS.producerVideo.drawingButton && isScreen && vb.appendChild(dw);
                 BUTTONS.producerVideo.focusVideoButton && vb.appendChild(ha);
-                if (BUTTONS.producerVideo.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);
+                if (BUTTONS.producerVideo.pinVideoButton) this.appendPinButton(vb, pn);
 
                 vb.appendChild(st);
 
@@ -4157,14 +4159,8 @@ class RoomClient {
                     }
                 };
 
-                if (this.isMobileDevice) {
-                    vb.classList.add('mobile-floating');
-                    document.body.appendChild(vb);
-                } else {
-                    vb.classList.remove('mobile-floating');
-                    d.appendChild(vb);
-                    d.addEventListener('mouseleave', hideVideoMenu);
-                }
+                d.appendChild(vb);
+                if (!this.isMobileDevice) d.addEventListener('mouseleave', hideVideoMenu);
                 vb.addEventListener('click', (e) => e.stopPropagation());
 
                 this.videoMediaContainer.appendChild(d);
@@ -4956,7 +4952,7 @@ class RoomClient {
                 BUTTONS.consumerVideo.drawingButton && remoteIsScreen && vb.appendChild(dw);
                 BUTTONS.consumerVideo.focusVideoButton && vb.appendChild(ha);
 
-                if (BUTTONS.consumerVideo.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);
+                if (BUTTONS.consumerVideo.pinVideoButton) this.appendPinButton(vb, pn);
 
                 d.appendChild(elem);
                 d.appendChild(remoteVideoLoader);
@@ -4964,13 +4960,7 @@ class RoomClient {
                 d.appendChild(p);
                 d.appendChild(pm);
 
-                if (this.isMobileDevice) {
-                    vb.classList.add('mobile-floating');
-                    document.body.appendChild(vb);
-                } else {
-                    vb.classList.remove('mobile-floating');
-                    d.appendChild(vb);
-                }
+                d.appendChild(vb);
                 vb.addEventListener('click', (e) => e.stopPropagation());
 
                 this.videoMediaContainer.appendChild(d);
@@ -5139,6 +5129,7 @@ class RoomClient {
                 //alert(this.pinnedVideoPlayerId + '==' + consumer_id);
                 if (this.isVideoPinned && this.pinnedVideoPlayerId == consumer_id) {
                     this.removeVideoPinMediaContainer();
+                    this.scheduleParticipantViewRestore();
                     console.log('Remove pin container due the Consumer close', {
                         consumer_id: consumer_id,
                         consumer_kind: consumer_kind,
@@ -5295,7 +5286,7 @@ class RoomClient {
         vb.appendChild(eDiv);
         BUTTONS.videoOff.audioVolumeInput && vb.appendChild(pv);
         BUTTONS.videoOff.muteAudioButton && vb.appendChild(au);
-        if (BUTTONS.videoOff.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);
+        if (BUTTONS.videoOff.pinVideoButton) this.appendPinButton(vb, pn);
         if (!remotePeer) vb.appendChild(st);
 
         d.appendChild(i);
@@ -5310,14 +5301,8 @@ class RoomClient {
             }
         };
 
-        if (this.isMobileDevice) {
-            vb.classList.add('mobile-floating');
-            document.body.appendChild(vb);
-        } else {
-            vb.classList.remove('mobile-floating');
-            d.appendChild(vb);
-            d.addEventListener('mouseleave', hideVideoMenu);
-        }
+        d.appendChild(vb);
+        if (!this.isMobileDevice) d.addEventListener('mouseleave', hideVideoMenu);
         vb.addEventListener('click', (e) => e.stopPropagation());
 
         this.videoMediaContainer.appendChild(d);
@@ -5381,7 +5366,14 @@ class RoomClient {
 
         if (pvOff?.hasAttribute('focus-mode')) this.toggleFocusMode(pvOff.id);
         if (this.isVideoPinned && this.pinnedVideoPlayerId === peer_id + '__img') {
-            this.getId(peer_id + '__img__pin')?.click();
+            // Programmatic unpin (e.g. the camera turned back on): don't persist 'grid', re-pin for the saved view
+            this.isApplyingParticipantViewMode = true;
+            try {
+                this.getId(peer_id + '__img__pin')?.click();
+            } finally {
+                this.isApplyingParticipantViewMode = false;
+            }
+            this.scheduleParticipantViewRestore();
         }
 
         if (vb) {
@@ -5436,6 +5428,7 @@ class RoomClient {
     // ####################################################
 
     exit(offline = false) {
+        this.clearSpeakingTiles();
 		this.isMySettingsOpen = false;
 		this.syncSettingsVideoPreview();
         this.saveRecording('Client exiting the room');
@@ -5899,6 +5892,7 @@ class RoomClient {
     }
 
     setPeerAudio(peer_id, status) {
+        if (!status) this.clearSpeakingPeer(peer_id);
         console.log('Set peer audio enabled: ' + status);
         const audioStatus = this.getPeerAudioBtn(peer_id); // producer, consumers
         const audioVolume = this.getPeerAudioVolumeBar(peer_id); // consumers
@@ -5907,6 +5901,7 @@ class RoomClient {
     }
 
     setIsAudio(peer_id, status) {
+        if (!status) this.clearSpeakingPeer(peer_id);
         if (!isBroadcastingEnabled || (isBroadcastingEnabled && isPresenter)) {
             console.log('Set local audio enabled: ' + status);
             this.peer_info.peer_audio = status;
@@ -6747,7 +6742,6 @@ class RoomClient {
             btnPn.dataset.pinTarget = elemId;
             this.refreshPinLabels();
             btnPn.addEventListener('click', () => {
-                if (this.isMobileDevice) return;
                 this.sound('click');
                 if (this.isVideoPinned && this.pinnedVideoPlayerId !== elemId) {
                     this.restorePinnedVideoToGrid?.();
@@ -6788,7 +6782,6 @@ class RoomClient {
                     }
                 }
                 this.refreshPinLabels();
-                this.resizeVideoMenuBar();
                 handleAspectRatio();
                 if (this.isFollowMeActive && isPresenter && !this.isApplyingDominantSpeaker) {
                     if (this.isVideoPinned) {
@@ -6825,8 +6818,14 @@ class RoomClient {
         return this.isVideoPinned && this.pinnedVideoPlayerId === screenElement.id;
     }
 
+    // Mobile has no per-tile pin UI, but the hidden button lets the participant view (speaker top/bottom/1:1) pin tiles
+    appendPinButton(vb, pn) {
+        if (this.isMobileDevice) pn.classList.add('hidden');
+        vb.appendChild(pn);
+    }
+
     scheduleParticipantViewRestore() {
-        if (this.isMobileDevice || this.isVideoPinned) return;
+        if (this.isVideoPinned) return;
         const mode = localStorageSettings?.participant_view;
         if (!mode?.startsWith('speaker-') && mode !== 'livestream') return;
 
@@ -6841,10 +6840,19 @@ class RoomClient {
 
     toggleVideoPin(position) {
         if (!this.isVideoPinned) return;
+        // Side-by-side layouts are too narrow on phones
+        if (this.isMobileDevice && ['speaker-left', 'speaker-right', 'vertical'].includes(position)) {
+            position = 'speaker-top';
+        }
+        this.videoPinPosition = position;
         const pinnedPanelWidth = this.getPinnedSidePanelWidth();
         const contentWidth = 100 - pinnedPanelWidth;
         const speakerWidth = contentWidth * 0.75;
         const thumbnailWidth = contentWidth * 0.25;
+        // Fixed-size thumbnail strip: consistent tiles for any participant count on all devices,
+        // growing by the buttons bar reserve when the strip touches the bottom of the screen
+        const stripSize = 'var(--pinned-strip-size, 20vh)';
+        const stripWithBar = `calc(${stripSize} + var(--buttons-bar-reserve, 0px))`;
         this.videoPinMediaContainer.style.top = 0;
         this.videoPinMediaContainer.style.left = 0;
         this.videoPinMediaContainer.style.width = contentWidth + '%';
@@ -6860,10 +6868,10 @@ class RoomClient {
         switch (position) {
             case 'speaker-bottom':
             case 'top':
-                this.videoPinMediaContainer.style.top = '25%';
+                this.videoPinMediaContainer.style.top = stripSize;
                 this.videoPinMediaContainer.style.width = contentWidth + '%';
-                this.videoPinMediaContainer.style.height = '75%';
-                this.videoMediaContainer.style.height = '25%';
+                this.videoPinMediaContainer.style.height = `calc(100% - ${stripSize})`;
+                this.videoMediaContainer.style.height = stripSize;
                 this.videoMediaContainer.classList.add('no-bar-reserve');
                 break;
             case 'speaker-left':
@@ -6874,9 +6882,9 @@ class RoomClient {
                 break;
             case 'speaker-top':
             case 'horizontal':
-                this.videoPinMediaContainer.style.height = '75%';
-                this.videoMediaContainer.style.top = '75%';
-                this.videoMediaContainer.style.height = '25%';
+                this.videoPinMediaContainer.style.height = `calc(100% - ${stripWithBar})`;
+                this.videoMediaContainer.style.top = `calc(100% - ${stripWithBar})`;
+                this.videoMediaContainer.style.height = stripWithBar;
                 this.videoPinMediaContainer.classList.add('no-bar-reserve');
                 break;
             case 'speaker-right':
@@ -7119,7 +7127,6 @@ class RoomClient {
             const eventType = this.isDesktopDevice ? 'mouseenter' : 'click';
             videoPlayer.addEventListener(eventType, async () => {
                 hideVideoMenuBar(videoBarId);
-                rc.resizeVideoMenuBar();
                 setCamerasBorderNone();
                 if (videoBar.classList.contains('hidden')) {
                     show(videoBar);
@@ -7139,26 +7146,6 @@ class RoomClient {
                     hideVideoMenuBar('ALL');
                 });
             }
-        }
-    }
-
-    resizeVideoMenuBar() {
-        const isPollDocked = this.isPollPinned && !this.isPollMaximized;
-        const somethingPinned =
-            this.isVideoPinned ||
-            this.isChatPinned ||
-            this.isEditorPinned ||
-            isPollDocked ||
-            this.isBreakoutPinned ||
-            transcription.isPin();
-        const menuBarWidth =
-            this.isVideoPinned || this.isChatPinned || isPollDocked || this.isBreakoutPinned || transcription.isPin()
-                ? '75%'
-                : '70%';
-        const videoMenuBar = rc.getEcN('videoMenuBar');
-        for (let i = 0; i < videoMenuBar.length; i++) {
-            const menuBar = videoMenuBar[i];
-            menuBar.style.width = this.isMobileDevice && somethingPinned ? menuBarWidth : '100%';
         }
     }
 
@@ -7194,7 +7181,6 @@ class RoomClient {
         this.videoMediaContainer.style.top = 0;
         this.videoMediaContainer.style.width = '75%';
         this.videoMediaContainer.style.height = '100%';
-        this.resizeVideoMenuBar();
     }
 
     videoMediaContainerUnpin() {
@@ -7206,7 +7192,6 @@ class RoomClient {
         this.videoMediaContainer.style.height = '100%';
         this.videoMediaContainer.classList.remove('no-bar-reserve');
         this.videoPinMediaContainer.classList.remove('no-bar-reserve');
-        this.resizeVideoMenuBar();
     }
 
     adaptVideoObjectFit(index) {
@@ -7529,6 +7514,7 @@ class RoomClient {
         const chat = this.getId('chat');
         plist.classList.toggle('hidden');
         const isParticipantsListHidden = !this.isPlistOpen();
+        this.syncParticipantsListButton();
 
         // Chat was opened only to show participants: close everything instead of leaving the chat visible.
         if (fromUser && isParticipantsListHidden && this.isChatOpenedByParticipantsBtn) {
@@ -7596,6 +7582,12 @@ class RoomClient {
             pBtn.classList.toggle('is-active', participantsActive);
             pBtn.setAttribute('aria-pressed', participantsActive ? 'true' : 'false');
         }
+        this.syncParticipantsListButton();
+    }
+
+    syncParticipantsListButton() {
+        const btn = document.getElementById('chatShowParticipantsListBtn');
+        if (btn) btn.setAttribute('aria-pressed', this.isPlistOpen() ? 'true' : 'false');
     }
 
     toggleChatHistorySize(max = true) {
@@ -7675,7 +7667,6 @@ class RoomClient {
         this.isChatPinned = true;
         this.refreshVideoPinLayout();
         this.setChatControlState(chatTogglePin, true);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         chatRoom.style.resize = 'none';
         if (!this.isMobileDevice) this.makeUnDraggable(chatRoom, chatHeader);
@@ -7690,7 +7681,6 @@ class RoomClient {
         this.isChatPinned = false;
         this.refreshVideoPinLayout();
         this.setChatControlState(chatTogglePin, false);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         if (slideOut) {
             // keep the pinned look while the panel slides away, then finish (and hide it)
@@ -7784,7 +7774,10 @@ class RoomClient {
         chatMessage.value = '';
         chatMessage.setAttribute('rows', '1');
         const charCount = this.getId('chatCharCount');
-        if (charCount) charCount.textContent = '0 / 4000';
+        if (charCount) {
+            charCount.textContent = '';
+            charCount.classList.remove('is-limit');
+        }
     }
 
     pasteMessage() {
@@ -9009,7 +9002,6 @@ class RoomClient {
         this.isPollPinned = true;
         this.refreshVideoPinLayout();
         this.setPollControlState(pollTogglePin, true);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         pollRoom.style.resize = 'none';
         if (!this.isMobileDevice) this.makeUnDraggable(pollRoom, pollHeader);
@@ -9029,7 +9021,6 @@ class RoomClient {
         this.isPollPinned = false;
         this.refreshVideoPinLayout();
         this.setPollControlState(pollTogglePin, false);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         if (!this.isMobileDevice) this.makeDraggable(pollRoom, pollHeader);
     }
@@ -9122,7 +9113,6 @@ class RoomClient {
         this.isBreakoutPinned = true;
         this.refreshVideoPinLayout();
         this.setBreakoutControlState(breakoutTogglePin, true);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
     }
 
@@ -9136,7 +9126,6 @@ class RoomClient {
         this.isBreakoutPinned = false;
         this.refreshVideoPinLayout();
         this.setBreakoutControlState(breakoutTogglePin, false);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         if (!this.isMobileDevice) this.makeDraggable(breakoutPanel, breakoutPanelHeader);
     }
@@ -9650,7 +9639,6 @@ class RoomClient {
         this.isEditorPinned = true;
         this.refreshVideoPinLayout();
         this.setEditorControlState(editorTogglePin, true);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         document.documentElement.style.setProperty('--editor-height', '80vh');
         //if (!this.isMobileDevice) this.makeUnDraggable(editorRoom, editorHeader);
@@ -9668,7 +9656,6 @@ class RoomClient {
         this.refreshVideoPinLayout();
         editorRoom.classList.remove('panel-slide-in');
         this.setEditorControlState(editorTogglePin, false);
-        this.resizeVideoMenuBar();
         resizeVideoMedia();
         document.documentElement.style.setProperty('--editor-height', '85vh');
         //if (!this.isMobileDevice) this.makeDraggable(editorRoom, editorHeader);
@@ -11571,7 +11558,7 @@ class RoomClient {
         }
         vb.appendChild(e);
         BUTTONS.videoShare.fullScreenButton && !audioShare && vb.appendChild(fsBtn);
-        if (BUTTONS.videoShare.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);
+        if (BUTTONS.videoShare.pinVideoButton) this.appendPinButton(vb, pn);
         d.appendChild(video);
         d.appendChild(vb);
         this.videoMediaContainer.appendChild(d);
@@ -11902,6 +11889,11 @@ class RoomClient {
             case 'pitchBar':
                 notifySwitch(`${icons.pitchBar} Audio pitch bar ${status}`);
                 break;
+            case 'speakingHighlight': {
+                const source = active ? 'Active speaker highlight enabled' : 'Active speaker highlight disabled';
+                notifySwitch(window.i18n?.t(source, 'dialogs') || source);
+                break;
+            }
             case 'sounds':
                 notifySwitch(`${icons.sounds} Sounds notification ${status}`);
                 break;
@@ -12479,6 +12471,11 @@ class RoomClient {
         const audioVolumeTmp = audioVolume * 10; //10-100
         const audioColorTmp = this.getAudioVolumeColor(audioVolumeTmp);
 
+        if (isSpeakingHighlightEnabled) {
+            this.handleSpeakingTile(peer_id);
+            this.handleSpeakingParticipant(peer_id);
+        }
+
         if (!isPitchBarEnabled) {
             const peerVideo = this.getName(peer_id);
             const peerAvatarImg = this.getId(peer_id + '__img');
@@ -12515,6 +12512,90 @@ class RoomClient {
                 this._audioVolumeTimers.delete(peer_id);
             }, 200)
         );
+    }
+
+    // Camera tiles of a peer: grid (.Camera), pinned (.pinned-video-container) or screen-share overlay; screen tiles skipped
+    getSpeakingTiles(peerId) {
+        const tiles = [];
+        [this.videoMediaContainer, this.videoPinMediaContainer].forEach((container) => {
+            container?.querySelectorAll('[data-peer-id]').forEach((tile) => {
+                if (tile.dataset.peerId === peerId && tile.dataset.mediaType !== mediaType.screen &&
+                    !tile.classList.contains('local-screen-share-notice') && !tile.hidden &&
+                    tile.getAttribute('aria-hidden') !== 'true' && tile.style.display !== 'none') tiles.push(tile);
+            });
+        });
+        return tiles;
+    }
+
+    // audioVolume arrives every ~100ms while a peer talks: hold the border briefly so short pauses don't flicker it
+    handleSpeakingTile(peerId, holdMs = 600) {
+        if (!peerId) return;
+        if (!this._speakingTileTimers) this._speakingTileTimers = new Map();
+        this.getSpeakingTiles(peerId).forEach((tile) => tile.classList.add('speaking'));
+        clearTimeout(this._speakingTileTimers.get(peerId));
+        this._speakingTileTimers.set(
+            peerId,
+            setTimeout(() => {
+                this.getSpeakingTiles(peerId).forEach((tile) => tile.classList.remove('speaking'));
+                this._speakingTileTimers.delete(peerId);
+            }, holdMs)
+        );
+    }
+
+    clearSpeakingTiles() {
+        this._speakingTileTimers?.forEach((timer) => clearTimeout(timer));
+        this._speakingTileTimers?.clear();
+        document.querySelectorAll('[data-peer-id].speaking').forEach((tile) => tile.classList.remove('speaking'));
+        this._speakingParticipantTimers?.forEach(timer => clearTimeout(timer));
+        this._speakingParticipantTimers?.clear();
+        document.querySelectorAll('#participantsList .speaking').forEach(node => node.classList.remove('speaking'));
+    }
+
+    clearSpeakingPeer(peerId) {
+        for (const timers of [this._speakingTileTimers, this._speakingParticipantTimers]) {
+            clearTimeout(timers?.get(peerId));
+            timers?.delete(peerId);
+        }
+        this.getSpeakingTiles(peerId).forEach(tile => tile.classList.remove('speaking'));
+        this.setParticipantSpeaking(peerId, false);
+    }
+
+    // Participants list: ring around the avatar and mixer bars in place of the mic icon, held like the tile border
+    handleSpeakingParticipant(peerId, holdMs = 600) {
+        if (!peerId) return;
+        if (!this._speakingParticipantTimers) this._speakingParticipantTimers = new Map();
+        this.setParticipantSpeaking(peerId, true);
+        clearTimeout(this._speakingParticipantTimers.get(peerId));
+        this._speakingParticipantTimers.set(
+            peerId,
+            setTimeout(() => {
+                this._speakingParticipantTimers.delete(peerId);
+                this.setParticipantSpeaking(peerId, false);
+            }, holdMs)
+        );
+    }
+
+    setParticipantSpeaking(peerId, speaking) {
+        const list = this.getId('participantsList');
+        const item = Array.from(list?.children || []).find(node => node.id === peerId);
+        if (item) item.classList.toggle('speaking', speaking);
+
+        // Spans, not <i>: mute handling reads the mic state from the button's first <i>
+        const audioIcon = this.getId(peerId + '___pAudio')?.querySelector('.participant-action-icon');
+        if (!audioIcon) return;
+        audioIcon.classList.toggle('speaking', speaking);
+        if (speaking && !audioIcon.querySelector('.participant-speaking-bars')) {
+            const bars = document.createElement('span');
+            bars.className = 'participant-speaking-bars';
+            bars.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < 4; i++) bars.appendChild(document.createElement('span'));
+            audioIcon.appendChild(bars);
+        }
+    }
+
+    // The participants list is re-rendered via innerHTML: restore peers that are still speaking
+    refreshSpeakingParticipants() {
+        this._speakingParticipantTimers?.forEach((_, peerId) => this.setParticipantSpeaking(peerId, true));
     }
 
     applyBoxShadowEffect(element, color, delay = 200) {

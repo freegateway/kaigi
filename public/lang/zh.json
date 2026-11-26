@@ -198,7 +198,8 @@
         "White annotation color": "批注颜色：白色",
         "Yellow annotation color": "批注颜色：黄色",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "开启/关闭当前发言人高亮"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "您的账户尚未分配任何会议。请联系管理员。",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "高亮当前发言人",
+        "Show a border around whoever is talking": "在正在说话的人周围显示边框"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "您的登录ID已连接到此会议。请退出另一个连接，或点击退出登录以使用其他账户登录。",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock 已释放",

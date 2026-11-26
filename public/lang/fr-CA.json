@@ -198,7 +198,8 @@
         "White annotation color": "Couleur d’annotation blanche",
         "Yellow annotation color": "Couleur d’annotation jaune",
         "Camera preview": "Aperçu de la caméra",
-        "Turn camera on": "Activer la caméra"
+        "Turn camera on": "Activer la caméra",
+        "Toggle the active speaker highlight": "Activer/désactiver la mise en évidence de l’intervenant actif"
     },
     "buttons": {
         "Hide password": "Masquer le mot de passe",
@@ -1095,7 +1096,9 @@
         "Log out": "Se déconnecter",
         "Username": "Nom d’utilisateur",
         "No meetings are assigned to your account. Please contact your administrator.": "Aucune réunion n’est attribuée à votre compte. Veuillez communiquer avec votre administrateur.",
-        "You are sharing your screen": "Vous partagez votre écran"
+        "You are sharing your screen": "Vous partagez votre écran",
+        "Highlight active speaker": "Mettre en évidence l’intervenant actif",
+        "Show a border around whoever is talking": "Afficher une bordure autour de la personne qui parle"
     },
     "dialogs": {
         "Server restarting": "Redémarrage du serveur",
@@ -1337,7 +1340,9 @@
         "Reconnect now": "Se reconnecter maintenant",
         "Waiting for the server. You may need to log in again.": "En attente du serveur. Vous pourriez devoir vous connecter de nouveau.",
         "Attempt {attempt}/{max} — retry in {seconds}s": "Tentative {attempt}/{max} — nouvel essai dans {seconds} s",
-        "Unable to play shared media. Check the file and try again.": "Impossible de lire le média partagé. Vérifiez le fichier et réessayez."
+        "Unable to play shared media. Check the file and try again.": "Impossible de lire le média partagé. Vérifiez le fichier et réessayez.",
+        "Active speaker highlight enabled": "Mise en évidence de la personne qui parle activée",
+        "Active speaker highlight disabled": "Mise en évidence de la personne qui parle désactivée"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Verrou d’éveil désactivé",

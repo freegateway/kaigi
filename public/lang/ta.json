@@ -198,7 +198,8 @@
         "White annotation color": "வெள்ளை குறிப்பு நிறம்",
         "Yellow annotation color": "மஞ்சள் குறிப்பு நிறம்",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "செயலில் உள்ள பேச்சாளர் சிறப்பம்சத்தை இயக்கு/முடக்கு"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "உங்கள் கணக்கிற்கு எந்தக் கூட்டமும் ஒதுக்கப்படவில்லை. உங்கள் நிர்வாகியைத் தொடர்பு கொள்ளவும்.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "செயலில் உள்ள பேச்சாளரைச் சிறப்பித்துக் காட்டு",
+        "Show a border around whoever is talking": "பேசுபவரைச் சுற்றி ஒரு கரையைக் காட்டு"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "உங்கள் உள்நுழைவு ID ஏற்கனவே இந்தக் கூட்டத்தில் இணைந்துள்ளது. மற்ற இணைப்பிலிருந்து வெளியேறவும் அல்லது வேறு கணக்கில் உள்நுழைய வெளியேறு என்பதை அழுத்தவும்.",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock விடுவிக்கப்பட்டது",

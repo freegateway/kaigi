@@ -449,6 +449,7 @@ let isPushToTalkActive = false;
 let isPushToTalkPressed = false;
 let pushToTalkAudioContext = null;
 let isPitchBarEnabled = true;
+let isSpeakingHighlightEnabled = true;
 let isSoundEnabled = true;
 let isKeepButtonsVisible = false;
 let isChatPinEnabled = true;
@@ -617,6 +618,7 @@ async function initClient() {
             true
         );
         setTippy('switchPitchBar', 'Toggle audio pitch bar', 'right');
+        setTippy('switchSpeakingHighlight', 'Toggle the active speaker highlight', 'right');
         setTippy('switchSounds', 'Toggle the sounds notifications', 'right');
         setTippy('switchShowCameraOffParticipants', 'Show participants with the camera off in the grid', 'right');
         setTippy('switchShare', "Show 'Share Room' popup on join", 'right');
@@ -2854,8 +2856,11 @@ function updateChatConversationsCount() {
 function updateChatCharCount() {
     const el = getId('chatCharCount');
     if (!el) return;
+    const max = rc?.chatMessageLength || 4000;
     const len = chatMessage ? chatMessage.value.length : 0;
-    el.textContent = `${len} / 4000`;
+    // Only surface the counter when approaching the limit, to keep the composer compact
+    el.textContent = len >= max * 0.8 ? `${len} / ${max}` : '';
+    el.classList.toggle('is-limit', len >= max);
 }
 
 function updateChatEmptyNotice() {
@@ -4145,6 +4150,26 @@ function updateParticipantViewButtonVisibility() {
     !isMobileDevice && !isBroadcastingEnabled ? show(participantViewDropdown) : hide(participantViewDropdown);
 }
 
+// Phones only get the stacked layouts: side-by-side and Livestream views don't fit a portrait screen
+const MOBILE_PARTICIPANT_VIEW_MODES = ['grid', 'speaker-top', 'speaker-bottom', 'speaker-1:1'];
+
+/**
+ * Show the selected option's layout icon (option data-icon -> pv-icon-<name>) next to a .select-with-icon select
+ * @param {HTMLSelectElement} select
+ */
+function updateSelectValueIcon(select) {
+    const icon = select?.parentElement?.querySelector(':scope > .select-value-icon');
+    if (!icon) return;
+    const name = select.selectedOptions[0]?.dataset.icon;
+    icon.className = `pv-icon select-value-icon${name ? ` pv-icon-${name}` : ''}`;
+}
+
+function removeUnsupportedMobileParticipantViews() {
+    participantViewMode.querySelectorAll('option').forEach((option) => {
+        if (!MOBILE_PARTICIPANT_VIEW_MODES.includes(option.value)) option.remove();
+    });
+}
+
 function setParticipantViewMode(requestedMode, persist = true, notify = true) {
     const supportedModes = new Set([
         'grid',
@@ -4157,6 +4182,8 @@ function setParticipantViewMode(requestedMode, persist = true, notify = true) {
     ]);
     const migratedMode = requestedMode === 'default' ? 'grid' : requestedMode;
     let mode = supportedModes.has(migratedMode) ? migratedMode : 'grid';
+
+    if (isMobileDevice && !MOBILE_PARTICIPANT_VIEW_MODES.includes(mode)) mode = 'grid';
 
     if (mode === 'livestream' && !isBroadcastingEnabled) {
         if (notify) rc.userLog('info', 'Enable broadcasting before using Livestream view', 'top-end');
@@ -4188,6 +4215,8 @@ function setParticipantViewMode(requestedMode, persist = true, notify = true) {
         clearTimeout(rc.participantViewRestoreTimer);
         rc.participantViewRestoreTimer = null;
     }
+    updateSelectValueIcon(participantViewMode);
+    updateSelectValueIcon(pinVideoPosition);
 
     if (!isSpeakerView && rc.isVideoPinned && rc.pinnedVideoPlayerId) {
         const pinButton = getId(`${rc.pinnedVideoPlayerId}__pin`);
@@ -4391,6 +4420,14 @@ function handleSelects() {
         isPitchBarEnabled = e.currentTarget.checked;
         rc.roomMessage('pitchBar', isPitchBarEnabled);
         localStorageSettings.pitch_bar = isPitchBarEnabled;
+        lS.setSettings(localStorageSettings);
+        e.target.blur();
+    };
+    switchSpeakingHighlight.onchange = (e) => {
+        isSpeakingHighlightEnabled = e.currentTarget.checked;
+        if (!isSpeakingHighlightEnabled) rc.clearSpeakingTiles();
+        rc.roomMessage('speakingHighlight', isSpeakingHighlightEnabled);
+        localStorageSettings.speaking_highlight = isSpeakingHighlightEnabled;
         lS.setSettings(localStorageSettings);
         e.target.blur();
     };
@@ -5268,6 +5305,7 @@ function loadSettingsFromLocalStorage() {
         localStorageSettings.transcript_send_to_all !== undefined ? localStorageSettings.transcript_send_to_all : true;
     rc.speechInMessages = localStorageSettings.speech_in_msg;
     isPitchBarEnabled = localStorageSettings.pitch_bar;
+    isSpeakingHighlightEnabled = localStorageSettings.speaking_highlight !== false;
     isSoundEnabled = localStorageSettings.sounds;
     isKeepButtonsVisible = localStorageSettings.keep_buttons_visible;
     isChatPinEnabled = localStorageSettings.chat_pin !== undefined ? localStorageSettings.chat_pin : true;
@@ -5278,6 +5316,7 @@ function loadSettingsFromLocalStorage() {
     transcriptSendToAll.checked = transcription.sendToAll;
     speechIncomingMsg.checked = rc.speechInMessages;
     switchPitchBar.checked = isPitchBarEnabled;
+    switchSpeakingHighlight.checked = isSpeakingHighlightEnabled;
     switchSounds.checked = isSoundEnabled;
     switchShowCameraOffParticipants.checked = showCameraOffParticipants;
     switchShare.checked = notify;
@@ -5306,6 +5345,7 @@ function loadSettingsFromLocalStorage() {
     BtnVideoControls.selectedIndex = localStorageSettings.video_controls;
     BtnsBarPosition.selectedIndex = localStorageSettings.buttons_bar;
     pinVideoPosition.selectedIndex = localStorageSettings.pin_grid;
+    if (isMobileDevice) removeUnsupportedMobileParticipantViews();
     participantViewMode.value = localStorageSettings.participant_view || 'grid';
     rc.handleVideoObjectFit(BtnVideoObjectFit.value);
     rc.handleVideoControls(BtnVideoControls.value);
@@ -6158,11 +6198,11 @@ function updateSettingsExtraGroups() {
 // ####################################################
 
 function restoreSplitButtonsBorderRadius() {
-    document.querySelectorAll('#bottomButtons .split-btn').forEach((group) => {
+    // On mobile the device chevrons are hidden, so round only the mic/camera splits.
+    // Other splits (participants, settings) keep their visible chevron and split shape.
+    document.querySelectorAll('#bottomButtons #startAudioSplit, #bottomButtons #startVideoSplit').forEach((group) => {
         group.querySelectorAll('button').forEach((button) => {
-            if (button.id != 'settingsExtraToggle' && button.id != 'settingsButton') {
-                button.style.setProperty('border-radius', '10px', 'important');
-            }
+            button.style.setProperty('border-radius', '10px', 'important');
         });
         const toggle = group.querySelector('.device-dropdown-toggle');
         if (toggle) toggle.style.setProperty('border-left', 'none', 'important');
@@ -8287,6 +8327,7 @@ async function getRoomParticipants() {
     const dropdowns = participantsList.querySelectorAll('.dropdown');
     handleParticipantDropdownPortal(dropdowns);
     handleDropdownHover(dropdowns);
+    rc.refreshSpeakingParticipants();
     refreshParticipantsCount(participantsCount, false);
     setParticipantsTippy(peers);
     updateChatConversationsCount();

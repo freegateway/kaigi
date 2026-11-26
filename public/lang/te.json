@@ -198,7 +198,8 @@
         "White annotation color": "తెలుపు ఉల్లేఖన రంగు",
         "Yellow annotation color": "పసుపు ఉల్లేఖన రంగు",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "క్రియాశీల వక్త హైలైట్‌ను ఆన్/ఆఫ్ చేయండి"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "మీ ఖాతాకు సమావేశాలు కేటాయించబడలేదు. దయచేసి మీ నిర్వాహకుడిని సంప్రదించండి.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "క్రియాశీల వక్తను హైలైట్ చేయండి",
+        "Show a border around whoever is talking": "మాట్లాడుతున్న వారి చుట్టూ అంచును చూపండి"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "మీ లాగిన్ ID ఇప్పటికే ఈ సమావేశానికి కనెక్ట్ అయింది. ఇతర కనెక్షన్ నుండి నిష్క్రమించండి లేదా వేరే ఖాతాతో లాగిన్ అవ్వడానికి లాగ్ అవుట్ క్లిక్ చేయండి.",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ వేక్ లాక్ విడుదలైంది",

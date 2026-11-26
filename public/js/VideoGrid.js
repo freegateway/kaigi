@@ -68,12 +68,18 @@ function resizeVideoMedia() {
     }
 
     resetZoom();
+    if (layoutPinnedStrip(videoMediaContainer, Cameras, Width, Height, Margin)) {
+        if (typeof VideoDrawingOverlay !== 'undefined') VideoDrawingOverlay.resizeAll();
+        return;
+    }
 
     // Optimized: binary search for best tile size
     let low = 1;
     let high = Math.min(Width, Height);
     if (isPinnedSingleVideo) {
-        const tileRatio = customRatio ? 0.75 : ratio;
+        // Fixed 4:3 thumbnails: the adaptive aspect ratio depends on the participant count,
+    // and the strip tiles must keep the same size no matter how many people join
+    const tileRatio = 0.75;
         high = Math.min(Width, Math.floor((Height - Margin * 2) / tileRatio));
     }
     let best = 1;
@@ -99,6 +105,70 @@ function resizeVideoMedia() {
     if (typeof VideoDrawingOverlay !== 'undefined') {
         VideoDrawingOverlay.resizeAll();
     }
+}
+
+function layoutPinnedStrip(container, Cameras, Width, Height, Margin) {
+    const pinned = typeof rc !== 'undefined' && !!rc?.isVideoPinned;
+    const active = pinned && Cameras.length > 0 && Width > 0;
+
+    if (!active) {
+        container.classList.remove('pinned-strip', 'pinned-strip-vertical', 'pinned-strip-overflow');
+        return false;
+    }
+
+    container.classList.remove('screen-stage', 'screen-stage-landscape');
+    Cameras.forEach(c => c.removeAttribute('data-screen-stage'));
+    const horizontal = rc.videoPinPosition ? !['speaker-left', 'speaker-right', 'vertical'].includes(rc.videoPinPosition) : Width > Height;
+    container.classList.add('pinned-strip');
+    container.classList.toggle('pinned-strip-vertical', !horizontal);
+
+    // Fixed 4:3 thumbnails: the adaptive aspect ratio depends on the participant count,
+    // and the strip tiles must keep the same size no matter how many people join
+    const tileRatio = 0.75;
+    let tileW, tileH;
+    if (horizontal) {
+        // Keep part of the next tile in view so it is clear the row scrolls
+        const maxTileW = Math.floor(Width / 2.4) - Margin * 2;
+        tileH = Math.max(40, Height - Margin * 2);
+        tileW = Math.round(tileH / tileRatio);
+        if (tileW > maxTileW) {
+            tileW = Math.max(40, maxTileW);
+            tileH = Math.round(tileW * tileRatio);
+        }
+    } else {
+        // Vertical column: tiles take the full column width
+        tileW = Math.max(40, Width - Margin * 2);
+        tileH = Math.round(tileW * tileRatio);
+    }
+
+    Cameras.forEach((c) => {
+        c.style.width = tileW + 'px';
+        c.style.height = tileH + 'px';
+        c.style.margin = Margin + 'px';
+    });
+
+    const stripLength = Cameras.length * ((horizontal ? tileW : tileH) + Margin * 2);
+    container.classList.toggle('pinned-strip-overflow', stripLength > (horizontal ? Width : Height) + Margin * 2);
+
+    if (!container.dataset.pinnedStripWheel) {
+        container.dataset.pinnedStripWheel = '1';
+        container.addEventListener(
+            'wheel',
+            (e) => {
+                // Vertical wheel scrolls the row (the vertical column scrolls natively);
+                // over a video the wheel keeps zooming the tile
+                if (!container.classList.contains('pinned-strip-overflow')) return;
+                if (container.classList.contains('pinned-strip-vertical')) return;
+                if (e.target.closest('video') || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+                container.scrollLeft += e.deltaY;
+                e.preventDefault();
+            },
+            { passive: false }
+        );
+    }
+
+    document.documentElement.style.setProperty('--vmi-wh', Math.max(32, tileW / 3) + 'px');
+    return true;
 }
 
 let layoutAnimationRaf = null;
@@ -137,7 +207,8 @@ function animateVideoLayout(duration = 240) {
 }
 
 function getVisibleCameraElements() {
-    return Array.from(document.getElementsByClassName('Camera')).filter((camera) => camera.style.display !== 'none');
+    return Array.from(document.getElementsByClassName('Camera')).filter(camera => !camera.hidden &&
+        camera.getAttribute('aria-hidden') !== 'true' && !camera.classList.contains('hidden') && camera.style.display !== 'none');
 }
 
 function resetZoom() {

@@ -198,7 +198,8 @@
         "White annotation color": "সাদা টীকা রঙ",
         "Yellow annotation color": "হলুদ টীকা রঙ",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "সক্রিয় বক্তার হাইলাইট চালু/বন্ধ করুন"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "আপনার অ্যাকাউন্টে কোনো মিটিং নির্ধারিত নেই। অনুগ্রহ করে আপনার প্রশাসকের সঙ্গে যোগাযোগ করুন।",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "সক্রিয় বক্তাকে হাইলাইট করুন",
+        "Show a border around whoever is talking": "যিনি কথা বলছেন তার চারপাশে একটি বর্ডার দেখান"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "আপনার লগইন আইডি ইতিমধ্যে এই সভায় সংযুক্ত। অন্য সংযোগ থেকে বেরিয়ে যান, অথবা অন্য অ্যাকাউন্ট দিয়ে প্রবেশ করতে লগ আউট ক্লিক করুন।",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock বন্ধ হয়েছে",
