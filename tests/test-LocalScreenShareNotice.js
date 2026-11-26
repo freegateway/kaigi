@@ -26,12 +26,18 @@ describe('screen preview configuration', () => {
         }
     });
 
-    it('preserves the complete original producer implementation byte for byte', () => {
+    it('preserves original producer media logic apart from the reviewed pin/menu UI changes', () => {
         const method = source.slice(source.indexOf('    async handleProducer('), source.indexOf('    async pauseProducer('));
-        const original = method.replace(
+        let original = method.replace(
             /        if \(type === mediaType.screen && BUTTONS.producerVideo.hideLocalScreenSharePreview !== false\) \{\n            return this.handleLocalScreenShare\(id, stream\);\n        \}\n/, '');
         // Entire method from Kaigi 1fa0826467e68a90b58f4fa53f96d2981d6dae94,
         // before the local-screen notice was introduced. Includes camera/audio paths.
+        // Normalize only the two reviewed UI adaptations before checking the
+        // original media implementation; capture/production logic must not drift.
+        original = original.replace('if (BUTTONS.producerVideo.pinVideoButton) this.appendPinButton(vb, pn);',
+            'if (BUTTONS.producerVideo.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);');
+        original = original.replace("                d.appendChild(vb);\n                if (!this.isMobileDevice) d.addEventListener('mouseleave', hideVideoMenu);",
+            "                if (this.isMobileDevice) {\n                    vb.classList.add('mobile-floating');\n                    document.body.appendChild(vb);\n                } else {\n                    vb.classList.remove('mobile-floating');\n                    d.appendChild(vb);\n                    d.addEventListener('mouseleave', hideVideoMenu);\n                }");
         assert.equal(require('node:crypto').createHash('sha256').update(original).digest('hex'),
             '56dd839f51946ca289887a34727362572567ea8cf991c7702307304e4fc16cf3');
     });

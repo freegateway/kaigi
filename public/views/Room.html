@@ -406,25 +406,25 @@
                 </button>
                 <div id="participantViewMenu" class="dropdown-menu text-start" aria-labelledby="participantViewButton">
                     <button type="button" data-participant-view="grid">
-                        <i class="fa-solid fa-border-all"></i> Grid
+                        <i class="pv-icon pv-icon-grid" aria-hidden="true"></i> Grid
                     </button>
                     <button type="button" data-participant-view="speaker-top">
-                        <i class="fa-solid fa-window-maximize"></i> Speaker top
+                        <i class="pv-icon pv-icon-speaker-top" aria-hidden="true"></i> Speaker top
                     </button>
                     <button type="button" data-participant-view="speaker-bottom">
-                        <i class="fa-solid fa-window-minimize"></i> Speaker bottom
+                        <i class="pv-icon pv-icon-speaker-bottom" aria-hidden="true"></i> Speaker bottom
                     </button>
                     <button type="button" data-participant-view="speaker-left">
-                        <i class="fa-solid fa-table-columns"></i> Speaker left
+                        <i class="pv-icon pv-icon-speaker-left" aria-hidden="true"></i> Speaker left
                     </button>
                     <button type="button" data-participant-view="speaker-right">
-                        <i class="fa-solid fa-table-columns"></i> Speaker right
+                        <i class="pv-icon pv-icon-speaker-right" aria-hidden="true"></i> Speaker right
                     </button>
                     <button type="button" data-participant-view="speaker-1:1">
-                        <i class="fa-solid fa-square"></i> Speaker 1:1
+                        <i class="pv-icon pv-icon-speaker-1-1" aria-hidden="true"></i> Speaker 1:1
                     </button>
                     <button type="button" data-participant-view="livestream">
-                        <i class="fa-solid fa-tower-broadcast"></i> Livestream
+                        <i class="pv-icon pv-icon-livestream" aria-hidden="true"></i> Livestream
                     </button>
                 </div>
             </div>
@@ -745,6 +745,13 @@
                                         <input id="switchPitchBar" class="form-check-input" type="checkbox" checked />
                                     </div>
                                 </td>
+                            </tr>
+                            <tr id="speakingHighlightButton">
+                                <td><div class="title"><i class="fas fa-user-check"></i>
+                                    <span class="settings-option-copy"><strong>Highlight active speaker</strong>
+                                    <small>Show a border around whoever is talking</small></span></div></td>
+                                <td><div class="form-check form-switch form-switch-md"><input id="switchSpeakingHighlight"
+                                    class="form-check-input" type="checkbox" checked aria-label="Highlight active speaker" /></div></td>
                             </tr>
                             <tr id="soundsButton">
                                 <td>
@@ -2098,15 +2105,18 @@
                             <p>Participant view:</p>
                         </div>
                         <br />
-                        <select id="participantViewMode" class="form-select text-light bg-dark">
-                            <option value="grid">Grid</option>
-                            <option value="speaker-top">Speaker top</option>
-                            <option value="speaker-bottom">Speaker bottom</option>
-                            <option value="speaker-left">Speaker left</option>
-                            <option value="speaker-right">Speaker right</option>
-                            <option value="speaker-1:1">Speaker 1:1</option>
-                            <option value="livestream">Livestream</option>
+                        <div class="select-with-icon">
+                            <i class="pv-icon select-value-icon" aria-hidden="true"></i>
+                            <select id="participantViewMode" class="form-select text-light bg-dark">
+                            <option value="grid" data-icon="grid">Grid</option>
+                            <option value="speaker-top" data-icon="speaker-top">Speaker top</option>
+                            <option value="speaker-bottom" data-icon="speaker-bottom">Speaker bottom</option>
+                            <option value="speaker-left" data-icon="speaker-left">Speaker left</option>
+                            <option value="speaker-right" data-icon="speaker-right">Speaker right</option>
+                            <option value="speaker-1:1" data-icon="speaker-1-1">Speaker 1:1</option>
+                            <option value="livestream" data-icon="livestream">Livestream</option>
                         </select>
+                        </div>
                         <br />
                         <div id="pinUnpinGridDiv" class="hidden">
                             <div class="title">
@@ -2114,13 +2124,16 @@
                                 <p>Pin video position:</p>
                             </div>
                             <br />
-                            <select id="pinVideoPosition" class="form-select text-light bg-dark">
-                                <option value="speaker-left">Left</option>
-                                <option value="speaker-top">Top</option>
-                                <option value="speaker-bottom">Bottom</option>
-                                <option value="speaker-right">Right</option>
-                                <option value="speaker-1:1">Full screen</option>
+                            <div class="select-with-icon">
+                                <i class="pv-icon select-value-icon" aria-hidden="true"></i>
+                                <select id="pinVideoPosition" class="form-select text-light bg-dark">
+                                <option value="speaker-left" data-icon="speaker-left">Left</option>
+                                <option value="speaker-top" data-icon="speaker-top">Top</option>
+                                <option value="speaker-bottom" data-icon="speaker-bottom">Bottom</option>
+                                <option value="speaker-right" data-icon="speaker-right">Right</option>
+                                <option value="speaker-1:1" data-icon="speaker-1-1">Full screen</option>
                             </select>
+                            </div>
                         </div>
                         <br />
                         <div class="title">
@@ -2464,7 +2477,7 @@
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
                         >
-                            <i class="fas fa-bars"></i>
+                            <i class="fas fa-ellipsis-vertical"></i>
                         </button>
                         <div class="dropdown-menu text-start" aria-labelledby="whiteboardDropDownMenu">
                             <label id="whiteboardParticipantNamesControl" class="whiteboard-menu-switch hidden">
@@ -2688,6 +2701,15 @@
                             <div class="chat-option-buttons">
                                 <div class="chat-tool-group chat-layout-tools" aria-label="Panel layout">
                                     <button
+                                        id="chatShowParticipantsListBtn"
+                                        class="hidden"
+                                        type="button"
+                                        aria-label="Show participants"
+                                        aria-pressed="false"
+                                    >
+                                        <i class="fas fa-users"></i>
+                                    </button>
+                                    <button
                                         id="chatTogglePin"
                                         class="hidden"
                                         aria-label="Pin chat"
@@ -2713,7 +2735,7 @@
                                             aria-expanded="false"
                                             aria-label="Chat menu"
                                         >
-                                            <i class="fas fa-bars"></i>
+                                            <i class="fas fa-ellipsis-vertical"></i>
                                         </button>
                                         <ul class="dropdown-menu text-start" aria-labelledby="chatDropDownMenu">
                                             <li>
@@ -2813,19 +2835,8 @@
                                     placeholder="Type a message..."
                                     rows="1"
                                 ></textarea>
-                                <button
-                                    id="chatSendButton"
-                                    class="chat-send-btn hidden"
-                                    type="button"
-                                    aria-label="Send message"
-                                >
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
                             </div>
-                            <div class="chat-toolbar-hint">
-                                <span class="chat-input-hint">Enter sends. Shift+Enter adds a line break.</span>
-                                <span id="chatCharCount" class="chat-char-count">0 / 4000</span>
-                            </div>
+                            <span id="chatCharCount" class="chat-char-count" aria-live="polite"></span>
                             <div class="chat-toolbar">
                                 <div class="chat-toolbar-left">
                                     <div class="chat-compose-tool-group" aria-label="Message tools">
@@ -2893,12 +2904,12 @@
                                 </div>
                                 <div class="chat-toolbar-right">
                                     <button
-                                        id="chatShowParticipantsListBtn"
-                                        class="chat-toolbar-btn chat-header-participants-btn hidden"
+                                        id="chatSendButton"
+                                        class="chat-send-btn hidden"
                                         type="button"
-                                        aria-label="Show participants"
+                                        aria-label="Send message"
                                     >
-                                        <i class="fas fa-users"></i>
+                                        <i class="fas fa-paper-plane"></i>
                                     </button>
                                 </div>
                             </div>
@@ -3023,7 +3034,7 @@
                     </div>
                     <div class="dropdown editor-compact-menu">
                         <button
-                            class="dropdown-toggle fas fa-bars"
+                            class="dropdown-toggle fas fa-ellipsis-vertical"
                             type="button"
                             id="editorDropDownMenu"
                             data-bs-toggle="dropdown"
@@ -3091,7 +3102,7 @@
                                     aria-expanded="false"
                                     aria-label="Transcription menu"
                                 >
-                                    <i class="fas fa-bars"></i>
+                                    <i class="fas fa-ellipsis-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu text-start" aria-labelledby="transcriptionDropDownMenu">
                                     <li>

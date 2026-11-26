@@ -1005,3 +1005,27 @@ chevron (902a8588), playback synchronization and auto-framing (59c32fa0/W02).
 Exclude KLIPY room GIFs (d9c86400), absent chat translation changes (1ddfbac7),
 cloud dependency refreshes, presenter controls and external browser requests.
 Calendar/SOGo/Kojo and Meeting Manager integration remain future work.
+
+## 2026-11-26 — Selective meeting UI improvements
+
+Kaigi 0.8.15 adapts chat composer/header changes from 397a14ff, mobile
+participant views from 81c55fe5 with fixed-size scrolling strips from 3fcd54c7
+and 170ed086, tile-contained mobile controls from 6ba1a243, split-button shaping
+from 55baa052, and layout icons from 9b6caf96/a50bba27. Use the existing native
+layout selectors; Kaigi has no upstream screen-camera-layout selector to copy.
+Retain the local screen-share notice and hidden source, saved pin preferences,
+read-only identity, permission restrictions and localized labels.
+
+Adapt speaking tile/list indicators from edbd1202 and 75b8bb67 with the calm
+ring style from cca86dda. Use existing volume events, an optional saved setting,
+and reduced-motion-aware CSS. Clear indicators/timers on mute, departure and
+exit; never highlight the local screen-share notice or hidden sources. The new
+setting, tooltip and status messages are localized without replacing existing
+catalogue entries. All dependency versions remain unchanged.
+
+Do not import the dependency updates bundled into UI commits. Keep the approved
+click-locked emoji selection behavior; defer 5bab16de, gesture recognition
+869ab310, Document PiP controls c5a37439, shared-audio waveform 2c2fe147,
+reaction dropup 206e7b8c, extra layout click sounds dfae84a2 and repository-wide
+line-ending changes f7c6d547. Calendar/Meeting Manager and the background worker
+rewrite remain separate future work.

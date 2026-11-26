@@ -198,7 +198,8 @@
         "White annotation color": "Màu chú thích màu trắng",
         "Yellow annotation color": "Màu chú thích màu vàng",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "Bật/tắt làm nổi bật người đang nói"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "Tài khoản của bạn chưa được chỉ định cuộc họp nào. Vui lòng liên hệ quản trị viên.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "Làm nổi bật người đang nói",
+        "Show a border around whoever is talking": "Hiển thị viền quanh người đang nói"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "ID đăng nhập của bạn đã kết nối với cuộc họp này. Hãy rời kết nối kia hoặc nhấn Đăng xuất để đăng nhập bằng tài khoản khác.",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock đã được tắt",

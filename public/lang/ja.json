@@ -198,7 +198,8 @@
         "White annotation color": "白の注釈色",
         "Yellow annotation color": "黄色の注釈色",
         "Camera preview": "カメラのプレビュー",
-        "Turn camera on": "カメラをオンにする"
+        "Turn camera on": "カメラをオンにする",
+        "Toggle the active speaker highlight": "発言者のハイライトのオン/オフ"
     },
     "buttons": {
         "Hide password": "パスワードを隠す",
@@ -1095,7 +1096,9 @@
         "Log out": "ログアウト",
         "Username": "ユーザー名",
         "No meetings are assigned to your account. Please contact your administrator.": "このアカウントには会議が割り当てられていません。管理者にお問い合わせください。",
-        "You are sharing your screen": "画面を共有しています"
+        "You are sharing your screen": "画面を共有しています",
+        "Highlight active speaker": "発言者をハイライト",
+        "Show a border around whoever is talking": "話している人の周りに枠を表示"
     },
     "dialogs": {
         "Server restarting": "サーバーを再起動しています",
@@ -1337,7 +1340,9 @@
         "Reconnect now": "今すぐ再接続",
         "Waiting for the server. You may need to log in again.": "サーバーの復旧を待っています。再度ログインが必要な場合があります。",
         "Attempt {attempt}/{max} — retry in {seconds}s": "試行 {attempt}/{max} — {seconds}秒後に再試行",
-        "Unable to play shared media. Check the file and try again.": "共有メディアを再生できません。ファイルを確認して、もう一度お試しください。"
+        "Unable to play shared media. Check the file and try again.": "共有メディアを再生できません。ファイルを確認して、もう一度お試しください。",
+        "Active speaker highlight enabled": "発言者のハイライトを有効にしました",
+        "Active speaker highlight disabled": "発言者のハイライトを無効にしました"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock を解除しました",

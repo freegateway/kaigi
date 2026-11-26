@@ -198,7 +198,8 @@
         "White annotation color": "Rangi nyeupe ya ufafanuzi",
         "Yellow annotation color": "Rangi ya maelezo ya njano",
         "Camera preview": "Camera preview",
-        "Turn camera on": "Turn camera on"
+        "Turn camera on": "Turn camera on",
+        "Toggle the active speaker highlight": "Washa/zima kuangazia mzungumzaji anayezungumza"
     },
     "buttons": {
         "Hide password": "Hide password",
@@ -1095,7 +1096,9 @@
         "Log out": "Log out",
         "Username": "Username",
         "No meetings are assigned to your account. Please contact your administrator.": "Hakuna mikutano iliyopangiwa akaunti yako. Tafadhali wasiliana na msimamizi wako.",
-        "You are sharing your screen": "You are sharing your screen"
+        "You are sharing your screen": "You are sharing your screen",
+        "Highlight active speaker": "Angazia mzungumzaji anayezungumza",
+        "Show a border around whoever is talking": "Onyesha mpaka kuzunguka anayezungumza"
     },
     "dialogs": {
         "The network timed out. Trying to reconnect.": "The network timed out. Trying to reconnect.",
@@ -1337,7 +1340,9 @@
         "WebRTC SFU v2.4.98": "WebRTC SFU v2.4.98",
         "WebRTC SFU v2.5.24": "WebRTC SFU v2.5.24",
         "Your login ID is already connected to this meeting. Leave the other connection, or click Log out to log in with a different account.": "Kitambulisho chako cha kuingia tayari kimeunganishwa kwenye mkutano huu. Ondoka kwenye muunganisho mwingine, au bofya Ondoka ili kuingia kwa akaunti nyingine.",
-        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again."
+        "Unable to play shared media. Check the file and try again.": "Unable to play shared media. Check the file and try again.",
+        "Active speaker highlight enabled": "Active speaker highlight enabled",
+        "Active speaker highlight disabled": "Active speaker highlight disabled"
     },
     "toasts": {
         "⚪ Wake Lock released": "⚪ Wake Lock imetolewa",
