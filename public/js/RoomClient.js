@@ -390,6 +390,9 @@ class RoomClient {
         this.isParticipantsOpen = false;
         this.isChatOpenedByParticipantsBtn = false;
         this.speechInMessages = false;
+        this.speechUtterances = new Set();
+        this.speechMicrophoneTracks = new Map();
+        this.speechWatchdog = null;
         this.showChatOnMessage = true;
         this.isChatBgTransparent = false;
         this.isVideoPinned = false;
@@ -2881,6 +2884,8 @@ class RoomClient {
                 params: params,
             });
 
+            // Guard before handing the track to WebRTC, including transport recovery.
+            if (audio) this.guardSpeechMicrophone(track);
             const producer = await this.producerTransport.produce(params);
 
             if (!producer) {
@@ -3421,7 +3426,7 @@ class RoomClient {
         const producerId = this.producerLabel.get(mediaType.audio);
         const producer = this.producers.get(producerId);
         if (processedStream && this.localAudioStream === processedStream && producer) {
-            track.enabled = !producer.paused;
+            this.guardSpeechMicrophone(track, !producer.paused);
             const processedTrack = producer.track;
             await producer.replaceTrack({ track });
             // Producers use stopTracks: false, so release the replaced processed track explicitly
@@ -4230,6 +4235,21 @@ class RoomClient {
 
                 console.log('[addProducer] audio-element-count', this.localAudioEl.childElementCount);
                 break;
+            case mediaType.audioTab:
+                // Local monitor of the shared tab/system audio: always muted (no echo), kept for recording
+                elem = document.createElement('audio');
+                elem.setAttribute('id', id);
+                elem.setAttribute('name', 'LOCAL-AUDIO');
+                elem.controls = false;
+                elem.autoplay = true;
+                elem.muted = true;
+                elem.volume = 0;
+                this.localAudioEl.appendChild(elem);
+
+                await this.attachMediaStream(elem, stream, type, 'Producer');
+
+                console.log('[addProducer] audio-element-count', this.localAudioEl.childElementCount);
+                break;
             default:
                 break;
         }
@@ -4243,6 +4263,9 @@ class RoomClient {
 
         const producer_id = this.producerLabel.get(type);
         this.producers.get(producer_id).pause();
+        if (type === mediaType.audio) {
+            this.guardSpeechMicrophone(this.producers.get(producer_id).track, false);
+        }
 
         try {
             const response = await this.socket.request('pauseProducer', { producer_id, type });
@@ -4273,6 +4296,9 @@ class RoomClient {
 
         const producer_id = this.producerLabel.get(type);
         this.producers.get(producer_id).resume();
+        if (type === mediaType.audio) {
+            this.guardSpeechMicrophone(this.producers.get(producer_id).track, true);
+        }
 
         try {
             const response = await this.socket.request('resumeProducer', { producer_id, type });
@@ -4392,7 +4418,8 @@ class RoomClient {
                 track,
                 stopTracks: false, // see produce()
                 appData: {
-                    mediaType: mediaType.audio,
+                    // Kept apart from the mic so receivers can control its volume separately
+                    mediaType: mediaType.audioTab,
                 },
             };
 
@@ -4405,7 +4432,7 @@ class RoomClient {
 
             console.log('[produceScreenAudio] - PRODUCER LABEL', this.producerLabel);
 
-            await this.handleProducer(producerSa.id, mediaType.audio, stream);
+            await this.handleProducer(producerSa.id, mediaType.audioTab, stream);
 
             producerSa.on('trackended', () => {
                 this.closeProducer(mediaType.audioTab, 'trackended');
@@ -4774,7 +4801,8 @@ class RoomClient {
 
         const { id, kind, rtpParameters } = data;
         const codecOptions = {};
-        const streamId = peer_id + (type == mediaType.screen ? '-screen-sharing' : '-mic-webcam');
+        const isScreenMedia = type == mediaType.screen || type == mediaType.audioTab;
+        const streamId = peer_id + (isScreenMedia ? '-screen-sharing' : '-mic-webcam');
         const consumer = await transport.consume({
             id,
             producerId,
@@ -4896,6 +4924,17 @@ class RoomClient {
                 pv.max = 100;
                 pv.value = 100;
 
+                // Independent volume for the shared tab/system audio, shown only while it is consumed
+                const sav =
+                    remoteIsScreen && BUTTONS.consumerVideo.audioVolumeInput ? document.createElement('input') : null;
+                if (sav) {
+                    sav.id = remotePeerId + '___sVolume';
+                    sav.type = 'range';
+                    sav.min = 0;
+                    sav.max = 100;
+                    sav.value = 100;
+                }
+
                 // Build dropdown items
                 BUTTONS.consumerVideo.pinVideoButton &&
                     !this.isMobileDevice &&
@@ -4912,6 +4951,12 @@ class RoomClient {
                     eVc.appendChild(this.createResponsiveDropdownItem(dw, 'Draw'));
                 BUTTONS.consumerVideo.audioVolumeInput &&
                     eVc.appendChild(this.createResponsiveDropdownRangeItem(pv, 'Volume', 'fa-volume-high'));
+                if (sav) {
+                    sav.setAttribute('aria-label', window.i18n?.t('Screen audio volume', 'buttons') || 'Screen audio volume');
+                    sav._dropdownItem = eVc.appendChild(
+                        this.createResponsiveDropdownRangeItem(sav, 'Screen audio volume', 'fa-desktop')
+                    );
+                }
                 BUTTONS.consumerVideo.presenterRoleButton &&
                     eVc.appendChild(
                         this.createDropdownItem(
@@ -4943,6 +4988,15 @@ class RoomClient {
 
                 vb.appendChild(eDiv);
                 BUTTONS.consumerVideo.audioVolumeInput && vb.appendChild(pv);
+                if (sav) {
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-desktop';
+                    icon.setAttribute('aria-hidden', 'true');
+                    sav._barItem = document.createElement('span');
+                    sav._barItem.className = 'screen-audio-volume navbar-secondary-action';
+                    sav._barItem.append(icon, sav);
+                    vb.appendChild(sav._barItem);
+                }
                 BUTTONS.consumerVideo.muteAudioButton && vb.appendChild(au);
                 BUTTONS.consumerVideo.muteVideoButton && vb.appendChild(cm);
                 BUTTONS.consumerVideo.snapShotButton && vb.appendChild(ts);
@@ -4982,6 +5036,7 @@ class RoomClient {
                 BUTTONS.consumerVideo.muteVideoButton && this.handleCM(cm.id, remotePeerId);
                 BUTTONS.consumerVideo.muteAudioButton && this.handleAU(au.id, remotePeerId);
                 this.handleCV(pv.id);
+                if (sav) this.handleScreenAudioVolume(sav);
 
 
                 this.handleBAN(ban.id, remotePeerId);
@@ -5021,6 +5076,7 @@ class RoomClient {
                     this.setTippy(cm.id, 'Hide', 'bottom');
                     this.setTippy(au.id, 'Mute', 'bottom');
                     this.setTippy(pv.id, '🔊 Volume', 'bottom');
+                    if (sav) this.setTippy(sav.id, 'Screen audio volume', 'bottom');
                 }
 
                 // Use helper function to set audio volume
@@ -5039,9 +5095,14 @@ class RoomClient {
                 this.sound('joined');
                 break;
             case mediaType.audio:
+            case mediaType.audioTab:
+                const isScreenAudio = type === mediaType.audioTab;
+                // Mic and shared screen audio get distinct keys, so each keeps its own volume control
+                const audioConsumerId = remotePeerId + (isScreenAudio ? '___sVolume' : '___pVolume');
+
                 elem = document.createElement('audio');
                 elem.setAttribute('id', id);
-                elem.setAttribute('volumeBar', remotePeerId + '___pVolume');
+                elem.setAttribute('volumeBar', audioConsumerId);
                 elem.autoplay = true;
                 elem.volume = 1.0;
 
@@ -5049,19 +5110,26 @@ class RoomClient {
                     elem.muted = true;
                 }
 
+                if (isScreenAudio) {
+                    const range = this.getId(audioConsumerId);
+                    this.setAudioVolume(elem, range ? range.value / 100 : 1);
+                }
                 this.remoteAudioEl.appendChild(elem);
 
                 await this.attachMediaStream(elem, stream, type, 'Consumer');
 
                 // Store audio consumer and set volume
-                const audioConsumerId = remotePeerId + '___pVolume';
                 this.audioConsumers.set(audioConsumerId, id);
 
-                // Use helper function to set audio volume
-                this.setAV(id, audioConsumerId, remotePeerAudioVolume, true);
-                this.handleCV(audioConsumerId);
+                if (isScreenAudio) {
+                    this.syncScreenAudioVolume(audioConsumerId);
+                } else {
+                    // Use helper function to set audio volume
+                    this.setAV(id, audioConsumerId, remotePeerAudioVolume, true);
+                    this.handleCV(audioConsumerId);
 
-                this.setPeerAudio(remotePeerId, remotePeerAudio);
+                    this.setPeerAudio(remotePeerId, remotePeerAudio);
+                }
 
                 if (sinkId && speakerSelect.value) {
                     this.changeAudioDestination(elem, false);
@@ -5147,9 +5215,13 @@ class RoomClient {
         if (consumer_kind === 'audio') {
             const audioConsumerPlayerId = this.getMapKeyByValue(this.audioConsumers, consumer_id);
             if (audioConsumerPlayerId) {
-                const inputPv = this.getId(audioConsumerPlayerId);
-                if (inputPv) inputPv.style.display = 'none';
                 this.audioConsumers.delete(audioConsumerPlayerId);
+                if (audioConsumerPlayerId.endsWith('___sVolume')) {
+                    this.syncScreenAudioVolume(audioConsumerPlayerId);
+                } else {
+                    const inputPv = this.getId(audioConsumerPlayerId);
+                    if (inputPv) inputPv.style.display = 'none';
+                }
                 console.log('Remove audio Consumer', {
                     consumer_id: consumer_id,
                     audioConsumerPlayerId: audioConsumerPlayerId,
@@ -5428,6 +5500,7 @@ class RoomClient {
     // ####################################################
 
     exit(offline = false) {
+        this.disposeSpeech();
         this.clearSpeakingTiles();
 		this.isMySettingsOpen = false;
 		this.syncSettingsVideoPreview();
@@ -5523,8 +5596,10 @@ class RoomClient {
 
     async attachMediaStream(elem, stream, type, who) {
         let track;
+        const isAudio = type === mediaType.audio || type === mediaType.audioTab;
         switch (type) {
             case mediaType.audio:
+            case mediaType.audioTab:
                 track = stream.getAudioTracks()[0];
                 break;
             case mediaType.video:
@@ -5537,7 +5612,7 @@ class RoomClient {
         const consumerStream = new MediaStream();
         consumerStream.addTrack(track);
         elem.srcObject = consumerStream;
-        if (type !== mediaType.audio) {
+        if (!isAudio) {
             this.hideVideoLoaderOnPlay(elem);
         } else {
             this.syncRecordingAudio();
@@ -8225,7 +8300,7 @@ class RoomClient {
         const reactionButtons = reactionEmojis
             .map(
                 (e) =>
-                    `<span class="reaction-emoji-btn" onclick="rc.sendChatReaction('msg-${chatMessagesId}', '${e}')" role="button">${e}</span>`
+                    `<button type="button" class="reaction-emoji-btn" aria-label="${this.sanitizeHtml((window.i18n?.t('React', 'tooltips') || 'React') + ' ' + e)}" onclick="rc.sendChatReaction('msg-${chatMessagesId}', '${e}')">${e}</button>`
             )
             .join('');
 
@@ -8330,7 +8405,29 @@ class RoomClient {
         if (!picker) return;
         const isVisible = picker.style.display !== 'none';
         document.querySelectorAll('.reaction-picker').forEach((p) => (p.style.display = 'none'));
-        if (!isVisible) picker.style.display = 'flex';
+        if (isVisible) return;
+        picker.style.display = 'flex';
+        if (!picker.dataset.keys) {
+            picker.dataset.keys = '1';
+            picker.addEventListener('keydown', (e) => this.handleReactionPickerKeys(e, picker, id));
+        }
+        picker.querySelector('.reaction-emoji-btn')?.focus();
+    }
+
+    // Arrow keys move between emojis, Esc closes the picker and returns focus to the React button
+    handleReactionPickerKeys(e, picker, id) {
+        const buttons = [...picker.querySelectorAll('.reaction-emoji-btn')];
+        const index = buttons.indexOf(document.activeElement);
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            picker.style.display = 'none';
+            document.getElementById('msg-react-' + id)?.focus();
+        } else if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key) && index !== -1) {
+            e.preventDefault();
+            const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
+            buttons[(index + step + buttons.length) % buttons.length].focus();
+        }
     }
 
     sendChatReaction(msgListId, emoji) {
@@ -8354,7 +8451,11 @@ class RoomClient {
         }
         const id = msgListId.replace('msg-', '');
         const picker = document.getElementById('reaction-picker-' + id);
-        if (picker) picker.style.display = 'none';
+        if (picker) {
+            const returnFocus = picker.contains(document.activeElement);
+            picker.style.display = 'none';
+            if (returnFocus) document.getElementById('msg-react-' + id)?.focus();
+        }
     }
 
     applyReactionToElement(msgEl, emoji, peerName, action = 'add') {
@@ -8829,24 +8930,75 @@ class RoomClient {
     }
 
     speechMessage(newMsg = true, from, msg) {
-        const speech = new SpeechSynthesisUtterance();
-        speech.text = (newMsg ? 'New' : '') + ' message from:' + from + '. The message is:' + msg;
-        speech.rate = 0.9;
-        window.speechSynthesis.speak(speech);
+        this.speechText((newMsg ? 'New' : '') + ' message from:' + from + '. The message is:' + msg);
     }
 
     speechElementText(elemId) {
         const element = this.getId(elemId);
-        this.speechText(element.innerText);
+        if (element) this.speechText(element.innerText);
     }
 
     speechText(msg) {
-        {
-            const speech = new SpeechSynthesisUtterance();
-            speech.text = msg;
-            speech.rate = 0.9;
+        if (this.speechDisposed || !msg) return;
+        const speech = new SpeechSynthesisUtterance(msg);
+        speech.rate = 0.9;
+        this.speechUtterances ??= new Set();
+        this.speechUtterances.add(speech);
+        speech.onend = speech.onerror = () => {
+            this.speechUtterances.delete(speech);
+            this.syncSpeechMicrophone();
+        };
+        this.syncSpeechMicrophone();
+        try {
             window.speechSynthesis.speak(speech);
+        } catch (error) {
+            speech.onerror();
+            console.warn('Local read-aloud unavailable');
         }
+    }
+
+    // Keep the user's microphone state separate from temporary local TTS silence.
+    guardSpeechMicrophone(track, enabled) {
+        if (!track) return;
+        this.speechMicrophoneTracks ??= new Map();
+        const previous = this.speechMicrophoneTracks.get(track);
+        const wanted = enabled ?? previous ?? track.enabled;
+        this.speechMicrophoneTracks.set(track, wanted);
+        track.enabled = !this.speechDisposed && !this.speechUtterances?.size && wanted;
+    }
+
+    syncSpeechMicrophone() {
+        const producer = this.producers?.get(this.producerLabel?.get(mediaType.audio));
+        if (producer?.track) {
+            const wanted = producer.paused ? false : this.speechMicrophoneTracks?.get(producer.track);
+            this.guardSpeechMicrophone(producer.track, wanted);
+        }
+        for (const [track, wanted] of this.speechMicrophoneTracks || []) {
+            if (track.readyState === 'ended') this.speechMicrophoneTracks.delete(track);
+            else track.enabled = !this.speechDisposed && !this.speechUtterances?.size && wanted;
+        }
+        if (!this.speechUtterances?.size) {
+            clearInterval(this.speechWatchdog);
+            this.speechWatchdog = null;
+        } else if (!this.speechWatchdog) {
+            this.speechWatchdog = setInterval(() => {
+                const synthesis = window.speechSynthesis;
+                // Recover missing end/error callbacks after cancellation or a drained queue.
+                // A stalled browser that still reports speech stays safely silenced.
+                if (!synthesis.speaking && !synthesis.pending) this.speechUtterances.clear();
+                this.syncSpeechMicrophone();
+            }, 1000);
+        }
+    }
+
+    disposeSpeech() {
+        this.speechDisposed = true;
+        this.speechUtterances?.clear();
+        clearInterval(this.speechWatchdog);
+        this.speechWatchdog = null;
+        try { window.speechSynthesis?.cancel(); } catch {}
+        this.syncSpeechMicrophone();
+        this.speechMicrophoneTracks?.clear();
     }
 
     chatToggleBg() {
@@ -12617,6 +12769,28 @@ class RoomClient {
 
     handlePV(audioElementId, volumeInputId) {
         this.handleVolumeControl(audioElementId, volumeInputId, false); // Producer
+    }
+
+    // Local-only volume for a peer's shared tab/system audio (not broadcast, unlike the mic volume)
+    handleScreenAudioVolume(volumeInput) {
+        const updateVolume = () => {
+            const audioPlayer = this.getId(this.audioConsumers.get(volumeInput.id));
+            if (audioPlayer) this.setAudioVolume(audioPlayer, volumeInput.value / 100);
+        };
+        this.addVolumeEventListeners(volumeInput, updateVolume);
+        this.syncScreenAudioVolume(volumeInput.id);
+    }
+
+    // The screen video and its audio are separate consumers that can arrive or leave in any order
+    syncScreenAudioVolume(volumeInputId) {
+        const volumeInput = this.getId(volumeInputId);
+        const audioPlayer = this.getId(this.audioConsumers.get(volumeInputId));
+        if (audioPlayer) this.setAudioVolume(audioPlayer, volumeInput ? volumeInput.value / 100 : 1);
+        if (!volumeInput) return;
+        const toggle = audioPlayer ? show : hide;
+        [volumeInput, volumeInput._barItem, volumeInput._dropdownItem].forEach((elem) => elem && toggle(elem));
+        const proxy = volumeInput._dropdownItem?.querySelector('input');
+        if (proxy) proxy.value = volumeInput.value;
     }
 
     setAV(audioElementId, volumeElementId, volumeValue, isConsumer = false) {

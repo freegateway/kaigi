@@ -5040,6 +5040,19 @@ function handleChatEmojiPicker() {
 
     const chatEmojiButton = getId('chatEmojiButton');
     const chatEmoji = getId('chatEmoji');
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !rc.isChatEmojiOpen) return;
+        event.preventDefault();
+        event.stopPropagation();
+        rc.setChatEmojiOpen(false);
+        chatEmojiButton.focus();
+    });
+    chatEmojiButton.addEventListener('click', (event) => {
+        if (event.detail === 0 && rc.isChatEmojiOpen) {
+            const search = emojiPicker.shadowRoot?.querySelector('input');
+            search?.focus();
+        }
+    });
 
     if (!isMobileDevice) {
         let closeTimer;
@@ -5050,7 +5063,7 @@ function handleChatEmojiPicker() {
         };
         const scheduleClose = () => {
             cancelClose();
-            closeTimer = setTimeout(() => { if (!rc.isChatEmojiLocked) rc.setChatEmojiOpen(false); }, 300);
+            closeTimer = setTimeout(() => { if (!rc.isChatEmojiLocked && !chatEmoji.contains(document.activeElement)) rc.setChatEmojiOpen(false); }, 300);
         };
 
         chatEmojiButton.addEventListener('mouseenter', openPicker);
@@ -5067,6 +5080,7 @@ function handleChatEmojiPicker() {
 }
 
 function handleRoomEmojiPicker() {
+    const t = (key) => window.i18n?.t(key, 'buttons') || key;
     const soundEmojis = [
         { emoji: '👍', shortcodes: ':+1:' },
         { emoji: '👎', shortcodes: ':-1:' },
@@ -5099,7 +5113,7 @@ function handleRoomEmojiPicker() {
 
     const titleText = document.createElement('span');
     titleText.className = 'room-emoji-title-text';
-    titleText.textContent = 'Room Emoji';
+    titleText.textContent = t('Room Emoji');
 
     title.appendChild(titleMark);
     title.appendChild(titleText);
@@ -5107,7 +5121,7 @@ function handleRoomEmojiPicker() {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'room-emoji-close-btn';
-    closeBtn.setAttribute('aria-label', 'Close room emoji');
+    closeBtn.setAttribute('aria-label', t('Close'));
     closeBtn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
 
     header.appendChild(title);
@@ -5116,7 +5130,7 @@ function handleRoomEmojiPicker() {
     const tabContainer = document.createElement('div');
     tabContainer.className = 'room-emoji-tab-container';
     tabContainer.setAttribute('role', 'tablist');
-    tabContainer.setAttribute('aria-label', 'Room emoji categories');
+    tabContainer.setAttribute('aria-label', t('Room Emoji'));
 
     const allTab = document.createElement('button');
     allTab.type = 'button';
@@ -5134,6 +5148,20 @@ function handleRoomEmojiPicker() {
     soundTab.setAttribute('aria-selected', 'false');
     soundTab.setAttribute('aria-controls', 'roomEmojiSounds');
 
+    allTab.id = 'roomEmojiAllTab';
+    soundTab.id = 'roomEmojiSoundTab';
+    allTab.querySelector('span').textContent = t('All');
+    soundTab.querySelector('span').textContent = t('Sounds');
+    allTab.tabIndex = 0;
+    soundTab.tabIndex = -1;
+    tabContainer.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const next = event.key === 'Home' ? allTab : event.key === 'End' ? soundTab :
+            document.activeElement === allTab ? soundTab : allTab;
+        next.click();
+        next.focus();
+    });
     tabContainer.appendChild(allTab);
     tabContainer.appendChild(soundTab);
 
@@ -5141,6 +5169,7 @@ function handleRoomEmojiPicker() {
     emojiMartDiv.id = 'roomEmojiMart';
     emojiMartDiv.className = 'room-emoji-mart';
     emojiMartDiv.setAttribute('role', 'tabpanel');
+    emojiMartDiv.setAttribute('aria-labelledby', allTab.id);
     const pickerRoomOptions = {
         theme: 'dark',
         onEmojiSelect: sendEmojiToRoom,
@@ -5152,6 +5181,17 @@ function handleRoomEmojiPicker() {
     emojiGrid.id = 'roomEmojiSounds';
     emojiGrid.className = 'room-emoji-grid';
     emojiGrid.setAttribute('role', 'tabpanel');
+    emojiGrid.setAttribute('aria-labelledby', soundTab.id);
+    emojiGrid.addEventListener('keydown', (event) => {
+        const buttons = [...emojiGrid.querySelectorAll('button')];
+        const index = buttons.indexOf(document.activeElement);
+        if (index < 0 || !['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const step = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1;
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
+            (index + step + buttons.length) % buttons.length;
+        buttons[next].focus();
+    });
 
     function showEmojiGrid() {
         emojiGrid.classList.add('visible');
@@ -5162,6 +5202,8 @@ function handleRoomEmojiPicker() {
 
     soundEmojis.forEach(({ emoji, shortcodes }) => {
         const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', t('Emoji') + ' ' + emoji);
         btn.textContent = emoji;
         btn.className = 'room-emoji-btn';
         btn.onclick = () => sendEmojiToRoom({ native: emoji, shortcodes });
@@ -5172,6 +5214,8 @@ function handleRoomEmojiPicker() {
         const isAllActive = activeTab === allTab;
         allTab.classList.toggle('active', isAllActive);
         soundTab.classList.toggle('active', !isAllActive);
+        allTab.tabIndex = isAllActive ? 0 : -1;
+        soundTab.tabIndex = isAllActive ? -1 : 0;
         allTab.setAttribute('aria-selected', String(isAllActive));
         soundTab.setAttribute('aria-selected', String(!isAllActive));
     }
@@ -5198,11 +5242,21 @@ function handleRoomEmojiPicker() {
         rc.makeDraggable(emojiPickerContainer, header);
     }
 
-    emojiRoomButton.onclick = () => {
+    emojiRoomButton.onclick = (event) => {
         toggleEmojiPicker();
+        if (event.detail === 0 && emojiPickerContainer.style.display === 'block') {
+            (allTab.classList.contains('active') ? allTab : soundTab).focus();
+        }
     };
     closeBtn.addEventListener('click', (e) => {
         toggleEmojiPicker();
+        emojiRoomButton.focus();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || emojiPickerContainer.style.display !== 'block') return;
+        e.stopPropagation();
+        toggleEmojiPicker();
+        emojiRoomButton.focus();
     });
 
     function sendEmojiToRoom(data) {
@@ -5227,6 +5281,7 @@ function handleRoomEmojiPicker() {
         emojiPickerContainer.style.display = isOpen ? 'block' : 'none';
         emojiRoomButton.classList.toggle('is-active', isOpen);
         emojiRoomButton.setAttribute('aria-pressed', String(isOpen));
+        emojiRoomButton.setAttribute('aria-expanded', String(isOpen));
         setColor(emojiRoomIcon, isOpen ? '#FFD600' : 'white');
     }
 }
