@@ -151,6 +151,25 @@ describe('Recording audio mix', () => {
         assert.equal(track.readyState, 'ended');
     });
 
+    it('keeps the recording output stable while separate screen audio is stopped and re-shared', async () => {
+        const h = createHarness();
+        const microphone = makeTrack('mic');
+        h.addAudioElement(microphone);
+        const output = startMix(h).getAudioTracks()[0];
+        h.client.localAudioEl = { childElementCount: 0 };
+        for (const id of ['screen-first', 'screen-again']) {
+            const track = makeTrack(id);
+            const elem = h.addAudioElement(track, { name: 'LOCAL-AUDIO' });
+            await h.client.attachMediaStream(elem, new FakeMediaStream([track]), 'audioTab', 'Producer');
+            assert.deepEqual(h.mixedIds(), ['mic', id].sort());
+            assert.equal(h.client.audioRecorder.getMixedAudioStream([]).getAudioTracks()[0], output);
+            elem.parentNode = { removeChild: () => h.removeAudioElement(elem) };
+            h.client.removeAudioProducer(elem, 'closed');
+            assert.deepEqual(h.mixedIds(), ['mic']);
+            assert.equal(microphone.readyState, 'live');
+        }
+    });
+
     it('does not create an audio context when meeting policy disables recording', () => {
         const h = createHarness();
         h.client.recordingAllowed = false;

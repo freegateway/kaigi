@@ -1029,3 +1029,30 @@ click-locked emoji selection behavior; defer 5bab16de, gesture recognition
 reaction dropup 206e7b8c, extra layout click sounds dfae84a2 and repository-wide
 line-ending changes f7c6d547. Calendar/Meeting Manager and the background worker
 rewrite remain separate future work.
+
+## 2026-11-27 — Read-aloud privacy, keyboard pickers and screen audio
+
+Kaigi 0.8.16 adapts 09b4c7bd861ce2d99de43eced76904fd8a831fd3:
+silence the outgoing microphone throughout queued local read-aloud. Preserve
+manual mute and push-to-talk state, guard tracks before publication/replacement
+including RNNoise fallback and transport recovery, and cancel speech on exit.
+Recover missing end/error callbacks when the speech queue drains; remain
+silenced if the browser still reports stalled speech. No transcription enabled.
+
+Adapt 71273bf07f334ce35832991052892d5b73243039 with native reaction
+buttons, visible focus, arrow navigation, Escape dismissal and focus return.
+Retain click-locked chat emoji selection and prevent hover closure while the
+picker contains keyboard focus. Meeting emoji tabs/sound buttons gain keyboard
+navigation and localized accessible names using existing local catalogues.
+
+Adapt 5e8f11c53b962a3e9f524fc5bce62132cf9991d9 with a separate
+audioTab producer/consumer path and receiver-only shared-screen audio slider.
+Keep the microphone slot, muted local monitor and recording tracks independent.
+Apply master output even before the screen tile arrives, synchronize compact
+dropdown controls and hide the slider when screen audio leaves. The new label
+is included in all catalogues, with maintained ja, en-CA and fr-CA wording.
+
+No dependency refresh, camera-layout subsystem or shared-audio waveform is
+imported. Local media-file streaming (e116fef1), PWA/service-worker adoption
+(d00b4735), calendar/Meeting Manager integration and the background worker
+rewrite remain outside these changes.

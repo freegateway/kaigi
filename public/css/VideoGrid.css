@@ -429,6 +429,10 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
+.navbar-dropdown-item.hidden {
+    display: none !important;
+}
+
 .navbar-dropdown-item button,
 .videoMenuBar .navbar-dropdown-item button,
 .videoMenuBar .navbar-dropdown-content .navbar-dropdown-item button {
@@ -606,6 +610,10 @@ input[type='range'] {
     .videoMenuBar input[type='range'] {
         width: clamp(40px, 20%, 80px);
     }
+    /* Nested in a wrapper: % would resolve against it, so size against the tile like the mic slider */
+    .videoMenuBar .screen-audio-volume input[type='range'] {
+        width: clamp(40px, 20cqw, 80px);
+    }
 }
 
 @container camera (min-width: 641px) {
@@ -622,6 +630,9 @@ input[type='range'] {
     }
     .videoMenuBar input[type='range'] {
         width: clamp(50px, 20%, 100px);
+    }
+    .videoMenuBar .screen-audio-volume input[type='range'] {
+        width: clamp(50px, 20cqw, 100px);
     }
 }
 
@@ -1412,4 +1423,14 @@ input[type='range'] {
         background: rgba(255, 255, 255, 0.25);
         border-radius: 3px;
     }
+}
+
+/* Independent receiver-side shared-screen audio control. */
+.videoMenuBar .screen-audio-volume {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    color: #fff;
+    font-size: clamp(0.9rem, 1vw, 1.05rem);
 }

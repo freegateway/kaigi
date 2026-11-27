@@ -26,7 +26,7 @@ describe('screen preview configuration', () => {
         }
     });
 
-    it('preserves original producer media logic apart from the reviewed pin/menu UI changes', () => {
+    it('preserves original producer media logic apart from reviewed UI changes and the separate screen-audio monitor', () => {
         const method = source.slice(source.indexOf('    async handleProducer('), source.indexOf('    async pauseProducer('));
         let original = method.replace(
             /        if \(type === mediaType.screen && BUTTONS.producerVideo.hideLocalScreenSharePreview !== false\) \{\n            return this.handleLocalScreenShare\(id, stream\);\n        \}\n/, '');
@@ -38,6 +38,7 @@ describe('screen preview configuration', () => {
             'if (BUTTONS.producerVideo.pinVideoButton && !this.isMobileDevice) vb.appendChild(pn);');
         original = original.replace("                d.appendChild(vb);\n                if (!this.isMobileDevice) d.addEventListener('mouseleave', hideVideoMenu);",
             "                if (this.isMobileDevice) {\n                    vb.classList.add('mobile-floating');\n                    document.body.appendChild(vb);\n                } else {\n                    vb.classList.remove('mobile-floating');\n                    d.appendChild(vb);\n                    d.addEventListener('mouseleave', hideVideoMenu);\n                }");
+        original = original.replace(/            case mediaType.audioTab:[\s\S]*?(?=            default:)/, '');
         assert.equal(require('node:crypto').createHash('sha256').update(original).digest('hex'),
             '56dd839f51946ca289887a34727362572567ea8cf991c7702307304e4fc16cf3');
     });
